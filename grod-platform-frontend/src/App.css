@@ -235,6 +235,115 @@ h3 {
   font-weight: 800;
 }
 
+.brand-block {
+  color: inherit;
+  text-decoration: none;
+}
+
+.hero-3d-section {
+  perspective: 1100px;
+}
+
+.copper-3d {
+  position: absolute;
+  right: max(32px, 8vw);
+  bottom: 88px;
+  z-index: 1;
+  width: min(440px, 38vw);
+  height: 360px;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.copper-coil,
+.copper-rod,
+.copper-slab {
+  position: absolute;
+  transform-style: preserve-3d;
+  filter: drop-shadow(0 28px 34px rgba(0, 0, 0, 0.32));
+}
+
+.copper-coil {
+  border: 18px solid #c8733f;
+  border-top-color: #f5b06f;
+  border-right-color: #8f3d24;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(255, 224, 180, 0.24) 0 35%, transparent 36%),
+    radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.42), transparent 25%),
+    linear-gradient(135deg, #efad6b, #b85f34 48%, #7d321f);
+  box-shadow:
+    inset 0 0 0 14px rgba(255, 226, 181, 0.16),
+    inset 0 0 0 28px rgba(87, 32, 18, 0.18);
+  animation: copperFloat 7s ease-in-out infinite;
+}
+
+.coil-one {
+  width: 230px;
+  height: 112px;
+  left: 32px;
+  top: 64px;
+  transform: rotateX(64deg) rotateZ(-17deg);
+}
+
+.coil-two {
+  width: 270px;
+  height: 132px;
+  right: 12px;
+  top: 124px;
+  transform: rotateX(64deg) rotateZ(15deg);
+  animation-delay: -2s;
+}
+
+.coil-three {
+  width: 190px;
+  height: 92px;
+  left: 112px;
+  bottom: 36px;
+  transform: rotateX(64deg) rotateZ(4deg);
+  animation-delay: -4s;
+}
+
+.copper-rod {
+  width: 300px;
+  height: 22px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #fff0cf, #d98545 18%, #9a4325 70%, #f5b06f);
+}
+
+.rod-one {
+  left: 80px;
+  top: 40px;
+  transform: rotateZ(-22deg) rotateY(22deg);
+}
+
+.rod-two {
+  left: 40px;
+  bottom: 118px;
+  transform: rotateZ(15deg) rotateY(-18deg);
+}
+
+.copper-slab {
+  right: 28px;
+  bottom: 24px;
+  width: 190px;
+  height: 58px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ffc27c, #bc6336 55%, #70301f);
+  transform: rotateX(58deg) rotateZ(-14deg);
+}
+
+@keyframes copperFloat {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 0 -18px;
+  }
+}
+
 .metrics-row,
 .solution-grid,
 .products-grid {
@@ -1894,5 +2003,96 @@ button:disabled {
   .spec-list div {
     grid-template-columns: 1fr;
     gap: 6px;
+  }
+}
+
+.admin-panel,
+.client-detail-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(22, 32, 24, 0.12);
+  border-radius: 8px;
+  padding: 18px;
+  background: #ffffff;
+}
+
+.client-detail-panel {
+  align-items: center;
+  background: #f8fbf7;
+}
+
+.client-detail-panel h3,
+.client-detail-panel p {
+  margin: 0;
+}
+
+.client-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.client-stats span {
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: #17633b;
+  background: #e7f4eb;
+  font-weight: 800;
+}
+
+.success-text {
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: #17633b;
+  background: #e8f6ed;
+  font-weight: 800;
+}
+
+.error-text {
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: #9f2f20;
+  background: #fff0ec;
+  font-weight: 800;
+}
+
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0 24px;
+}
+
+.admin-form-grid label:has(textarea),
+.admin-form-grid .form-actions {
+  grid-column: 1 / -1;
+}
+
+.products-admin-table div {
+  align-items: center;
+}
+
+.products-admin-table button {
+  min-height: 36px;
+  padding: 0 10px;
+}
+
+.form-status {
+  color: #69766d;
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  .admin-panel,
+  .client-detail-panel,
+  .admin-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .client-stats {
+    justify-content: flex-start;
   }
 }
