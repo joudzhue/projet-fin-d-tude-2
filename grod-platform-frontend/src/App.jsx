@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { NavLink, Route, Routes, useNavigate } from 'react-router-dom'
+import { NavLink, Route, Routes, useNavigate, useParams } from 'react-router-dom'
 import './App.css'
 
 const API_URL = 'http://localhost:8080/api'
@@ -15,6 +15,10 @@ const officialProducts = [
     imageUrl:
       'https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/rod-index-770x460.jpg',
     applications: ['Cables electriques', 'Conducteurs industriels'],
+    dimensions: 'Diametres et longueurs selon demande client',
+    normes: 'ASTM, EN, IEC ou specification interne',
+    purete: 'Cuivre haute conductivite',
+    conditionnement: 'Bottes, bobines ou palettes selon format',
   },
   {
     id: 'anodes',
@@ -24,6 +28,10 @@ const officialProducts = [
     imageUrl:
       'https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/ImagebildROD_1-kopiera-616x460.jpg',
     applications: ['Electrolyse', 'Traitement metallurgique'],
+    dimensions: 'Formats et epaisseurs selon installation',
+    normes: 'Specification client et controle laboratoire',
+    purete: 'Choix libre entre 50% et 99,99%',
+    conditionnement: 'Palettes industrielles securisees',
   },
   {
     id: 'bus-bars',
@@ -34,6 +42,10 @@ const officialProducts = [
     imageUrl:
       'https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/rod-index-770x460.jpg',
     applications: ['Tableaux electriques', 'Distribution energie'],
+    dimensions: 'Largeur, epaisseur et percage sur demande',
+    normes: 'Normes electriques industrielles',
+    purete: 'Cuivre conducteur',
+    conditionnement: 'Pieces marquees et emballees',
   },
   {
     id: 'flat-bars',
@@ -43,6 +55,10 @@ const officialProducts = [
     imageUrl:
       'https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/ImagebildROD_1-kopiera-616x460.jpg',
     applications: ['Assemblage technique', 'Pieces conductrices'],
+    dimensions: 'Largeur, epaisseur et longueur selon besoin',
+    normes: 'EN 13601 ou equivalent selon specification',
+    purete: 'Cuivre technique',
+    conditionnement: 'Barres protegees pour transport',
   },
   {
     id: 'tubes',
@@ -52,6 +68,10 @@ const officialProducts = [
     imageUrl:
       'https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/rod-index-770x460.jpg',
     applications: ['Plomberie', 'Climatisation'],
+    dimensions: 'Diametres, epaisseurs et longueurs sur demande',
+    normes: 'Normes plomberie, HVAC et industrie',
+    purete: 'Cuivre adapte aux installations techniques',
+    conditionnement: 'Tubes droits ou couronnes',
   },
   {
     id: 'sheets',
@@ -62,6 +82,10 @@ const officialProducts = [
     imageUrl:
       'https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/ImagebildROD_1-kopiera-616x460.jpg',
     applications: ['Fabrication', 'Revetement'],
+    dimensions: 'Feuilles, plaques et epaisseurs selon besoin',
+    normes: 'Specification client ou norme industrielle',
+    purete: 'Cuivre pour fabrication et conductivite',
+    conditionnement: 'Feuilles protegees, plaques ou palettes',
   },
   {
     id: 'wire',
@@ -72,6 +96,10 @@ const officialProducts = [
     imageUrl:
       'https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/rod-index-770x460.jpg',
     applications: ['Cables', 'Bobinages'],
+    dimensions: 'Sections et conditionnements selon application',
+    normes: 'Normes cable, bobinage et connexion',
+    purete: 'Haute conductivite',
+    conditionnement: 'Bobines, tourets ou cartons',
   },
   {
     id: 'custom',
@@ -82,6 +110,10 @@ const officialProducts = [
     imageUrl:
       'https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/ImagebildROD_1-kopiera-616x460.jpg',
     applications: ['Plans techniques', 'Fabrication sur mesure'],
+    dimensions: 'Selon plan 2D/3D et cahier des charges',
+    normes: 'Controle selon specification client',
+    purete: 'Selon usage et contrainte technique',
+    conditionnement: 'Emballage adapte a la geometrie',
   },
 ]
 
@@ -145,6 +177,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage t={t} />} />
         <Route path="/catalogue" element={<ProductsPage t={t} />} />
+        <Route path="/catalogue/:productId" element={<ProductDetailPage t={t} />} />
         <Route path="/resources" element={<ResourcesPage t={t} />} />
         <Route path="/devis" element={<QuotePage t={t} />} />
         <Route path="/admin" element={<AdminPage t={t} />} />
@@ -364,6 +397,9 @@ function ProductCard({ product, t }) {
             <span key={application}>{application}</span>
           ))}
         </div>
+        <NavLink className="text-link" to={`/catalogue/${product.id || slugify(product.nom)}`}>
+          {t.productDetail}
+        </NavLink>
         <NavLink className="text-link" to={`/devis?produit=${encodeURIComponent(product.nom)}`}>
           {t.requestQuote}
         </NavLink>
@@ -372,7 +408,100 @@ function ProductCard({ product, t }) {
   )
 }
 
+function ProductDetailPage({ t }) {
+  const { productId } = useParams()
+  const product = officialProducts.find((item) => item.id === productId || slugify(item.nom) === productId) || officialProducts[0]
+
+  return (
+    <main className="product-detail-page">
+      <section className="product-detail-hero">
+        <div className="product-detail-media">
+          <img src={product.imageUrl} alt={product.nom} />
+        </div>
+        <div className="product-detail-copy">
+          <p className="eyebrow">{product.categorie}</p>
+          <h2>{product.nom}</h2>
+          <p>{product.description}</p>
+          <div className="hero-actions">
+            <NavLink className="primary-link" to={`/devis?produit=${encodeURIComponent(product.nom)}`}>
+              {t.requestQuote}
+            </NavLink>
+            <NavLink className="secondary-link" to="/catalogue">
+              {t.backCatalogue}
+            </NavLink>
+          </div>
+        </div>
+      </section>
+
+      <section className="page-section detail-grid">
+        <article className="detail-panel">
+          <h3>{t.applications}</h3>
+          <div className="tag-list">
+            {product.applications.map((application) => (
+              <span key={application}>{application}</span>
+            ))}
+          </div>
+        </article>
+        <article className="detail-panel">
+          <h3>{t.techInfo}</h3>
+          <dl className="spec-list">
+            <div><dt>{t.dimensions}</dt><dd>{product.dimensions}</dd></div>
+            <div><dt>{t.purity}</dt><dd>{product.purete}</dd></div>
+            <div><dt>{t.standards}</dt><dd>{product.normes}</dd></div>
+            <div><dt>{t.packaging}</dt><dd>{product.conditionnement}</dd></div>
+          </dl>
+        </article>
+      </section>
+    </main>
+  )
+}
+
 function ResourcesPage({ t }) {
+  const [backendDocs, setBackendDocs] = useState([])
+  const [request, setRequest] = useState(emptyDocumentRequest())
+  const [status, setStatus] = useState('')
+
+  useEffect(() => {
+    async function loadDocs() {
+      try {
+        const response = await fetch(`${API_URL}/documents-techniques/actifs`)
+        if (response.ok) setBackendDocs(await response.json())
+      } catch {
+        setBackendDocs([])
+      }
+    }
+    loadDocs()
+  }, [])
+
+  const allResources = [
+    ...resources,
+    ...backendDocs.map((document) => ({
+      title: document.titre,
+      type: document.typeDocument,
+      text: document.description || document.fichierNom,
+      href: document.telechargementPublic ? document.fichierUrl : null,
+      product: document.produitConcerne,
+    })),
+  ]
+
+  async function submitDocumentRequest(event) {
+    event.preventDefault()
+    setStatus(t.sending)
+    try {
+      const response = await fetch(`${API_URL}/demandes-documents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+      })
+      if (!response.ok) throw new Error('Document request failed')
+      const data = await response.json()
+      setRequest(emptyDocumentRequest())
+      setStatus(`${t.documentRequestSuccess} ${data.referenceDemande || ''}`)
+    } catch {
+      setStatus(t.documentRequestError)
+    }
+  }
+
   return (
     <main className="resources-page">
       <section className="resources-hero">
@@ -381,7 +510,7 @@ function ResourcesPage({ t }) {
         <p>{t.resourcesText}</p>
       </section>
       <section className="page-section resources-grid">
-        {resources.map((resource) => (
+        {allResources.map((resource) => (
           <article className="resource-card" key={resource.title}>
             <div className="resource-card-header">
               <span>{resource.type}</span>
@@ -389,6 +518,7 @@ function ResourcesPage({ t }) {
             </div>
             <h3>{resource.title}</h3>
             <p>{resource.text}</p>
+            {resource.product ? <span className="resource-product">{resource.product}</span> : null}
             {resource.href ? (
               <a className="text-link" href={resource.href} download>
                 {t.download}
@@ -400,6 +530,29 @@ function ResourcesPage({ t }) {
             )}
           </article>
         ))}
+      </section>
+
+      <section className="page-section document-request-form">
+        <div>
+          <p className="eyebrow">{t.documentRequestEyebrow}</p>
+          <h2>{t.documentRequestTitle}</h2>
+          <p>{t.documentRequestText}</p>
+        </div>
+        <form className="quote-form" onSubmit={submitDocumentRequest}>
+          <Field label={t.company} name="societe" value={request.societe} onChange={(event) => setProductFormValue(setRequest, event)} required />
+          <Field label={t.contact} name="nomContact" value={request.nomContact} onChange={(event) => setProductFormValue(setRequest, event)} required />
+          <Field label="Email" name="email" type="email" value={request.email} onChange={(event) => setProductFormValue(setRequest, event)} required />
+          <Field label={t.phone} name="telephone" value={request.telephone} onChange={(event) => setProductFormValue(setRequest, event)} required />
+          <Field label={t.documentType} name="typeDocument" value={request.typeDocument} onChange={(event) => setProductFormValue(setRequest, event)} required />
+          <Field label={t.documentTitle} name="titreDocument" value={request.titreDocument} onChange={(event) => setProductFormValue(setRequest, event)} required />
+          <Field label={t.concernedProduct} name="produitConcerne" value={request.produitConcerne} onChange={(event) => setProductFormValue(setRequest, event)} />
+          <label>
+            {t.message}
+            <textarea name="message" rows="4" value={request.message} onChange={(event) => setProductFormValue(setRequest, event)} />
+          </label>
+          <button type="submit">{t.submitDocumentRequest}</button>
+          {status ? <p className="form-status">{status}</p> : null}
+        </form>
       </section>
     </main>
   )
@@ -420,6 +573,8 @@ function QuotePage({ t }) {
     quantite: '',
     besoinLivraison: '',
     message: '',
+    fichierTechniqueUrl: '',
+    fichierTechniqueNom: '',
   })
   const [status, setStatus] = useState('')
 
@@ -451,6 +606,30 @@ function QuotePage({ t }) {
       setStatus(`${t.quoteSuccess} ${data.referenceDemande || ''}`)
     } catch {
       setStatus(t.quoteError)
+    }
+  }
+
+  async function uploadQuoteDocument(event) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    setStatus(t.uploadingFile)
+    try {
+      const data = new FormData()
+      data.append('file', file)
+      const response = await fetch(`${API_URL}/uploads/quote-documents`, {
+        method: 'POST',
+        body: data,
+      })
+      if (!response.ok) throw new Error('Upload failed')
+      const result = await response.json()
+      setForm((current) => ({
+        ...current,
+        fichierTechniqueUrl: result.documentUrl,
+        fichierTechniqueNom: result.originalName,
+      }))
+      setStatus(t.uploadSuccess)
+    } catch {
+      setStatus(t.uploadError)
     }
   }
 
@@ -492,6 +671,11 @@ function QuotePage({ t }) {
         <Field label={t.length} name="longueur" type="number" value={form.longueur} onChange={updateField} />
         <Field label={t.width} name="largeur" type="number" value={form.largeur} onChange={updateField} />
         <Field label={t.thickness} name="epaisseur" type="number" value={form.epaisseur} onChange={updateField} />
+        <label>
+          {t.uploadDrawing}
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.dwg,.dxf" onChange={uploadQuoteDocument} />
+        </label>
+        {form.fichierTechniqueNom ? <p className="form-status">{t.uploadedFile}: {form.fichierTechniqueNom}</p> : null}
         <label>
           {t.message}
           <textarea name="message" value={form.message} onChange={updateField} rows="5" />
@@ -615,6 +799,7 @@ function AdminPage({ t }) {
 
 function AdminDashboard({ t, token, onLogout }) {
   const [demandes, setDemandes] = useState([])
+  const [documentRequests, setDocumentRequests] = useState([])
   const [products, setProducts] = useState([])
   const [documents, setDocuments] = useState([])
   const [settings, setSettings] = useState({ adminEmail: 'admin@grod.ma', adminPhone: '+212 6 68 61 56 08' })
@@ -630,8 +815,11 @@ function AdminDashboard({ t, token, onLogout }) {
   useEffect(() => {
     async function loadAdminData() {
       try {
-        const [demandesResponse, productsResponse, documentsResponse, settingsResponse] = await Promise.all([
+        const [demandesResponse, documentRequestsResponse, productsResponse, documentsResponse, settingsResponse] = await Promise.all([
           fetch(`${API_URL}/demandes-devis`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API_URL}/demandes-documents`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
           fetch(`${API_URL}/produits`, {
@@ -646,6 +834,9 @@ function AdminDashboard({ t, token, onLogout }) {
         ])
         if (!demandesResponse.ok) throw new Error('Admin request failed')
         setDemandes(await demandesResponse.json())
+        if (documentRequestsResponse.ok) {
+          setDocumentRequests(await documentRequestsResponse.json())
+        }
 
         if (productsResponse.ok) {
           setProducts(await productsResponse.json())
@@ -754,6 +945,23 @@ function AdminDashboard({ t, token, onLogout }) {
       URL.revokeObjectURL(url)
     } catch {
       setError(t.pdfError)
+    }
+  }
+
+  async function updateDocumentRequestStatus(id, statut) {
+    setSuccess('')
+    setError('')
+    try {
+      const response = await fetch(`${API_URL}/demandes-documents/${id}/statut?statut=${statut}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok) throw new Error('Document status failed')
+      const updated = await response.json()
+      setDocumentRequests((current) => current.map((request) => (request.id === updated.id ? updated : request)))
+      setSuccess(t.statusUpdated)
+    } catch {
+      setError(t.statusError)
     }
   }
 
@@ -971,8 +1179,8 @@ function AdminDashboard({ t, token, onLogout }) {
       <section className="metrics-row">
         <Metric value={demandes.length} label={t.totalRequests} />
         <Metric value={demandes.filter((demande) => demande.statut === 'NOUVELLE').length} label={t.newRequests} />
+        <Metric value={documentRequests.length} label={t.documentRequests} />
         <Metric value={clients.length} label={t.clients} />
-        <Metric value={products.length || officialProducts.length} label={t.products} />
       </section>
 
       {error ? <p className="error-text">{error}</p> : null}
@@ -1072,6 +1280,45 @@ function AdminDashboard({ t, token, onLogout }) {
           </tbody>
         </table>
       </div>
+
+      <section className="product-admin-form">
+        <p className="eyebrow">{t.resourcesEyebrow}</p>
+        <h3>{t.documentRequests}</h3>
+        <div className="table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Reference</th>
+                <th>{t.company}</th>
+                <th>{t.documentTitle}</th>
+                <th>{t.documentType}</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              {documentRequests.map((request) => (
+                <tr key={request.id}>
+                  <td>{request.referenceDemande || `#${request.id}`}</td>
+                  <td>
+                    <strong>{request.societe}</strong>
+                    <span>{request.email}</span>
+                  </td>
+                  <td>{request.titreDocument}</td>
+                  <td>{request.typeDocument}</td>
+                  <td>
+                    <select value={request.statut} onChange={(event) => updateDocumentRequestStatus(request.id, event.target.value)}>
+                      <option value="NOUVELLE">NOUVELLE</option>
+                      <option value="EN_TRAITEMENT">EN_TRAITEMENT</option>
+                      <option value="TRAITEE">TRAITEE</option>
+                      <option value="ANNULEE">ANNULEE</option>
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <section className="product-admin-form">
         <p className="eyebrow">{t.catalogueTitle}</p>
@@ -1382,9 +1629,29 @@ function emptyDocumentForm() {
   }
 }
 
+function emptyDocumentRequest() {
+  return {
+    societe: '',
+    nomContact: '',
+    email: '',
+    telephone: '',
+    typeDocument: '',
+    titreDocument: '',
+    produitConcerne: '',
+    message: '',
+  }
+}
+
 function setProductFormValue(setter, event) {
   const { name, value } = event.target
   setter((current) => ({ ...current, [name]: value }))
+}
+
+function slugify(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
 }
 
 function buildClientHistory(demandes) {
@@ -1508,6 +1775,13 @@ const dictionary = {
     requestQuote: 'Demander un devis',
     productSearch: 'Recherche produit',
     active: 'Actif',
+    productDetail: 'Voir la fiche produit',
+    backCatalogue: 'Retour au catalogue',
+    applications: 'Applications',
+    techInfo: 'Informations techniques',
+    dimensions: 'Dimensions',
+    standards: 'Normes',
+    packaging: 'Conditionnement',
     loading: 'Chargement...',
     resourcesEyebrow: 'Ressources techniques',
     resourcesTitle: 'Documents utiles pour acheteurs B2B',
@@ -1516,6 +1790,12 @@ const dictionary = {
     onRequest: 'Sur demande',
     download: 'Telecharger',
     requestDocument: 'Demander ce document',
+    documentRequestEyebrow: 'Documentation technique',
+    documentRequestTitle: 'Demander un document technique',
+    documentRequestText: 'Demandez une fiche technique, un certificat ou un document de conformite sans demander un prix.',
+    submitDocumentRequest: 'Envoyer la demande document',
+    documentRequestSuccess: 'Demande document enregistree.',
+    documentRequestError: 'Impossible d envoyer la demande document.',
     quoteEyebrow: 'Devis',
     quoteTitle: 'Nouvelle demande client',
     company: 'Societe',
@@ -1528,6 +1808,9 @@ const dictionary = {
     length: 'Longueur',
     width: 'Largeur',
     thickness: 'Epaisseur',
+    uploadDrawing: 'Joindre un fichier technique',
+    uploadedFile: 'Fichier joint',
+    uploadingFile: 'Upload en cours...',
     message: 'Message',
     submitQuote: 'Envoyer la demande',
     sending: 'Envoi en cours...',
@@ -1549,6 +1832,7 @@ const dictionary = {
     newRequests: 'Nouvelles demandes',
     clients: 'Clients',
     products: 'Produits',
+    documentRequests: 'Demandes documents',
     adminSearch: 'Recherche admin',
     adminSearchPlaceholder: 'Reference, client, email, produit...',
     clientHistory: 'Historique client',
@@ -1644,6 +1928,13 @@ const dictionary = {
     requestQuote: 'Request a quote',
     productSearch: 'Product search',
     active: 'Active',
+    productDetail: 'View product sheet',
+    backCatalogue: 'Back to catalog',
+    applications: 'Applications',
+    techInfo: 'Technical information',
+    dimensions: 'Dimensions',
+    standards: 'Standards',
+    packaging: 'Packaging',
     loading: 'Loading...',
     resourcesEyebrow: 'Technical resources',
     resourcesTitle: 'Useful documents for B2B buyers',
@@ -1652,6 +1943,12 @@ const dictionary = {
     onRequest: 'On request',
     download: 'Download',
     requestDocument: 'Request this document',
+    documentRequestEyebrow: 'Technical documentation',
+    documentRequestTitle: 'Request a technical document',
+    documentRequestText: 'Request a datasheet, certificate or compliance document without requesting a price.',
+    submitDocumentRequest: 'Send document request',
+    documentRequestSuccess: 'Document request saved.',
+    documentRequestError: 'Unable to send document request.',
     quoteEyebrow: 'Quote',
     quoteTitle: 'New client request',
     company: 'Company',
@@ -1664,6 +1961,9 @@ const dictionary = {
     length: 'Length',
     width: 'Width',
     thickness: 'Thickness',
+    uploadDrawing: 'Attach technical file',
+    uploadedFile: 'Attached file',
+    uploadingFile: 'Uploading...',
     message: 'Message',
     submitQuote: 'Send request',
     sending: 'Sending...',
@@ -1685,6 +1985,7 @@ const dictionary = {
     newRequests: 'New requests',
     clients: 'Clients',
     products: 'Products',
+    documentRequests: 'Document requests',
     adminSearch: 'Admin search',
     adminSearchPlaceholder: 'Reference, client, email, product...',
     clientHistory: 'Client history',
