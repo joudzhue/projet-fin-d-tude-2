@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-labelledby="title">
+  <title id="title">CFYE</title>
+  <rect width="320" height="180" fill="#fff"/>
+  <text x="160" y="105" text-anchor="middle" font-family="Arial, sans-serif" font-size="61" font-weight="500">
+    <tspan fill="#14244d">CF</tspan><tspan fill="#169d8e">YE</tspan>
+  </text>
+  <path d="M147 66 164 88 147 110 130 88Z" fill="#8a969c"/>
+</svg>

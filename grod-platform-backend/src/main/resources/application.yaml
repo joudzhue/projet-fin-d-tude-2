@@ -1,0 +1,56 @@
+spring:
+  application:
+    name: grod-platform-backend
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/grod_platform?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    username: root
+    password: ""
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 15MB
+
+  mail:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  port: 8080
+
+app:
+  upload-dir: uploads
+  notifications:
+    enabled: ${EMAIL_NOTIFICATIONS_ENABLED:false}
+    admin-email: ${ADMIN_NOTIFICATION_EMAIL:admin@grod.ma}
+    admin-phone: ${ADMIN_NOTIFICATION_PHONE:+212 6 68 61 56 08}
+    from-email: ${EMAIL_FROM:noreply@grod.ma}
+    sms:
+      enabled: ${SMS_NOTIFICATIONS_ENABLED:false}
+      provider: ${SMS_PROVIDER:twilio}
+      twilio-account-sid: ${TWILIO_ACCOUNT_SID:}
+      twilio-auth-token: ${TWILIO_AUTH_TOKEN:}
+      twilio-from-number: ${TWILIO_FROM_NUMBER:}
+  jwt:
+    secret: "grod-platform-local-dev-secret-change-this-in-production"
+    expiration-ms: 86400000
+  openai:
+    api-key: ${OPENAI_API_KEY:}
+    model: ${OPENAI_MODEL:gpt-5.5}

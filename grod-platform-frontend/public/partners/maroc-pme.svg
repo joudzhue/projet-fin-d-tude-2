@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-labelledby="title">
+  <title id="title">Maroc PME</title>
+  <rect width="320" height="180" fill="#fff"/>
+  <text x="160" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" font-weight="700">
+    <tspan fill="#85898c">Maroc</tspan><tspan fill="#14749a">PM</tspan><tspan fill="#63ad36">E</tspan>
+  </text>
+  <path d="M235 53c20-20 42 1 25 18-11 10-26 7-33 20" fill="none" stroke="#148ba0" stroke-width="6" stroke-linecap="round"/>
+  <path d="M236 70c11-13 25-11 31-2" fill="none" stroke="#74bd35" stroke-width="5" stroke-linecap="round"/>
+  <text x="160" y="111" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-style="italic" fill="#777">Entrepreneuriat  Croissance  Competitivite</text>
+</svg>

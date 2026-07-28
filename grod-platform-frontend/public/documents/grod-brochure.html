@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>G-ROD - Brochure institutionnelle</title>
+  <style>
+    @page { size: A4; margin: 0; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: #d9ddd8; color: #162019; font-family: Arial, sans-serif; }
+    .page {
+      position: relative;
+      width: 210mm;
+      height: 297mm;
+      margin: 0 auto;
+      overflow: hidden;
+      page-break-after: always;
+      background: #fff;
+    }
+    .page:last-child { page-break-after: auto; }
+    body:has(.page:target) .page:not(:target) { display: none; }
+    .content { padding: 21mm 18mm 18mm; }
+    .running {
+      position: absolute;
+      top: 9mm;
+      left: 18mm;
+      right: 18mm;
+      display: flex;
+      justify-content: space-between;
+      color: #687169;
+      font-size: 8pt;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .footer {
+      position: absolute;
+      bottom: 9mm;
+      left: 18mm;
+      right: 18mm;
+      display: flex;
+      justify-content: space-between;
+      color: #687169;
+      font-size: 8pt;
+    }
+    .kicker {
+      margin: 0 0 3mm;
+      color: #a85d37;
+      font-size: 9pt;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { max-width: 165mm; margin-bottom: 7mm; font-size: 30pt; line-height: 1.04; }
+    h2 { margin-bottom: 7mm; font-size: 23pt; line-height: 1.08; }
+    h3 { margin-bottom: 2mm; font-size: 13pt; }
+    p { margin-bottom: 4mm; font-size: 10.5pt; line-height: 1.52; }
+    .lead { color: #48554b; font-size: 13pt; line-height: 1.48; }
+    .rule { width: 32mm; height: 1.5mm; margin: 0 0 9mm; background: #b76842; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 9mm; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; }
+    .card {
+      border: .35mm solid #d9dfda;
+      border-radius: 2mm;
+      padding: 6mm;
+      background: #fff;
+    }
+    .card p { margin-bottom: 0; color: #566158; font-size: 9.5pt; }
+    .number { color: #b76842; font-size: 24pt; font-weight: 800; }
+    .band {
+      margin: 8mm -18mm 0;
+      padding: 10mm 18mm;
+      background: #15231a;
+      color: #fff;
+    }
+    .band p { margin: 0; color: #d9e2db; }
+    .cover {
+      display: grid;
+      grid-template-rows: 1fr auto;
+      color: #fff;
+      background:
+        linear-gradient(150deg, rgba(13, 25, 17, .98), rgba(18, 62, 38, .88)),
+        #173723;
+    }
+    .cover::before {
+      content: "";
+      position: absolute;
+      top: -22mm;
+      right: -35mm;
+      width: 145mm;
+      height: 145mm;
+      border: 19mm solid rgba(183, 104, 66, .32);
+      border-radius: 50%;
+    }
+    .cover::after {
+      content: "";
+      position: absolute;
+      bottom: -52mm;
+      left: -35mm;
+      width: 175mm;
+      height: 175mm;
+      border: 10mm solid rgba(103, 148, 78, .26);
+      border-radius: 50%;
+    }
+    .cover-main { position: relative; z-index: 1; padding: 35mm 20mm 0; }
+    .brand { margin-bottom: 45mm; font-size: 27pt; font-weight: 900; letter-spacing: .08em; }
+    .brand span { color: #c8784c; }
+    .cover h1 { max-width: 150mm; margin-bottom: 8mm; font-size: 38pt; }
+    .cover .lead { max-width: 135mm; color: #dde9df; font-size: 15pt; }
+    .cover-bottom {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      padding: 16mm 20mm;
+      background: rgba(0, 0, 0, .18);
+    }
+    .cover-bottom strong { display: block; margin-bottom: 2mm; font-size: 11pt; }
+    .cover-bottom span { color: #cbd7cd; font-size: 9pt; }
+    .copper-lines {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 2mm;
+      width: 75mm;
+      height: 34mm;
+      transform: skewX(-8deg);
+    }
+    .copper-lines i { border-radius: 4mm; background: linear-gradient(90deg, #71351f, #e6a06c, #8a3f24); }
+    .timeline { position: relative; margin-top: 7mm; padding-left: 18mm; }
+    .timeline::before { content: ""; position: absolute; left: 6mm; top: 3mm; bottom: 3mm; width: .7mm; background: #667d4a; }
+    .event { position: relative; margin-bottom: 8mm; }
+    .event::before {
+      content: "";
+      position: absolute;
+      left: -15.7mm;
+      top: 1mm;
+      width: 8mm;
+      height: 8mm;
+      border-radius: 50%;
+      background: #667d4a;
+      border: 1.8mm solid #eef2e8;
+    }
+    .event strong { display: block; margin-bottom: 1.5mm; color: #667d4a; font-size: 16pt; }
+    .person { margin-bottom: 6mm; border-left: 1.8mm solid #667d4a; padding: 1mm 0 1mm 5mm; }
+    .person .role { margin: -1mm 0 2mm; color: #a85d37; font-size: 9pt; font-weight: 700; text-transform: uppercase; }
+    ul { margin: 0; padding-left: 5mm; }
+    li { margin-bottom: 2mm; font-size: 9.7pt; line-height: 1.4; }
+    .value { min-height: 42mm; }
+    .value strong { display: block; margin-bottom: 2mm; color: #667d4a; font-size: 12pt; }
+    .partners {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5mm;
+      margin-top: 7mm;
+    }
+    .partner {
+      display: grid;
+      place-items: center;
+      height: 38mm;
+      border: .35mm solid #d9dfda;
+      border-radius: 2mm;
+      background: #fff;
+    }
+    .partner img { width: 42mm; height: 26mm; object-fit: contain; }
+    .impact {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5mm;
+      margin: 8mm 0;
+    }
+    .impact .card { min-height: 48mm; background: #f1f5ed; }
+    .product { display: flex; gap: 4mm; align-items: flex-start; margin-bottom: 5mm; }
+    .product::before {
+      content: "";
+      flex: 0 0 10mm;
+      height: 10mm;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #f2bd91, #a64e2d 65%, #63301f);
+    }
+    .product p { margin: 0; font-size: 9.5pt; }
+    .closing {
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: #fff;
+      background: linear-gradient(145deg, #17231a, #245d3b);
+    }
+    .closing .inner { max-width: 150mm; }
+    .closing h2 { font-size: 31pt; }
+    .closing p { color: #dbe7dd; font-size: 14pt; }
+    .contact {
+      display: inline-block;
+      margin-top: 12mm;
+      border: .4mm solid rgba(255,255,255,.4);
+      border-radius: 2mm;
+      padding: 6mm 10mm;
+      font-size: 12pt;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <section class="page cover" id="page-1">
+    <div class="cover-main">
+      <div class="brand">G-<span>ROD</span></div>
+      <p class="kicker">Brochure institutionnelle</p>
+      <h1>Le cuivre recyclé pour une transition énergétique durable</h1>
+      <p class="lead">Une ambition industrielle marocaine au service des marchés locaux et internationaux.</p>
+    </div>
+    <div class="cover-bottom">
+      <div><strong>Morocco Copper Foundry</strong><span>Cuivre • Industrie • Économie circulaire</span></div>
+      <div class="copper-lines"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+  </section>
+
+  <section class="page" id="page-2">
+    <div class="running"><span>G-ROD</span><span>Contexte du projet</span></div>
+    <div class="content">
+      <p class="kicker">Introduction</p>
+      <h2>Valoriser les métaux non ferreux et soutenir une industrie durable</h2>
+      <div class="rule"></div>
+      <p class="lead">Le projet Morocco Copper Foundry (MCF) répond à deux enjeux majeurs : la valorisation des métaux non ferreux, en particulier le cuivre, et la transition vers une industrie durable.</p>
+      <div class="grid-2">
+        <div>
+          <p>Créée en 2020 pour exploiter le potentiel des métaux usagés au Maroc, MCF vise à transformer le cuivre recyclable en produits industriels à faible empreinte carbone. Cette approche participe au développement de l’économie circulaire et à la réduction de la dépendance aux importations.</p>
+          <p>Le cuivre recyclé est une ressource stratégique pour l’électrification, les énergies renouvelables, les infrastructures et la mobilité. Le projet entend répondre à cette demande avec une production locale plus responsable.</p>
+        </div>
+        <div>
+          <div class="card"><span class="number">2020</span><h3>Création de MCF</h3><p>Lancement du projet industriel à Youssoufia avec une orientation claire vers la valorisation du cuivre recyclé.</p></div>
+          <div class="card" style="margin-top:5mm"><span class="number">68 M MAD</span><h3>Investissement initial présenté</h3><p>Un investissement destiné à installer une unité moderne et à structurer une filière industrielle compétitive.</p></div>
+        </div>
+      </div>
+      <div class="band"><p><strong>Notre cap :</strong> conjuguer performance industrielle, innovation, responsabilité environnementale et création de valeur au Maroc.</p></div>
+    </div>
+    <div class="footer"><span>Brochure institutionnelle</span><span>2</span></div>
+  </section>
+
+  <section class="page" id="page-3">
+    <div class="running"><span>G-ROD</span><span>À propos</span></div>
+    <div class="content">
+      <p class="kicker">Qui sommes-nous ?</p>
+      <h2>Morocco Copper Foundry</h2>
+      <div class="rule"></div>
+      <p class="lead">Une entreprise marocaine spécialisée dans la valorisation des métaux non ferreux, avec un positionnement centré sur le cuivre recyclé à faible empreinte carbone.</p>
+      <div class="grid-3" style="margin:10mm 0">
+        <div class="card"><span class="number">01</span><h3>Industrie</h3><p>Des infrastructures modernes et une organisation adaptée aux exigences des marchés industriels.</p></div>
+        <div class="card"><span class="number">02</span><h3>Durabilité</h3><p>Une production fondée sur l’économie circulaire et la réduction de l’impact environnemental.</p></div>
+        <div class="card"><span class="number">03</span><h3>Innovation</h3><p>Une recherche continue d’efficacité, de qualité et de solutions adaptées aux clients.</p></div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <h3>Notre ambition</h3>
+          <p>Devenir un acteur africain de référence dans le cuivre recyclé en fournissant des solutions respectueuses de l’environnement aux industries locales et internationales.</p>
+        </div>
+        <div>
+          <h3>Notre engagement</h3>
+          <p>Répondre aux besoins croissants du marché tout en contribuant au développement économique, social et environnemental.</p>
+        </div>
+      </div>
+      <div class="band" style="margin-top:18mm">
+        <p style="font-size:15pt;line-height:1.45">« Transformer une ressource recyclable en levier industriel durable, compétitif et créateur de valeur. »</p>
+      </div>
+    </div>
+    <div class="footer"><span>Brochure institutionnelle</span><span>3</span></div>
+  </section>
+
+  <section class="page" id="page-4">
+    <div class="running"><span>G-ROD</span><span>Notre histoire</span></div>
+    <div class="content">
+      <p class="kicker">Quelques dates</p>
+      <h2>Une vision industrielle construite dans le temps</h2>
+      <div class="rule"></div>
+      <div class="timeline">
+        <div class="event"><strong>2016</strong><p>Signature d’un contrat de performance entre l’État et la FIMME afin de développer un écosystème national de valorisation des métaux non ferreux et de soutenir l’émergence d’industries locales innovantes.</p></div>
+        <div class="event"><strong>2020</strong><p>Fondation de Morocco Copper Foundry par M. Abdelmajid Kaddouri, en partenariat avec le groupe OCP. Implantation d’une unité à Youssoufia sur un terrain présenté à 15 042 m², avec un investissement initial annoncé de 68 millions MAD.</p></div>
+        <div class="event"><strong>2025</strong><p>Étape de montée en production : lancement présenté de la production d’anodes en cuivre recyclé et mise en service envisagée d’une ligne de fil machine en cuivre de 8 mm.</p></div>
+        <div class="event"><strong>2028</strong><p>Objectif présenté d’extension de la capacité de production à 25 000 tonnes afin d’accompagner la demande croissante des marchés africains et de la transition énergétique.</p></div>
+      </div>
+      <div class="band"><p>Les jalons futurs correspondent aux objectifs et projections présentés dans le document institutionnel du projet.</p></div>
+    </div>
+    <div class="footer"><span>Brochure institutionnelle</span><span>4</span></div>
+  </section>
+
+  <section class="page" id="page-5">
+    <div class="running"><span>G-ROD</span><span>Équipe dirigeante</span></div>
+    <div class="content">
+      <p class="kicker">L’énergie de l’unité</p>
+      <h2>Une équipe aux compétences complémentaires</h2>
+      <div class="rule"></div>
+      <div class="person">
+        <h3>M. Abdelmajid Kaddouri</h3>
+        <p class="role">Fondateur et directeur stratégique</p>
+        <ul><li>Ingénieur de l’École des Mines de Rabat et MBA de HEC Montréal.</li><li>Plus de 30 ans d’expérience dans la métallurgie et les métaux non ferreux.</li><li>Supervision de la stratégie, des opérations industrielles et des activités commerciales.</li></ul>
+      </div>
+      <div class="person">
+        <h3>M. Lahsen Badih</h3>
+        <p class="role">Gérant et responsable des activités support</p>
+        <ul><li>Master en finance et consulting.</li><li>Expérience dans le secteur bancaire et le conseil.</li><li>Gestion des fonctions administratives, financières et logistiques.</li></ul>
+      </div>
+      <div class="person">
+        <h3>M. Vasantha Alva</h3>
+        <p class="role">Responsable production et maintenance</p>
+        <ul><li>Ingénieur en métallurgie des métaux.</li><li>Expérience industrielle dans la valorisation des métaux et les entreprises indiennes du secteur.</li><li>Supervision de la production et de la maintenance des installations.</li></ul>
+      </div>
+      <div class="band"><p>L’alliance de la vision stratégique, de la gestion et de l’expertise métallurgique structure le développement opérationnel de G-ROD.</p></div>
+    </div>
+    <div class="footer"><span>Brochure institutionnelle</span><span>5</span></div>
+  </section>
+
+  <section class="page" id="page-6">
+    <div class="running"><span>G-ROD</span><span>Nos valeurs</span></div>
+    <div class="content">
+      <p class="kicker">Ce qui guide notre projet</p>
+      <h2>Des principes au service d’une croissance responsable</h2>
+      <div class="rule"></div>
+      <div class="grid-3">
+        <div class="card value"><strong>Intégrité</strong><p>Agir avec honnêteté, éthique et transparence dans nos décisions et nos relations.</p></div>
+        <div class="card value"><strong>Innovation</strong><p>Promouvoir des solutions nouvelles pour répondre aux défis de demain et maintenir notre compétitivité.</p></div>
+        <div class="card value"><strong>Durabilité</strong><p>Réduire notre empreinte écologique et favoriser des pratiques respectueuses de l’environnement.</p></div>
+        <div class="card value"><strong>Excellence</strong><p>Rechercher l’efficacité opérationnelle et la qualité dans tout ce que nous entreprenons.</p></div>
+        <div class="card value"><strong>Engagement social</strong><p>Contribuer au développement économique et humain de notre région et de nos parties prenantes.</p></div>
+        <div class="card value"><strong>Collaboration</strong><p>Construire des relations solides fondées sur la confiance, la transparence et le respect mutuel.</p></div>
+      </div>
+      <div class="band" style="margin-top:12mm"><p>Ces valeurs orientent nos choix industriels, nos relations commerciales et notre contribution à l’écosystème marocain.</p></div>
+    </div>
+    <div class="footer"><span>Brochure institutionnelle</span><span>6</span></div>
+  </section>
+
+  <section class="page" id="page-7">
+    <div class="running"><span>G-ROD</span><span>Partenaires et marchés</span></div>
+    <div class="content">
+      <p class="kicker">Écosystème</p>
+      <h2>Clients potentiels et partenaires stratégiques</h2>
+      <div class="rule"></div>
+      <div class="grid-2">
+        <div>
+          <h3>Marché local</h3>
+          <ul><li>Entreprises importatrices de fil de cuivre 8 mm.</li><li>Acteurs des secteurs du BTP et des infrastructures.</li><li>Industries électriques, énergétiques et techniques.</li></ul>
+        </div>
+        <div>
+          <h3>Marchés internationaux</h3>
+          <ul><li>Europe, notamment la Suisse et l’Italie.</li><li>Afrique et pays de la CEDEAO.</li><li>Clients recherchant des solutions en cuivre recyclé à faible empreinte carbone.</li></ul>
+        </div>
+      </div>
+      <div class="partners">
+        <div class="partner"><img src="../partners/ocp.svg" alt="OCP"></div>
+        <div class="partner"><img src="../partners/tamwilcom.svg" alt="Tamwilcom"></div>
+        <div class="partner"><img src="../partners/anapec.svg" alt="ANAPEC"></div>
+        <div class="partner"><img src="../partners/maroc-pme.svg" alt="Maroc PME"></div>
+        <div class="partner"><img src="../partners/cfye.svg" alt="CFYE"></div>
+        <div class="partner"><strong style="color:#667d4a;font-size:16pt">FIMME</strong></div>
+      </div>
+      <div class="band"><p>Les partenaires présentés contribuent, selon leur rôle, à l’ancrage industriel, au financement, à l’emploi, à la compétitivité et au développement de l’écosystème.</p></div>
+    </div>
+    <div class="footer"><span>Brochure institutionnelle</span><span>7</span></div>
+  </section>
+
+  <section class="page" id="page-8">
+    <div class="running"><span>G-ROD</span><span>Green copper</span></div>
+    <div class="content">
+      <p class="kicker">Transition énergétique</p>
+      <h2>Réduire l’empreinte carbone de l’industrie</h2>
+      <div class="rule"></div>
+      <p class="lead">G-ROD place le cuivre recyclé au cœur d’un modèle industriel associant circularité des matières, efficacité énergétique et proximité des marchés.</p>
+      <div class="impact">
+        <div class="card"><span class="number">Circularité</span><p>Transformer des déchets métalliques en ressources utiles et limiter le recours aux matières premières vierges.</p></div>
+        <div class="card"><span class="number">Énergie</span><p>Développer des procédés plus efficaces et accompagner l’intégration progressive d’énergies renouvelables.</p></div>
+        <div class="card"><span class="number">Proximité</span><p>Produire au Maroc pour réduire certaines distances logistiques et soutenir l’écosystème industriel national.</p></div>
+      </div>
+      <h3>Une matière essentielle aux infrastructures de demain</h3>
+      <p>Le cuivre est indispensable aux réseaux électriques, aux énergies solaire et éolienne, à l’électrification, aux câbles, aux équipements industriels et aux infrastructures énergétiques modernes.</p>
+      <div class="band"><p><strong>Principe directeur :</strong> produire une matière industrielle performante tout en recherchant une empreinte environnementale plus faible.</p></div>
+    </div>
+    <div class="footer"><span>Brochure institutionnelle</span><span>8</span></div>
+  </section>
+
+  <section class="page" id="page-9">
+    <div class="running"><span>G-ROD</span><span>Solutions cuivre</span></div>
+    <div class="content">
+      <p class="kicker">Gamme de produits</p>
+      <h2>Des solutions pour les applications industrielles</h2>
+      <div class="rule"></div>
+      <div class="grid-2">
+        <div>
+          <div class="product"><div><h3>Copper Rod</h3><p>Barres rondes en cuivre haute pureté pour les applications électriques et industrielles.</p></div></div>
+          <div class="product"><div><h3>Copper Anodes</h3><p>Anodes destinées aux procédés industriels, électrolytiques et métallurgiques.</p></div></div>
+          <div class="product"><div><h3>Copper Bus Bars</h3><p>Barres conductrices pour tableaux, installations électriques et systèmes énergétiques.</p></div></div>
+          <div class="product"><div><h3>Copper Flat Bars</h3><p>Méplats en cuivre adaptés aux applications électriques et techniques.</p></div></div>
+        </div>
+        <div>
+          <div class="product"><div><h3>Copper Tubes</h3><p>Tubes pour la plomberie, la climatisation et les installations industrielles.</p></div></div>
+          <div class="product"><div><h3>Copper Sheets</h3><p>Feuilles et plaques pour la fabrication, le revêtement et l’électricité.</p></div></div>
+          <div class="product"><div><h3>Copper Wire</h3><p>Fil haute conductivité pour câbles, bobinages et connexions électriques.</p></div></div>
+          <div class="product"><div><h3>Custom Copper Parts</h3><p>Pièces sur mesure fabriquées selon les besoins et plans techniques des clients.</p></div></div>
+        </div>
+      </div>
+      <div class="band" style="margin-top:10mm"><p>Dimensions, pureté, normes, conditionnement et finitions sont à confirmer selon le produit, le lot et la demande de devis.</p></div>
+    </div>
+    <div class="footer"><span>Brochure institutionnelle</span><span>9</span></div>
+  </section>
+
+  <section class="page closing" id="page-10">
+    <div class="inner">
+      <div class="brand">G-<span>ROD</span></div>
+      <p class="kicker" style="color:#d38a5f">Construisons l’industrie circulaire</p>
+      <h2>Le cuivre recyclé pour une transition énergétique durable</h2>
+      <p>Catalogue technique, demandes de devis et documents disponibles sur la plateforme G-ROD.</p>
+      <div class="contact">contact@africarod.com</div>
+    </div>
+    <div class="footer" style="color:#c8d4ca"><span>Morocco Copper Foundry</span><span>10</span></div>
+  </section>
+</body>
+</html>

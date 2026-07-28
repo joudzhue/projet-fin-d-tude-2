@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-labelledby="title">
+  <title id="title">OCP</title>
+  <rect width="320" height="180" fill="#fff"/>
+  <g transform="translate(160 68)">
+    <path d="M0-45 12-15 40-30 22-5 50 8 18 9 26 40 0 18-26 40-18 9-50 8-22-5-40-30-12-15Z" fill="#55b948"/>
+    <circle r="55" fill="none" stroke="#77c043" stroke-width="5" stroke-dasharray="145 35" transform="rotate(-78)"/>
+  </g>
+  <text x="160" y="157" text-anchor="middle" font-family="Arial, sans-serif" font-size="52" font-weight="800" fill="#078542">OCP</text>
+</svg>

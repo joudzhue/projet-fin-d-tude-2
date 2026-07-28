@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flow chart production MCF</title>
+    <style>
+      :root {
+        color: #15241b;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        background: #f4f6f1;
+      }
+
+      main {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 36px;
+      }
+
+      .sheet {
+        border: 1px solid #d4dbd0;
+        border-radius: 18px;
+        padding: 34px;
+        background: #ffffff;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        color: #0e2438;
+        font-size: 38px;
+        text-align: center;
+      }
+
+      .subtitle {
+        margin: 0 0 30px;
+        color: #617064;
+        text-align: center;
+        font-weight: 700;
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .step,
+      .legend,
+      .pillars {
+        border: 1px solid #d7dfd4;
+        border-radius: 12px;
+        padding: 18px;
+        background: #fbfcf9;
+      }
+
+      .step strong {
+        display: block;
+        margin-bottom: 8px;
+        color: #0f6840;
+        font-size: 18px;
+      }
+
+      .step span {
+        display: block;
+        color: #5d6b60;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .wide {
+        grid-column: span 2;
+      }
+
+      .full {
+        grid-column: 1 / -1;
+      }
+
+      .route {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .route div {
+        border-radius: 10px;
+        padding: 14px;
+        background: #eef6ef;
+        font-weight: 800;
+      }
+
+      h2 {
+        margin: 0 0 14px;
+        color: #0e2438;
+        font-size: 22px;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 20px;
+        color: #4d5d52;
+        line-height: 1.7;
+      }
+
+      .pillars-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .pillar {
+        border-radius: 10px;
+        padding: 14px;
+        background: #10251a;
+        color: #ffffff;
+      }
+
+      .pillar strong {
+        display: block;
+        margin-bottom: 6px;
+        color: #f0b27a;
+      }
+
+      footer {
+        margin-top: 26px;
+        color: #5d6b60;
+        font-size: 13px;
+        text-align: center;
+      }
+
+      @media print {
+        body {
+          background: #ffffff;
+        }
+
+        main {
+          padding: 0;
+        }
+
+        .sheet {
+          border: 0;
+          border-radius: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="sheet">
+        <h1>Flow chart production MCF</h1>
+        <p class="subtitle">Morocco Copper Foundry - Excellence in Copper</p>
+
+        <div class="flow">
+          <article class="step">
+            <strong>1. Reception</strong>
+            <span>Reception des matieres premieres, dechargement et orientation vers les zones de controle.</span>
+          </article>
+          <article class="step">
+            <strong>2. Tri ferraille</strong>
+            <span>Tri local et import, separation des lots et preparation avant pesee.</span>
+          </article>
+          <article class="step">
+            <strong>3. Pesee</strong>
+            <span>Controle par balance 5 tonnes, pont bascule et systeme serveur pour assurer la tracabilite.</span>
+          </article>
+          <article class="step">
+            <strong>4. Laboratoire</strong>
+            <span>Analyses qualite et controle de conformite avant integration en production.</span>
+          </article>
+
+          <article class="step wide">
+            <strong>5. Stock matiere premiere</strong>
+            <span>Organisation des stocks M.P.L et M.P.I pour alimenter le four selon les besoins de production.</span>
+          </article>
+          <article class="step wide">
+            <strong>6. Four E.T.R.F</strong>
+            <span>Fusion et raffinage dans le Electrical Tilting Refining Furnace alimente au gaz.</span>
+          </article>
+
+          <article class="step full">
+            <strong>7. Sortie production</strong>
+            <span>Orientation selon la purete et la destination industrielle.</span>
+            <div class="route">
+              <div>V &gt; 99,9%</div>
+              <div>O +/- 99%</div>
+              <div>R &lt; 99%</div>
+            </div>
+          </article>
+
+          <article class="step">
+            <strong>Anodes</strong>
+            <span>Production d'anodes cuivre selon exigences clients.</span>
+          </article>
+          <article class="step">
+            <strong>Up Cast Machine</strong>
+            <span>Transformation vers fil cuivre 16 mm.</span>
+          </article>
+          <article class="step">
+            <strong>Conform Machine</strong>
+            <span>Transformation et controle vers fil cuivre 8 mm.</span>
+          </article>
+          <article class="step">
+            <strong>Stock P.F / Export</strong>
+            <span>Stockage produit fini, preparation expedition et export.</span>
+          </article>
+
+          <section class="legend wide">
+            <h2>Legende</h2>
+            <ul>
+              <li>P.F : produit fini</li>
+              <li>B.5t : balance 5 tonnes</li>
+              <li>M.P.L : matiere premiere local</li>
+              <li>M.P.I : matiere premiere import</li>
+              <li>E.T.R.F : Electrical Tilting Refining Furnace</li>
+              <li>P.G : poste de garde</li>
+              <li>P.P.B : peseur pont bascule</li>
+              <li>P.B : pont bascule</li>
+            </ul>
+          </section>
+
+          <section class="pillars wide">
+            <h2>Points de controle</h2>
+            <div class="pillars-grid">
+              <div class="pillar"><strong>Securite</strong>Processus controle</div>
+              <div class="pillar"><strong>Tracabilite</strong>Suivi de chaque etape</div>
+              <div class="pillar"><strong>Qualite</strong>Analyses a chaque etape</div>
+              <div class="pillar"><strong>Performance</strong>Optimisation continue</div>
+            </div>
+          </section>
+        </div>
+
+        <footer>Document technique telechargeable - MCF / G-ROD</footer>
+      </section>
+    </main>
+  </body>
+</html>
