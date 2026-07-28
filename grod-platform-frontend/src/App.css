@@ -2189,6 +2189,68 @@ button:disabled {
   margin-top: 24px;
 }
 
+.product-detail-page {
+  padding-top: 28px;
+}
+
+.product-detail-hero {
+  width: min(1160px, calc(100% - 36px));
+  min-height: 420px;
+  margin: 0 auto 18px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 18px 46px rgba(17, 24, 20, 0.1);
+}
+
+.product-detail-media,
+.product-detail-media img {
+  min-height: 420px;
+}
+
+.product-detail-copy {
+  background: #ffffff;
+  color: #111814;
+}
+
+.product-detail-copy h2,
+.product-detail-copy .eyebrow {
+  color: #111814;
+}
+
+.product-detail-copy p {
+  color: #46554b;
+}
+
+.product-detail-copy .secondary-link {
+  color: #17633b;
+  border-color: rgba(23, 99, 59, 0.26);
+  background: #ffffff;
+}
+
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 20px;
+  border-bottom: 1px solid rgba(22, 32, 24, 0.12);
+  padding-bottom: 12px;
+}
+
+.admin-tabs button {
+  min-height: 40px;
+  border: 1px solid rgba(23, 99, 59, 0.24);
+  border-radius: 6px;
+  padding: 0 14px;
+  color: #17633b;
+  background: #ffffff;
+}
+
+.admin-tabs button.active {
+  color: #ffffff;
+  background: #17633b;
+  border-color: #17633b;
+}
+
 @media (max-width: 760px) {
   .admin-panel,
   .client-detail-panel,

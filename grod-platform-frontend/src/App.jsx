@@ -809,6 +809,7 @@ function AdminDashboard({ t, token, onLogout }) {
   const [editingDocumentId, setEditingDocumentId] = useState(null)
   const [selectedClient, setSelectedClient] = useState('')
   const [search, setSearch] = useState('')
+  const [adminTab, setAdminTab] = useState('demandes')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -1186,7 +1187,30 @@ function AdminDashboard({ t, token, onLogout }) {
       {error ? <p className="error-text">{error}</p> : null}
       {success ? <p className="success-text">{success}</p> : null}
 
-      <section className="admin-panel">
+      <nav className="admin-tabs">
+        <button className={adminTab === 'demandes' ? 'active' : ''} onClick={() => setAdminTab('demandes')}>
+          {t.totalRequests}
+        </button>
+        <button className={adminTab === 'clients' ? 'active' : ''} onClick={() => setAdminTab('clients')}>
+          {t.clientHistory}
+        </button>
+        <button className={adminTab === 'documents' ? 'active' : ''} onClick={() => setAdminTab('documents')}>
+          {t.documentRequests}
+        </button>
+        <button className={adminTab === 'produits' ? 'active' : ''} onClick={() => setAdminTab('produits')}>
+          {t.products}
+        </button>
+        <button className={adminTab === 'ressources' ? 'active' : ''} onClick={() => setAdminTab('ressources')}>
+          {t.resourcesEyebrow}
+        </button>
+        <button className={adminTab === 'settings' ? 'active' : ''} onClick={() => setAdminTab('settings')}>
+          Notifications
+        </button>
+      </nav>
+
+      {adminTab === 'demandes' ? (
+      <>
+        <section className="admin-panel">
         <div>
           <p className="eyebrow">{t.adminSearch}</p>
           <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t.adminSearchPlaceholder} />
@@ -1280,7 +1304,10 @@ function AdminDashboard({ t, token, onLogout }) {
           </tbody>
         </table>
       </div>
+      </>
+      ) : null}
 
+      {adminTab === 'documents' ? (
       <section className="product-admin-form">
         <p className="eyebrow">{t.resourcesEyebrow}</p>
         <h3>{t.documentRequests}</h3>
@@ -1319,7 +1346,9 @@ function AdminDashboard({ t, token, onLogout }) {
           </table>
         </div>
       </section>
+      ) : null}
 
+      {adminTab === 'produits' ? (
       <section className="product-admin-form">
         <p className="eyebrow">{t.catalogueTitle}</p>
         <h3>{editingProductId ? t.editProduct : t.addProduct}</h3>
@@ -1399,7 +1428,9 @@ function AdminDashboard({ t, token, onLogout }) {
           ))}
         </div>
       </section>
+      ) : null}
 
+      {adminTab === 'ressources' ? (
       <section className="product-admin-form">
         <p className="eyebrow">{t.resourcesEyebrow}</p>
         <h3>{editingDocumentId ? t.editDocument : t.addDocument}</h3>
@@ -1481,7 +1512,9 @@ function AdminDashboard({ t, token, onLogout }) {
           ))}
         </div>
       </section>
+      ) : null}
 
+      {adminTab === 'settings' ? (
       <section className="product-admin-form">
         <p className="eyebrow">Notifications</p>
         <h3>{t.notificationSettings}</h3>
@@ -1504,6 +1537,29 @@ function AdminDashboard({ t, token, onLogout }) {
         </form>
         <p className="form-status">{t.notificationHelp}</p>
       </section>
+      ) : null}
+
+      {adminTab === 'clients' ? (
+        <section className="clients-grid">
+          {clients.map((client) => (
+            <article className="client-card" key={client.key}>
+              <div className="client-card-heading">
+                <div>
+                  <h3>{client.name}</h3>
+                  <span>{client.email}</span>
+                  <span>{client.phone}</span>
+                </div>
+                <strong>{client.total}</strong>
+              </div>
+              <div className="client-stats-row">
+                {client.products.map((product) => (
+                  <span key={product}>{product}</span>
+                ))}
+              </div>
+            </article>
+          ))}
+        </section>
+      ) : null}
     </main>
   )
 }
