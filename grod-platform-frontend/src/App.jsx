@@ -420,10 +420,14 @@ function ProductDetailPage({ t }) {
 
       try {
         if (/^\d+$/.test(productId)) {
-          const response = await fetch(`${API_URL}/produits/${productId}`)
+          const response = await fetch(`${API_URL}/produits/actifs`)
           if (response.ok) {
-            setProduct(normalizeProduct(await response.json()))
-            return
+            const activeProducts = await response.json()
+            const backendProduct = activeProducts.find((item) => String(item.id) === String(productId))
+            if (backendProduct) {
+              setProduct(normalizeProduct(backendProduct))
+              return
+            }
           }
         }
         setProduct(normalizeProduct(localProduct || officialProducts[0]))
