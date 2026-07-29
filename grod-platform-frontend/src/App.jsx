@@ -974,7 +974,10 @@ function AdminDashboard({ t, token, onLogout }) {
       headers: { Authorization: `Bearer ${token}` },
       body: data,
     })
-    if (!response.ok) throw new Error('Upload failed')
+    if (!response.ok) {
+      const message = await response.text()
+      throw new Error(message || 'Upload failed')
+    }
     return response.json()
   }
 
@@ -986,9 +989,47 @@ function AdminDashboard({ t, token, onLogout }) {
     try {
       const result = await uploadFile(file, 'images')
       setProductForm((current) => ({ ...current, imageUrl: result.imageUrl }))
-      setSuccess(t.uploadSuccess)
+      setSuccess(`${t.uploadSuccess} ${t.clickSaveProduct}`)
     } catch {
       setError(t.uploadError)
+    }
+  }
+
+  async function uploadAndSaveProductImage(product, event) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    setSuccess('')
+    setError('')
+    try {
+      const result = await uploadFile(file, 'images')
+      const payload = {
+        nom: product.nom || '',
+        description: product.description || '',
+        categorie: product.categorie || '',
+        imageUrl: result.imageUrl,
+        applications: product.applications || '',
+        dimensions: product.dimensions || '',
+        purete: product.purete || '',
+        normes: product.normes || '',
+        conditionnement: product.conditionnement || '',
+        actif: Boolean(product.actif),
+      }
+      const response = await fetch(`${API_URL}/produits/${product.id}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+      if (!response.ok) throw new Error('Product image save failed')
+      const saved = await response.json()
+      setProducts((current) => current.map((item) => (item.id === saved.id ? saved : item)))
+      setSuccess(t.productImageSaved)
+    } catch {
+      setError(t.productImageSaveError)
+    } finally {
+      event.target.value = ''
     }
   }
 
@@ -1398,9 +1439,14 @@ function AdminDashboard({ t, token, onLogout }) {
         <div className="products-admin-table">
           {products.map((product) => (
             <div key={product.id || product.nom}>
+              <img className="admin-product-thumb" src={product.imageUrl || normalizeProduct(product).imageUrl} alt={product.nom} />
               <strong>{product.nom}</strong>
               <span>{product.actif ? t.active : 'Inactif'}</span>
               <span>{product.categorie}</span>
+              <label className="inline-upload">
+                {t.uploadImage}
+                <input type="file" accept="image/*" onChange={(event) => uploadAndSaveProductImage(product, event)} />
+              </label>
               <button
                 type="button"
                 onClick={() => {
@@ -1916,6 +1962,10 @@ const dictionary = {
     saveChanges: 'Sauvegarder',
     uploadSuccess: 'Upload termine.',
     uploadError: 'Upload impossible.',
+    uploadImage: 'Uploader image',
+    clickSaveProduct: 'Cliquez sur Sauvegarder pour appliquer au produit.',
+    productImageSaved: 'Image produit sauvegardee.',
+    productImageSaveError: 'Impossible de sauvegarder l image du produit.',
     productSaved: 'Produit sauvegarde.',
     productSaveError: 'Impossible de sauvegarder le produit.',
     confirmDeleteProduct: 'Supprimer ce produit ?',
@@ -2069,6 +2119,10 @@ const dictionary = {
     saveChanges: 'Save',
     uploadSuccess: 'Upload complete.',
     uploadError: 'Upload failed.',
+    uploadImage: 'Upload image',
+    clickSaveProduct: 'Click Save to apply it to the product.',
+    productImageSaved: 'Product image saved.',
+    productImageSaveError: 'Unable to save product image.',
     productSaved: 'Product saved.',
     productSaveError: 'Unable to save product.',
     confirmDeleteProduct: 'Delete this product?',
