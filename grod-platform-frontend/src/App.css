@@ -2251,6 +2251,116 @@ button:disabled {
   border-color: #17633b;
 }
 
+.product-admin-form {
+  display: block;
+  border: 1px solid rgba(22, 32, 24, 0.12);
+  border-radius: 8px;
+  padding: 22px;
+  background: #ffffff;
+  box-shadow: 0 18px 46px rgba(17, 24, 20, 0.07);
+}
+
+.product-admin-form > .eyebrow,
+.product-admin-form > h3 {
+  margin-bottom: 14px;
+}
+
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 14px;
+  margin: 18px 0 26px;
+}
+
+.admin-form-grid label,
+.admin-panel label {
+  min-width: 0;
+}
+
+.admin-form-grid input,
+.admin-form-grid select,
+.admin-form-grid textarea,
+.admin-panel input,
+.admin-panel select {
+  width: 100%;
+}
+
+.admin-form-grid label:has(textarea) {
+  grid-column: span 3;
+}
+
+.admin-form-grid .form-actions {
+  grid-column: 1 / -1;
+}
+
+.products-admin-table {
+  display: grid;
+  gap: 8px;
+}
+
+.products-admin-table div {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.2fr) 90px minmax(150px, 0.8fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #e2e9e2;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fbfcf9;
+}
+
+.products-admin-table strong,
+.products-admin-table span {
+  min-width: 0;
+}
+
+.products-admin-table button {
+  min-height: 36px;
+  padding: 0 10px;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+  vertical-align: top;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.assistant-chat {
+  z-index: 50;
+}
+
+@media (max-width: 980px) {
+  .admin-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-form-grid label:has(textarea) {
+    grid-column: span 2;
+  }
+
+  .products-admin-table div {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .admin-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-form-grid label:has(textarea) {
+    grid-column: auto;
+  }
+}
+
 @media (max-width: 760px) {
   .admin-panel,
   .client-detail-panel,
