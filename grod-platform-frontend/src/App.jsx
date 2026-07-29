@@ -410,24 +410,63 @@ function ProductCard({ product, t }) {
 
 function ProductDetailPage({ t }) {
   const { productId } = useParams()
-  const product = officialProducts.find((item) => item.id === productId || slugify(item.nom) === productId) || officialProducts[0]
+  const [product, setProduct] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadProduct() {
+      setLoading(true)
+      const localProduct = officialProducts.find((item) => item.id === productId || slugify(item.nom) === productId)
+
+      try {
+        if (/^\d+$/.test(productId)) {
+          const response = await fetch(`${API_URL}/produits/${productId}`)
+          if (response.ok) {
+            setProduct(normalizeProduct(await response.json()))
+            return
+          }
+        }
+        setProduct(normalizeProduct(localProduct || officialProducts[0]))
+      } catch {
+        setProduct(normalizeProduct(localProduct || officialProducts[0]))
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadProduct()
+  }, [productId])
+
+  if (loading || !product) {
+    return (
+      <main className="page-section">
+        <p>{t.loading}</p>
+      </main>
+    )
+  }
 
   return (
     <main className="product-detail-page">
+      <section className="product-detail-heading">
+        <NavLink className="text-link" to="/catalogue">{t.backCatalogue}</NavLink>
+        <p className="eyebrow">{product.categorie}</p>
+        <h2>{product.nom}</h2>
+      </section>
+
       <section className="product-detail-hero">
         <div className="product-detail-media">
           <img src={product.imageUrl} alt={product.nom} />
         </div>
         <div className="product-detail-copy">
-          <p className="eyebrow">{product.categorie}</p>
-          <h2>{product.nom}</h2>
           <p>{product.description}</p>
+          <div className="tag-list">
+            {product.applications.map((application) => (
+              <span key={application}>{application}</span>
+            ))}
+          </div>
           <div className="hero-actions">
             <NavLink className="primary-link" to={`/devis?produit=${encodeURIComponent(product.nom)}`}>
               {t.requestQuote}
-            </NavLink>
-            <NavLink className="secondary-link" to="/catalogue">
-              {t.backCatalogue}
             </NavLink>
           </div>
         </div>
@@ -1726,11 +1765,22 @@ function AssistantChat({ t, language }) {
 
 function normalizeProduct(product) {
   const fallback = officialProducts.find((item) => item.nom === product.nom) || officialProducts[0]
+  const applications = Array.isArray(product.applications)
+    ? product.applications
+    : String(product.applications || fallback.applications.join(','))
+        .split(',')
+        .map((application) => application.trim())
+        .filter(Boolean)
+
   return {
     ...fallback,
     ...product,
-    applications: product.applications || fallback.applications || [],
+    applications,
     imageUrl: product.imageUrl || fallback.imageUrl,
+    dimensions: product.dimensions || fallback.dimensions,
+    purete: product.purete || fallback.purete,
+    normes: product.normes || fallback.normes,
+    conditionnement: product.conditionnement || fallback.conditionnement,
   }
 }
 
