@@ -1392,7 +1392,8 @@ function AdminDashboard({ t, token, onLogout }) {
       {adminTab === 'produits' ? (
       <section className="product-admin-form">
         <p className="eyebrow">{t.catalogueTitle}</p>
-        <h3>{editingProductId ? t.editProduct : t.addProduct}</h3>
+        <h3>{t.addProduct}</h3>
+        {!editingProductId ? (
         <form className="admin-form-grid" onSubmit={saveProduct}>
           <Field label={t.productName} name="nom" value={productForm.nom} onChange={(event) => setProductFormValue(setProductForm, event)} required />
           <Field label="Categorie" name="categorie" value={productForm.categorie} onChange={(event) => setProductFormValue(setProductForm, event)} />
@@ -1400,7 +1401,6 @@ function AdminDashboard({ t, token, onLogout }) {
             {t.productImage}
             <input type="file" accept="image/*" onChange={uploadProductImage} />
           </label>
-          <Field label="Image URL" name="imageUrl" value={productForm.imageUrl} onChange={(event) => setProductFormValue(setProductForm, event)} />
           <label>
             Description
             <textarea name="description" rows="4" value={productForm.description} onChange={(event) => setProductFormValue(setProductForm, event)} />
@@ -1420,57 +1420,88 @@ function AdminDashboard({ t, token, onLogout }) {
           </label>
           <div className="form-actions">
             <button type="submit">{editingProductId ? t.saveChanges : t.addProduct}</button>
-            {editingProductId ? (
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => {
-                  setEditingProductId(null)
-                  setProductForm(emptyProductForm())
-                }}
-              >
-                {t.cancel}
-              </button>
-            ) : null}
           </div>
         </form>
+        ) : null}
 
         <h3>{t.productsVisible}</h3>
         <div className="products-admin-table">
           {products.map((product) => (
-            <div key={product.id || product.nom}>
-              <img className="admin-product-thumb" src={product.imageUrl || normalizeProduct(product).imageUrl} alt={product.nom} />
-              <strong>{product.nom}</strong>
-              <span>{product.actif ? t.active : 'Inactif'}</span>
-              <span>{product.categorie}</span>
-              <label className="inline-upload">
-                {t.uploadImage}
-                <input type="file" accept="image/*" onChange={(event) => uploadAndSaveProductImage(product, event)} />
-              </label>
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingProductId(product.id)
-                  setProductForm({
-                    nom: product.nom || '',
-                    description: product.description || '',
-                    categorie: product.categorie || '',
-                    imageUrl: product.imageUrl || '',
-                    applications: product.applications || '',
-                    dimensions: product.dimensions || '',
-                    purete: product.purete || '',
-                    normes: product.normes || '',
-                    conditionnement: product.conditionnement || '',
-                    actif: Boolean(product.actif),
-                  })
-                }}
-              >
-                {t.edit}
-              </button>
-              <button type="button" className="danger-button" onClick={() => deleteProduct(product.id)}>
-                {t.delete}
-              </button>
-            </div>
+            <article className="product-admin-item" key={product.id || product.nom}>
+              <div className="product-admin-row">
+                <img className="admin-product-thumb" src={product.imageUrl || normalizeProduct(product).imageUrl} alt={product.nom} />
+                <strong>{product.nom}</strong>
+                <span>{product.actif ? t.active : 'Inactif'}</span>
+                <span>{product.categorie}</span>
+                <label className="inline-upload">
+                  {t.uploadImage}
+                  <input type="file" accept="image/*" onChange={(event) => uploadAndSaveProductImage(product, event)} />
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingProductId(product.id)
+                    setProductForm({
+                      nom: product.nom || '',
+                      description: product.description || '',
+                      categorie: product.categorie || '',
+                      imageUrl: product.imageUrl || '',
+                      applications: product.applications || '',
+                      dimensions: product.dimensions || '',
+                      purete: product.purete || '',
+                      normes: product.normes || '',
+                      conditionnement: product.conditionnement || '',
+                      actif: Boolean(product.actif),
+                    })
+                  }}
+                >
+                  {t.edit}
+                </button>
+                <button type="button" className="danger-button" onClick={() => deleteProduct(product.id)}>
+                  {t.delete}
+                </button>
+              </div>
+              {editingProductId === product.id ? (
+                <form className="admin-form-grid inline-product-editor" onSubmit={saveProduct}>
+                  <Field label={t.productName} name="nom" value={productForm.nom} onChange={(event) => setProductFormValue(setProductForm, event)} required />
+                  <Field label="Categorie" name="categorie" value={productForm.categorie} onChange={(event) => setProductFormValue(setProductForm, event)} />
+                  <label>
+                    {t.productImage}
+                    <input type="file" accept="image/*" onChange={uploadProductImage} />
+                  </label>
+                  <label>
+                    Description
+                    <textarea name="description" rows="4" value={productForm.description} onChange={(event) => setProductFormValue(setProductForm, event)} />
+                  </label>
+                  <Field label="Applications" name="applications" value={productForm.applications} onChange={(event) => setProductFormValue(setProductForm, event)} />
+                  <Field label="Dimensions" name="dimensions" value={productForm.dimensions} onChange={(event) => setProductFormValue(setProductForm, event)} />
+                  <Field label="Purete" name="purete" value={productForm.purete} onChange={(event) => setProductFormValue(setProductForm, event)} />
+                  <Field label="Normes" name="normes" value={productForm.normes} onChange={(event) => setProductFormValue(setProductForm, event)} />
+                  <Field label="Conditionnement" name="conditionnement" value={productForm.conditionnement} onChange={(event) => setProductFormValue(setProductForm, event)} />
+                  <label className="toggle-control">
+                    <input
+                      type="checkbox"
+                      checked={productForm.actif}
+                      onChange={(event) => setProductForm((current) => ({ ...current, actif: event.target.checked }))}
+                    />
+                    {t.active}
+                  </label>
+                  <div className="form-actions">
+                    <button type="submit">{t.saveChanges}</button>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => {
+                        setEditingProductId(null)
+                        setProductForm(emptyProductForm())
+                      }}
+                    >
+                      {t.cancel}
+                    </button>
+                  </div>
+                </form>
+              ) : null}
+            </article>
           ))}
         </div>
       </section>

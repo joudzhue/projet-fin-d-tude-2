@@ -2298,7 +2298,7 @@ button:disabled {
   gap: 8px;
 }
 
-.products-admin-table div {
+.products-admin-table .product-admin-row {
   display: grid;
   grid-template-columns: 72px minmax(180px, 1.1fr) 90px minmax(150px, 0.8fr) auto auto auto;
   align-items: center;
@@ -2312,6 +2312,19 @@ button:disabled {
 .products-admin-table strong,
 .products-admin-table span {
   min-width: 0;
+}
+
+.product-admin-item {
+  display: grid;
+  gap: 12px;
+}
+
+.inline-product-editor {
+  margin: 0 0 10px;
+  border: 1px solid rgba(23, 99, 59, 0.16);
+  border-radius: 8px;
+  padding: 16px;
+  background: #f8fbf7;
 }
 
 .products-admin-table button {
@@ -2374,7 +2387,7 @@ button:disabled {
     grid-column: span 2;
   }
 
-  .products-admin-table div {
+  .products-admin-table .product-admin-row {
     grid-template-columns: 1fr;
   }
 }
