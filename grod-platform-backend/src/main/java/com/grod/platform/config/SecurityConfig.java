@@ -58,6 +58,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/documents-techniques/actifs").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/demandes-devis").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/demandes-documents").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/uploads/quote-documents").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/assistant/chat").permitAll()
                         .anyRequest().authenticated()
                 )

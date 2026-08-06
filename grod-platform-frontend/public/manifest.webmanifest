@@ -1,0 +1,27 @@
+{
+  "name": "G-ROD B2B Platform",
+  "short_name": "G-ROD",
+  "description": "Catalogue cuivre industriel, devis B2B, ressources techniques et visualisation 3D.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3f5f1",
+  "theme_color": "#17633b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/grod-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "fr"
+}

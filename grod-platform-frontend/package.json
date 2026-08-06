@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "generate:models": "node scripts/generate-copper-models.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -13,7 +14,8 @@
     "axios": "^1.16.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "react-router-dom": "^7.15.1"
+    "react-router-dom": "^7.15.1",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
