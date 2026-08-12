@@ -7,8 +7,75 @@ const ADMIN_TOKEN_KEY = 'grod_admin_token'
 const RECENT_PRODUCTS_KEY = 'grod_recent_products'
 const FAVORITE_PRODUCTS_KEY = 'grod_favorite_products'
 const QUOTE_DRAFT_KEY = 'grod_quote_draft'
-const CopperScene = lazy(() => import('./Copper3DScenes.jsx').then((module) => ({ default: module.CopperScene })))
 const Product3DViewer = lazy(() => import('./Copper3DScenes.jsx').then((module) => ({ default: module.Product3DViewer })))
+const PRODUCT_PLACEHOLDER_IMAGE = '/images/products/product-placeholder.svg'
+const PRODUCT_IMAGE_BASE = '/images/products'
+const productVisuals = {
+  rod: {
+    images: [
+      `${PRODUCT_IMAGE_BASE}/copper-rod-main.webp`,
+      `${PRODUCT_IMAGE_BASE}/copper-rod-detail.webp`,
+    ],
+    model3D: '/models/copper-rod.glb',
+    has3D: true,
+  },
+  anodes: {
+    images: [
+      `${PRODUCT_IMAGE_BASE}/copper-anodes-main.webp`,
+      `${PRODUCT_IMAGE_BASE}/copper-anodes-detail.webp`,
+    ],
+    model3D: '/models/copper-anodes.glb',
+    has3D: true,
+  },
+  'bus-bars': {
+    images: [
+      `${PRODUCT_IMAGE_BASE}/copper-bus-bars-main.webp`,
+      `${PRODUCT_IMAGE_BASE}/copper-bus-bars-detail.webp`,
+    ],
+    model3D: '/models/copper-bus-bars.glb',
+    has3D: true,
+  },
+  'flat-bars': {
+    images: [
+      `${PRODUCT_IMAGE_BASE}/copper-flat-bars-main.webp`,
+      `${PRODUCT_IMAGE_BASE}/copper-flat-bars-detail.webp`,
+    ],
+    model3D: null,
+    has3D: false,
+  },
+  tubes: {
+    images: [
+      `${PRODUCT_IMAGE_BASE}/copper-tubes-main.webp`,
+      `${PRODUCT_IMAGE_BASE}/copper-tubes-detail.webp`,
+    ],
+    model3D: '/models/copper-tubes.glb',
+    has3D: true,
+  },
+  sheets: {
+    images: [
+      `${PRODUCT_IMAGE_BASE}/copper-sheets-main.webp`,
+      `${PRODUCT_IMAGE_BASE}/copper-sheets-detail.webp`,
+    ],
+    model3D: '/models/copper-sheets.glb',
+    has3D: true,
+  },
+  wire: {
+    images: [
+      `${PRODUCT_IMAGE_BASE}/copper-wire-main.webp`,
+      `${PRODUCT_IMAGE_BASE}/copper-wire-detail.webp`,
+    ],
+    model3D: '/models/copper-wire.glb',
+    has3D: true,
+  },
+  custom: {
+    images: [
+      `${PRODUCT_IMAGE_BASE}/custom-copper-parts-main.webp`,
+      `${PRODUCT_IMAGE_BASE}/custom-copper-parts-detail.webp`,
+    ],
+    model3D: '/models/custom-copper-parts.glb',
+    has3D: true,
+  },
+}
 
 const officialProducts = [
   {
@@ -151,6 +218,8 @@ function App() {
   const [commandOpen, setCommandOpen] = useState(false)
   const [commandSearch, setCommandSearch] = useState('')
   const navigate = useNavigate()
+  const location = useLocation()
+  const isAdminRoute = location.pathname.startsWith('/admin')
   const t = dictionary[language]
   const commandActions = useMemo(
     () => [
@@ -206,43 +275,58 @@ function App() {
       <MotionEnhancer />
       <ConnectionStatus t={t} />
       <InstallAppPrompt t={t} />
+      {!isAdminRoute ? (
       <header className="topbar">
         <NavLink className="brand-block" to="/">
           <span className="brand-logo">
             <img src="/grod-logo.png" alt="G-ROD" />
           </span>
           <span>
-            <span className="eyebrow">{t.platformLabel}</span>
-            <h1>{t.brandTitle}</h1>
+            <span className="eyebrow brand-kicker">G-ROD</span>
+            <h1>{t.companyLine}</h1>
           </span>
         </NavLink>
 
-        <nav className="nav-links">
-          <NavLink to="/">{t.navHome}</NavLink>
-          <NavLink to="/catalogue">{t.navCatalogue}</NavLink>
-          <NavLink to="/resources">{t.navResources}</NavLink>
-          <NavLink to="/processus">{t.navProcess}</NavLink>
-          <NavLink to="/pourquoi-grod">{t.navWhy}</NavLink>
-          <NavLink to="/devis">{t.navQuote}</NavLink>
-          <NavLink to="/admin">{t.navAdmin}</NavLink>
-          <button className="command-trigger" type="button" onClick={() => setCommandOpen(true)}>
-            {t.commandTrigger}
-            <span>{t.shortcutLabel}</span>
-          </button>
-          <button className="theme-toggle" type="button" onClick={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))}>
-            {theme === 'dark' ? t.lightMode : t.darkMode}
-          </button>
-          <span className="language-switcher">
-            <button className={language === 'fr' ? 'active' : ''} onClick={() => setLanguage('fr')}>
-              FR
+        <nav className="nav-links" aria-label={t.breadcrumbLabel}>
+          <div className="nav-primary">
+            <NavLink to="/">{t.navHome}</NavLink>
+            <NavLink to="/catalogue">{t.navCatalogue}</NavLink>
+            <NavLink to="/resources">{t.navResources}</NavLink>
+            <NavLink to="/processus">{t.navProcess}</NavLink>
+            <NavLink to="/pourquoi-grod">{t.navWhy}</NavLink>
+          </div>
+          <div className="nav-actions">
+            <button className="command-trigger icon-control" type="button" onClick={() => setCommandOpen(true)} aria-label={t.commandTrigger} title={t.commandTrigger}>
+              <svg className="header-svg-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-4.2-4.2" />
+              </svg>
+              <small>{t.shortcutLabel}</small>
             </button>
-            <button className={language === 'en' ? 'active' : ''} onClick={() => setLanguage('en')}>
-              EN
+            <button className="theme-toggle icon-control" type="button" onClick={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} aria-label={theme === 'dark' ? t.lightMode : t.darkMode} title={theme === 'dark' ? t.lightMode : t.darkMode}>
+              {theme === 'dark' ? (
+                <svg className="header-svg-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="4.5" />
+                  <path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6" />
+                </svg>
+              ) : (
+                <svg className="header-svg-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M20.4 14.7A8.3 8.3 0 0 1 9.3 3.6a8.8 8.8 0 1 0 11.1 11.1Z" />
+                </svg>
+              )}
             </button>
-          </span>
+            <button className="language-toggle" type="button" onClick={() => setLanguage((current) => (current === 'fr' ? 'en' : 'fr'))} aria-label={language === 'fr' ? 'Passer en anglais' : 'Switch to French'}>
+              {language.toUpperCase()}
+            </button>
+            <NavLink className="admin-link" to="/admin" aria-label={t.navAdmin} title={t.navAdmin}>A</NavLink>
+            <NavLink className="header-cta" to="/devis">
+              {t.headerQuoteCta} <span aria-hidden="true">→</span>
+            </NavLink>
+          </div>
         </nav>
       </header>
-      <SmartBreadcrumbs t={t} />
+      ) : null}
+      {!isAdminRoute ? <SmartBreadcrumbs t={t} /> : null}
 
       {commandOpen ? (
         <section className="command-palette" role="dialog" aria-modal="true">
@@ -282,53 +366,118 @@ function App() {
         <Route path="/admin/login" element={<AdminPage t={t} />} />
         <Route path="/admin/dashboard" element={<AdminPage t={t} />} />
         <Route path="/admin/produits" element={<AdminPage t={t} />} />
+        <Route path="/admin/produits/:productId/modifier" element={<AdminPage t={t} />} />
         <Route path="/admin/demandes" element={<AdminPage t={t} />} />
         <Route path="/admin/documents" element={<AdminPage t={t} />} />
+        <Route path="/admin/ressources" element={<AdminPage t={t} />} />
         <Route path="/admin/clients" element={<AdminPage t={t} />} />
         <Route path="/admin/clients/:clientKey" element={<AdminPage t={t} />} />
       </Routes>
 
-      <TrustDock t={t} />
-      <QuickActionDock t={t} />
-      <AssistantChat t={t} language={language} />
+      {!isAdminRoute ? <AssistantChat t={t} language={language} /> : null}
 
+      {!isAdminRoute ? (
       <footer className="site-footer">
-        <div>
+        <div className="footer-brand">
+          <img src="/grod-logo.png" alt="G-ROD" />
           <strong>G-ROD</strong>
-          <span>Morocco Copper Foundry - Youssoufia, Bouznika, Maroc</span>
+          <span>{t.footerDescription}</span>
         </div>
         <div>
-          <span>contact@africarod.com</span>
-          <span>+212 6 68 61 56 08</span>
+          <strong>{t.footerProducts}</strong>
+          <NavLink to="/catalogue/copper-rod">Copper Rod</NavLink>
+          <NavLink to="/catalogue/copper-anodes">Copper Anodes</NavLink>
+          <NavLink to="/catalogue/custom-copper-parts">Custom Copper Parts</NavLink>
+        </div>
+        <div>
+          <strong>{t.footerResources}</strong>
+          <NavLink to="/resources">{t.navResources}</NavLink>
+          <NavLink to="/processus">{t.navProcess}</NavLink>
+          <NavLink to="/pourquoi-grod">{t.navWhy}</NavLink>
+        </div>
+        <div className="footer-contact">
+          <strong>{t.footerContact}</strong>
+          <a href="mailto:contact@africarod.com">contact@africarod.com</a>
+          <a href="tel:+212667962236">06 67 96 22 36</a>
+          <a href="tel:+212663708527">06 63 70 85 27</a>
+          <span>Kamal Parc Ghn7 - Bureau N04, Mohammedia</span>
+        </div>
+        <div className="footer-bottom">
+          <span>© 2026 G-ROD / Morocco Copper Foundry</span>
+          <NavLink to="/devis">{t.headerQuoteCta}</NavLink>
         </div>
       </footer>
+      ) : null}
     </div>
   )
 }
 
 function TrustDock({ t }) {
-  const location = useLocation()
-  if (location.pathname.startsWith('/admin')) return null
-
   return (
     <section className="trust-dock" aria-label={t.trustDockLabel}>
       <article>
-        <strong>24h</strong>
-        <span>{t.trustDockResponse}</span>
+        <TrustIcon type="clock" />
+        <div>
+          <strong>24h</strong>
+          <span>{t.trustDockResponse}</span>
+        </div>
       </article>
       <article>
-        <strong>PDF</strong>
-        <span>{t.trustDockDocs}</span>
+        <TrustIcon type="document" />
+        <div>
+          <strong>PDF</strong>
+          <span>{t.trustDockDocs}</span>
+        </div>
       </article>
       <article>
-        <strong>3D</strong>
-        <span>{t.trustDock3d}</span>
+        <TrustIcon type="cube" />
+        <div>
+          <strong>3D</strong>
+          <span>{t.trustDock3d}</span>
+        </div>
       </article>
       <article>
-        <strong>+212</strong>
-        <span>{t.trustDockContact}</span>
+        <TrustIcon type="phone" />
+        <div>
+          <strong>+212 6 67 96 22 36</strong>
+          <span>{t.trustDockContact}</span>
+        </div>
       </article>
     </section>
+  )
+}
+
+function TrustIcon({ type }) {
+  const icons = {
+    clock: (
+      <>
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 7v5l3 2" />
+      </>
+    ),
+    document: (
+      <>
+        <path d="M7 3h7l4 4v14H7z" />
+        <path d="M14 3v5h4" />
+        <path d="M9 12h6M9 16h6" />
+      </>
+    ),
+    cube: (
+      <>
+        <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z" />
+        <path d="m4 7.5 8 4.5 8-4.5" />
+        <path d="M12 12v9" />
+      </>
+    ),
+    phone: (
+      <path d="M7 4h3l1.5 4-2 1.2a12 12 0 0 0 5.3 5.3l1.2-2 4 1.5v3a2 2 0 0 1-2 2C10.2 20 4 13.8 4 6a2 2 0 0 1 2-2z" />
+    ),
+  }
+
+  return (
+    <svg className="trust-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      {icons[type]}
+    </svg>
   )
 }
 
@@ -604,33 +753,12 @@ function ScrollProgress({ t }) {
   )
 }
 
-function QuickActionDock({ t }) {
-  const location = useLocation()
-  const isAdmin = location.pathname.startsWith('/admin')
-
-  if (isAdmin) return null
-
-  return (
-    <aside className="quick-action-dock" aria-label={t.quickDockLabel}>
-      <NavLink to="/devis" className="dock-primary">
-        {t.quickDockQuote}
-      </NavLink>
-      <NavLink to="/catalogue">{t.quickDockCatalog}</NavLink>
-      <NavLink to="/resources">{t.quickDockDocs}</NavLink>
-      <a href="tel:+212668615608">{t.quickDockCall}</a>
-    </aside>
-  )
-}
-
 function HomePage({ t }) {
   return (
     <>
       <section className="hero-section hero-3d-section">
-        <img src="/src/assets/hero.png" alt="Production cuivre G-ROD" />
+        <div className="hero-industrial-bg" aria-hidden="true" />
         <div className="hero-overlay" />
-        <Suspense fallback={<div className="copper-3d copper-3d-fallback" aria-hidden="true" />}>
-          <CopperScene />
-        </Suspense>
         <div className="hero-copy">
           <p className="eyebrow">Morocco Copper Foundry</p>
           <h2>{t.heroTitle}</h2>
@@ -651,11 +779,13 @@ function HomePage({ t }) {
         </div>
       </section>
 
+      <TrustDock t={t} />
+
       <section className="page-section metrics-row">
-        <Metric value="2020" label={t.metricLaunch} />
-        <Metric value="25K t" label={t.metricCapacity} />
-        <Metric value="68M MAD" label={t.metricInvestment} />
-        <Metric value="99.99%" label={t.metricPurity} />
+        <Metric value="2020" label={t.metricLaunch} icon="factory" />
+        <Metric value="25K t" label={t.metricCapacity} icon="capacity" />
+        <Metric value="68M MAD" label={t.metricInvestment} icon="coins" />
+        <Metric value="99.99%" label={t.metricPurity} icon="shield" />
       </section>
 
       <section className="page-band">
@@ -669,9 +799,9 @@ function HomePage({ t }) {
       </section>
 
       <section className="page-section solution-grid">
-        <InfoCard number="01" title="Copper Rod" text={t.solutionRod} />
-        <InfoCard number="02" title="Copper Anodes" text={t.solutionAnodes} />
-        <InfoCard number="03" title="Custom Copper Parts" text={t.solutionCustom} />
+        <InfoCard number="01" title="Copper Rod" text={t.solutionRod} image="/images/home/home-copper-rod.webp" />
+        <InfoCard number="02" title="Copper Anodes" text={t.solutionAnodes} image="/images/home/home-copper-anodes.webp" />
+        <InfoCard number="03" title="Custom Copper Parts" text={t.solutionCustom} image="/images/home/home-custom-copper-parts.webp" />
       </section>
 
       <section className="partners-section">
@@ -692,8 +822,11 @@ function HomePage({ t }) {
       </section>
 
       <section className="page-section brochure-section">
-        <div className="brochure-mark" aria-hidden="true">
-          <span>G-</span>ROD
+        <div className="brochure-cover" aria-hidden="true">
+          <div>
+            <strong>G-ROD</strong>
+            <span>Copper solutions</span>
+          </div>
         </div>
         <div className="brochure-copy">
           <p className="eyebrow">{t.documentsEyebrow}</p>
@@ -710,25 +843,320 @@ function HomePage({ t }) {
           </a>
         </div>
       </section>
+
+      <section className="page-section identity-contact-section">
+        <div className="identity-panel">
+          <p className="eyebrow">{t.identityEyebrow}</p>
+          <h2>{t.identityTitle}</h2>
+          <p>{t.identityText}</p>
+        </div>
+        <address className="contact-panel">
+          <strong>{t.contactUs}</strong>
+          <a href="tel:+212667962236">06 67 96 22 36</a>
+          <a href="tel:+212663708527">06 63 70 85 27</a>
+          <a href="mailto:contact@africarod.com">contact@africarod.com</a>
+          <span>Kamal Parc Ghn7 - Bureau N04 Angle Bd Zerktouni, Lot 59, Mfadel Business Center - MOHAMMEDIA</span>
+        </address>
+      </section>
     </>
   )
 }
 
-function Metric({ value, label }) {
+function Metric({ value, label, icon }) {
   return (
     <article className="metric-card">
-      <strong>{value}</strong>
-      <span>{label}</span>
+      <MetricIcon type={icon} />
+      <div>
+        <strong>{value}</strong>
+        <span>{label}</span>
+      </div>
     </article>
   )
 }
 
-function InfoCard({ number, title, text }) {
+function MetricIcon({ type }) {
+  const icons = {
+    factory: (
+      <>
+        <path d="M4 20V9l5 3V9l5 3V6h4v14z" />
+        <path d="M7 17h2M12 17h2M17 17h1" />
+      </>
+    ),
+    capacity: (
+      <>
+        <path d="M7 4h10v16H7z" />
+        <path d="M10 8h4M10 12h4M10 16h2" />
+      </>
+    ),
+    coins: (
+      <>
+        <ellipse cx="12" cy="6" rx="6" ry="3" />
+        <path d="M6 6v8c0 1.7 2.7 3 6 3s6-1.3 6-3V6" />
+        <path d="M6 10c0 1.7 2.7 3 6 3s6-1.3 6-3" />
+      </>
+    ),
+    shield: <path d="M12 3 19 6v5c0 4.3-2.8 7.8-7 10-4.2-2.2-7-5.7-7-10V6z" />,
+  }
+
+  return (
+    <svg className="metric-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      {icons[type]}
+    </svg>
+  )
+}
+
+function SearchIcon() {
+  return (
+    <svg className="inline-ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m16 16 4 4" />
+    </svg>
+  )
+}
+
+function GridIcon() {
+  return (
+    <svg className="inline-ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />
+    </svg>
+  )
+}
+
+function ListIcon() {
+  return (
+    <svg className="inline-ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M8 6h12M8 12h12M8 18h12" />
+      <path d="M4 6h.01M4 12h.01M4 18h.01" />
+    </svg>
+  )
+}
+
+function ProductAdvisorIcon() {
+  return (
+    <svg className="advisor-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M5 21a7 7 0 0 1 14 0" />
+      <path d="m15.5 14.5 3.5 3.5" />
+    </svg>
+  )
+}
+
+function CatalogCtaIcon() {
+  return (
+    <svg className="catalogue-cta-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M7 3h8l4 4v14H7z" />
+      <path d="M15 3v5h4M10 12h6M10 16h4" />
+    </svg>
+  )
+}
+
+function CubeIcon() {
+  return (
+    <svg className="inline-ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z" />
+      <path d="m4 7.5 8 4.5 8-4.5M12 12v9" />
+    </svg>
+  )
+}
+
+function ProcessIcon({ type }) {
+  const icons = {
+    security: (
+      <>
+        <path d="M12 3 19 6v5c0 4.3-2.8 7.8-7 10-4.2-2.2-7-5.7-7-10V6z" />
+        <path d="m9 12 2 2 4-5" />
+      </>
+    ),
+    traceability: (
+      <>
+        <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z" />
+        <path d="m4 7.5 8 4.5 8-4.5M12 12v9" />
+        <path d="M8.5 15.5h.01M15.5 15.5h.01" />
+      </>
+    ),
+    quality: (
+      <>
+        <path d="M8 4h8v5a4 4 0 0 1-8 0z" />
+        <path d="M6 5H4c0 3 1.5 5 4.4 5.5M18 5h2c0 3-1.5 5-4.4 5.5" />
+        <path d="M12 13v4M9 21h6M10 17h4" />
+      </>
+    ),
+    performance: (
+      <>
+        <path d="M4 19V9M10 19V5M16 19v-7M22 19H2" />
+        <path d="m4 9 6-4 6 7 5-6" />
+      </>
+    ),
+  }
+
+  return (
+    <svg className="process-control-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      {icons[type]}
+    </svg>
+  )
+}
+
+function AboutIcon({ type }) {
+  const icons = {
+    recycle: (
+      <>
+        <path d="m7 7 2-3 2 3" />
+        <path d="M9 4v5H4" />
+        <path d="m17 17-2 3-2-3" />
+        <path d="M15 20v-5h5" />
+        <path d="M4.5 14a8 8 0 0 0 11.2 4.7" />
+        <path d="M19.5 10A8 8 0 0 0 8.3 5.3" />
+      </>
+    ),
+    leaf: (
+      <>
+        <path d="M20 4c-7 1-12 5-13 12" />
+        <path d="M20 4c0 10-6 16-13 16-2.5 0-4-1.5-4-4 0-7 6-12 17-12z" />
+      </>
+    ),
+    morocco: (
+      <>
+        <path d="M12 3 8.6 9.1 2 10.2l4.8 4.7L5.7 21 12 17.8 18.3 21l-1.1-6.1 4.8-4.7-6.6-1.1z" />
+      </>
+    ),
+    quality: (
+      <>
+        <path d="M12 3 19 6v5c0 4.3-2.8 7.8-7 10-4.2-2.2-7-5.7-7-10V6z" />
+        <path d="m9 12 2 2 4-5" />
+      </>
+    ),
+    traceability: (
+      <>
+        <path d="M4 7h16M4 12h16M4 17h16" />
+        <path d="M7 5v14M17 5v14" />
+      </>
+    ),
+    partners: (
+      <>
+        <path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+        <path d="M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+        <path d="M4 20v-1a4 4 0 0 1 8 0v1" />
+        <path d="M12 20v-1a4 4 0 0 1 8 0v1" />
+      </>
+    ),
+    support: (
+      <>
+        <path d="M4 12a8 8 0 0 1 16 0" />
+        <path d="M4 12v4a2 2 0 0 0 2 2h2v-6H4z" />
+        <path d="M20 12v4a2 2 0 0 1-2 2h-2v-6h4z" />
+        <path d="M9 19h4" />
+      </>
+    ),
+    check: (
+      <>
+        <path d="M20 6 9 17l-5-5" />
+      </>
+    ),
+  }
+
+  return (
+    <svg className="about-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      {icons[type] || icons.check}
+    </svg>
+  )
+}
+
+function AdminIcon({ type }) {
+  const icons = {
+    dashboard: (
+      <>
+        <rect x="4" y="4" width="7" height="7" rx="1.5" />
+        <rect x="13" y="4" width="7" height="7" rx="1.5" />
+        <rect x="4" y="13" width="7" height="7" rx="1.5" />
+        <rect x="13" y="13" width="7" height="7" rx="1.5" />
+      </>
+    ),
+    requests: (
+      <>
+        <path d="M8 4h8l2 2v14H6V6z" />
+        <path d="M9 10h6M9 14h6M9 18h4" />
+      </>
+    ),
+    clients: (
+      <>
+        <circle cx="9" cy="8" r="3" />
+        <path d="M3.5 20a5.5 5.5 0 0 1 11 0" />
+        <path d="M16 11a2.5 2.5 0 1 0 0-5" />
+        <path d="M17 20a4 4 0 0 0-2-3.4" />
+      </>
+    ),
+    products: (
+      <>
+        <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z" />
+        <path d="M12 12 4.5 7.8M12 12l7.5-4.2M12 12v8.5" />
+      </>
+    ),
+    documents: (
+      <>
+        <path d="M7 3h7l4 4v14H7z" />
+        <path d="M14 3v5h4M10 13h5M10 17h5" />
+      </>
+    ),
+    resources: (
+      <>
+        <path d="M5 5h14v14H5z" />
+        <path d="M8 9h8M8 13h8M8 17h5" />
+      </>
+    ),
+    bell: (
+      <>
+        <path d="M18 10a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7" />
+        <path d="M9.5 20a3 3 0 0 0 5 0" />
+      </>
+    ),
+    download: (
+      <>
+        <path d="M12 4v10" />
+        <path d="m8 10 4 4 4-4" />
+        <path d="M5 20h14" />
+      </>
+    ),
+    security: (
+      <>
+        <path d="M12 3 19 6v5c0 4.3-2.8 7.8-7 10-4.2-2.2-7-5.7-7-10V6z" />
+        <path d="m9 12 2 2 4-5" />
+      </>
+    ),
+    search: (
+      <>
+        <circle cx="11" cy="11" r="6" />
+        <path d="m16 16 4 4" />
+      </>
+    ),
+    menu: (
+      <>
+        <path d="M4 7h16M4 12h16M4 17h16" />
+      </>
+    ),
+    'document-add': (
+      <>
+        <path d="M7 3h7l4 4v14H7z" />
+        <path d="M14 3v5h4M12 12v6M9 15h6" />
+      </>
+    ),
+  }
+
+  return (
+    <svg className="admin-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      {icons[type] || icons.dashboard}
+    </svg>
+  )
+}
+
+function InfoCard({ number, title, text, image }) {
   return (
     <article className="solution-card">
-      <span>{number}</span>
-      <h3>{title}</h3>
-      <p>{text}</p>
+      <img src={image} alt="" aria-hidden="true" />
+      <div>
+        <span>{number}</span>
+        <h3>{title}</h3>
+        <p>{text}</p>
+      </div>
     </article>
   )
 }
@@ -747,8 +1175,8 @@ function ProductsPage({ t }) {
   const [compareOpen, setCompareOpen] = useState(false)
   const [projectProducts, setProjectProducts] = useState([])
   const [advisor, setAdvisor] = useState({ application: '', need: '' })
-  const [recentProducts, setRecentProducts] = useState([])
-  const [favoriteProducts, setFavoriteProducts] = useState([])
+  const [recentProducts] = useState(() => getRecentProducts())
+  const [favoriteProducts, setFavoriteProducts] = useState(() => getFavoriteProducts())
 
   useEffect(() => {
     async function loadProducts() {
@@ -764,11 +1192,6 @@ function ProductsPage({ t }) {
       }
     }
     loadProducts()
-  }, [])
-
-  useEffect(() => {
-    setRecentProducts(getRecentProducts())
-    setFavoriteProducts(getFavoriteProducts())
   }, [])
 
   const normalizedProducts = useMemo(() => products.map((product) => normalizeProduct(product)), [products])
@@ -843,22 +1266,27 @@ function ProductsPage({ t }) {
   const hasCatalogueFilters = Boolean(search || applicationFilter || !activeOnly || sortMode !== 'recommended')
 
   return (
-    <main className="page-section catalogue-page">
-      <div className="section-heading catalogue-heading">
+    <main className="catalogue-page">
+      <section className="catalogue-hero">
         <div>
-          <p className="eyebrow">{t.catalogueEyebrow}</p>
+          <nav className="catalogue-breadcrumb" aria-label="Breadcrumb">
+            <NavLink to="/">{t.navHome}</NavLink>
+            <span>/</span>
+            <strong>{t.navCatalogue}</strong>
+          </nav>
           <h2>{t.catalogueTitle}</h2>
+          <p>{t.catalogueSubtitle}</p>
         </div>
-        <label className="active-only-control">
-          <input type="checkbox" checked={activeOnly} onChange={(event) => setActiveOnly(event.target.checked)} />
-          {t.activeOnly}
-        </label>
-      </div>
+      </section>
 
+      <div className="catalogue-content">
       <div className="catalogue-tools">
         <label>
           {t.productSearch}
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t.productSearchPlaceholder} />
+          <span className="catalogue-search-control">
+            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t.productSearchPlaceholder} />
+            <SearchIcon />
+          </span>
         </label>
         <label>
           {t.applicationFilter}
@@ -880,33 +1308,11 @@ function ProductsPage({ t }) {
             <option value="active">{t.sortActive}</option>
           </select>
         </label>
+        <label className="active-only-control">
+          {t.activeOnly}
+          <input type="checkbox" checked={activeOnly} onChange={(event) => setActiveOnly(event.target.checked)} />
+        </label>
       </div>
-
-      <section className="catalogue-result-summary">
-        <div>
-          <span>{displayedProducts.length}</span>
-          <strong>{displayedProducts.length > 1 ? t.catalogueResultsPlural : t.catalogueResultsSingle}</strong>
-        </div>
-        <p>{hasCatalogueFilters ? t.catalogueFilteredHint : t.catalogueAllVisibleHint}</p>
-        <div className="catalogue-view-switch" aria-label={t.viewMode}>
-          <button type="button" className={viewMode === 'grid' ? 'active' : ''} onClick={() => setViewMode('grid')}>
-            {t.gridView}
-          </button>
-          <button type="button" className={viewMode === 'list' ? 'active' : ''} onClick={() => setViewMode('list')}>
-            {t.listView}
-          </button>
-        </div>
-        {hasCatalogueFilters ? (
-          <button type="button" className="secondary-button" onClick={() => {
-            setSearch('')
-            setApplicationFilter('')
-            setSortMode('recommended')
-            setActiveOnly(true)
-          }}>
-            {t.resetFilters}
-          </button>
-        ) : null}
-      </section>
 
       {hasCatalogueFilters ? (
         <section className="active-filter-chips" aria-label={t.activeFilters}>
@@ -934,6 +1340,60 @@ function ProductsPage({ t }) {
         </section>
       ) : null}
 
+      <section className="product-advisor">
+        <div className="advisor-intro">
+          <ProductAdvisorIcon />
+          <div>
+            <p className="eyebrow">{t.advisorEyebrow}</p>
+            <h3>{t.advisorTitle}</h3>
+            <p>{t.advisorText}</p>
+          </div>
+        </div>
+        <label>
+          {t.advisorApplication}
+          <select value={advisor.application} onChange={(event) => setAdvisor((current) => ({ ...current, application: event.target.value }))}>
+            <option value="">{t.advisorChoose}</option>
+            <option value="electricite">{t.advisorElectricity}</option>
+            <option value="electrolyse">{t.advisorElectrolysis}</option>
+            <option value="plomberie">{t.advisorPlumbing}</option>
+            <option value="fabrication">{t.advisorFabrication}</option>
+            <option value="sur-mesure">{t.advisorCustom}</option>
+          </select>
+        </label>
+        <label>
+          {t.advisorNeed}
+          <select value={advisor.need} onChange={(event) => setAdvisor((current) => ({ ...current, need: event.target.value }))}>
+            <option value="">{t.advisorChoose}</option>
+            <option value="conductivite">{t.advisorConductivity}</option>
+            <option value="forme-plate">{t.advisorFlat}</option>
+            <option value="tube">{t.advisorTube}</option>
+            <option value="fil">{t.advisorWire}</option>
+            <option value="piece-speciale">{t.advisorSpecialPart}</option>
+          </select>
+        </label>
+        <button type="button" className="advisor-find-button">
+          {t.advisorFind}
+        </button>
+        {recommendedProduct ? (
+          <article className="advisor-result">
+            <span>{t.advisorRecommendation}</span>
+            <strong>{recommendedProduct.nom}</strong>
+            <p>{getRecommendationReason(recommendedProduct, advisor, t)}</p>
+            <div>
+              {recommendedProduct.has3D && recommendedProduct.model3D ? (
+                <button type="button" onClick={() => setPreviewProduct(recommendedProduct)}>{t.quick3dPreview}</button>
+              ) : null}
+              <NavLink className="secondary-link" to={`/catalogue/${recommendedProduct.id || slugify(recommendedProduct.nom)}`}>
+                {t.productDetail}
+              </NavLink>
+              <NavLink className="primary-link" to={`/devis?produit=${encodeURIComponent(recommendedProduct.nom)}`}>
+                {t.requestQuote}
+              </NavLink>
+            </div>
+          </article>
+        ) : null}
+      </section>
+
       {smartSearchProduct ? (
         <section className="smart-search-panel">
           <div>
@@ -942,7 +1402,9 @@ function ProductsPage({ t }) {
             <p>{getSmartSearchReason(smartSearchProduct, search, t)}</p>
           </div>
           <div className="smart-search-actions">
-            <button type="button" onClick={() => setPreviewProduct(smartSearchProduct)}>{t.quick3dPreview}</button>
+            {smartSearchProduct.has3D && smartSearchProduct.model3D ? (
+              <button type="button" onClick={() => setPreviewProduct(smartSearchProduct)}>{t.quick3dPreview}</button>
+            ) : null}
             <NavLink className="secondary-link" to={`/catalogue/${smartSearchProduct.id || slugify(smartSearchProduct.nom)}`}>
               {t.productDetail}
             </NavLink>
@@ -988,51 +1450,6 @@ function ProductsPage({ t }) {
           </div>
         </section>
       ) : null}
-
-      <section className="product-advisor">
-        <div>
-          <p className="eyebrow">{t.advisorEyebrow}</p>
-          <h3>{t.advisorTitle}</h3>
-        </div>
-        <label>
-          {t.advisorApplication}
-          <select value={advisor.application} onChange={(event) => setAdvisor((current) => ({ ...current, application: event.target.value }))}>
-            <option value="">{t.advisorChoose}</option>
-            <option value="electricite">{t.advisorElectricity}</option>
-            <option value="electrolyse">{t.advisorElectrolysis}</option>
-            <option value="plomberie">{t.advisorPlumbing}</option>
-            <option value="fabrication">{t.advisorFabrication}</option>
-            <option value="sur-mesure">{t.advisorCustom}</option>
-          </select>
-        </label>
-        <label>
-          {t.advisorNeed}
-          <select value={advisor.need} onChange={(event) => setAdvisor((current) => ({ ...current, need: event.target.value }))}>
-            <option value="">{t.advisorChoose}</option>
-            <option value="conductivite">{t.advisorConductivity}</option>
-            <option value="forme-plate">{t.advisorFlat}</option>
-            <option value="tube">{t.advisorTube}</option>
-            <option value="fil">{t.advisorWire}</option>
-            <option value="piece-speciale">{t.advisorSpecialPart}</option>
-          </select>
-        </label>
-        {recommendedProduct ? (
-          <article className="advisor-result">
-            <span>{t.advisorRecommendation}</span>
-            <strong>{recommendedProduct.nom}</strong>
-            <p>{getRecommendationReason(recommendedProduct, advisor, t)}</p>
-            <div>
-              <button type="button" onClick={() => setPreviewProduct(recommendedProduct)}>{t.quick3dPreview}</button>
-              <NavLink className="secondary-link" to={`/catalogue/${recommendedProduct.id || slugify(recommendedProduct.nom)}`}>
-                {t.productDetail}
-              </NavLink>
-              <NavLink className="primary-link" to={`/devis?produit=${encodeURIComponent(recommendedProduct.nom)}`}>
-                {t.requestQuote}
-              </NavLink>
-            </div>
-          </article>
-        ) : null}
-      </section>
 
       {compareProducts.length ? (
         <section className="compare-toolbar">
@@ -1108,6 +1525,23 @@ function ProductsPage({ t }) {
       ) : null}
 
       {!loading ? (
+      <>
+      <section className="catalogue-result-summary">
+        <div>
+          <span>{displayedProducts.length}</span>
+          <strong>{displayedProducts.length > 1 ? t.catalogueResultsPlural : t.catalogueResultsSingle}</strong>
+        </div>
+        <div className="catalogue-view-switch" aria-label={t.viewMode}>
+          <button type="button" className={viewMode === 'grid' ? 'active' : ''} onClick={() => setViewMode('grid')}>
+            <GridIcon />
+            {t.gridView}
+          </button>
+          <button type="button" className={viewMode === 'list' ? 'active' : ''} onClick={() => setViewMode('list')}>
+            <ListIcon />
+            {t.listView}
+          </button>
+        </div>
+      </section>
       <div className={`products-grid ${viewMode === 'list' ? 'products-grid--list' : ''}`}>
         {displayedProducts.map((product) => (
           <ProductCard
@@ -1126,6 +1560,19 @@ function ProductsPage({ t }) {
           />
         ))}
       </div>
+      <section className="catalogue-custom-cta">
+        <div>
+          <CatalogCtaIcon />
+          <div>
+            <h3>{t.catalogueCustomTitle}</h3>
+            <p>{t.catalogueCustomText}</p>
+          </div>
+        </div>
+        <NavLink className="secondary-link" to="/devis">
+          {t.catalogueCustomCta}
+        </NavLink>
+      </section>
+      </>
       ) : null}
 
       {previewProduct ? (
@@ -1168,12 +1615,14 @@ function ProductsPage({ t }) {
                 <div><dt>{t.applications}</dt><dd>{quickViewProduct.applications.join(', ')}</dd></div>
               </dl>
               <div className="quick-view-actions">
-                <button type="button" onClick={() => {
-                  setQuickViewProduct(null)
-                  setPreviewProduct(quickViewProduct)
-                }}>
-                  {t.quick3dPreview}
-                </button>
+                {quickViewProduct.has3D && quickViewProduct.model3D ? (
+                  <button type="button" onClick={() => {
+                    setQuickViewProduct(null)
+                    setPreviewProduct(quickViewProduct)
+                  }}>
+                    {t.quick3dPreview}
+                  </button>
+                ) : null}
                 <NavLink className="secondary-link" to={`/catalogue/${quickViewProduct.id || slugify(quickViewProduct.nom)}`}>
                   {t.productDetail}
                 </NavLink>
@@ -1220,61 +1669,92 @@ function ProductsPage({ t }) {
           </div>
         </section>
       ) : null}
+      </div>
     </main>
   )
 }
 
 function ProductCard({ product, t, onPreview, onQuickView, onCompare, onProjectSelect, onFavorite, compareSelected, compareDisabled, projectSelected, favoriteSelected }) {
+  const mainImage = getMainProductImage(product)
+  const navigate = useNavigate()
+  const productDetailPath = `/catalogue/${product.id || slugify(product.nom)}`
+
+  function openProductDetail() {
+    navigate(productDetailPath)
+  }
+
   return (
-    <article className="product-card">
+    <article
+      className="product-card product-card-clickable"
+      role="link"
+      tabIndex="0"
+      aria-label={`${t.productDetail}: ${product.nom}`}
+      onClick={openProductDetail}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          openProductDetail()
+        }
+      }}
+    >
       <div className="product-media">
-        <img src={product.imageUrl} alt={product.nom} onError={(event) => event.currentTarget.remove()} />
-        <span>{product.categorie}</span>
+        <img
+          src={mainImage}
+          alt={product.nom}
+          width="640"
+          height="430"
+          loading="lazy"
+          onError={(event) => {
+            event.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE
+            event.currentTarget.classList.add('is-placeholder')
+          }}
+        />
+        <div className="product-media-shine" aria-hidden="true" />
+        <span className="status-badge active">{t.active}</span>
       </div>
       <div className="product-body">
         <div className="product-title-row">
           <h3>{product.nom}</h3>
-          <span className="status-badge active">{t.active}</span>
+          <details className="product-more-menu" onClick={(event) => event.stopPropagation()}>
+            <summary aria-label={t.secondaryActions}>...</summary>
+            <div>
+              <button type="button" onClick={() => onQuickView(product)}>
+                {t.quickView}
+              </button>
+              <button type="button" onClick={() => onFavorite(product)}>
+                {favoriteSelected ? t.removeFavorite : t.addFavorite}
+              </button>
+              <button type="button" onClick={() => onProjectSelect(product)}>
+                {projectSelected ? t.removeFromProject : t.addToProject}
+              </button>
+              <button type="button" onClick={() => onCompare(product)} disabled={compareDisabled}>
+                {compareSelected ? t.removeCompare : t.addCompare}
+              </button>
+              {product.has3D && product.model3D ? (
+                <button type="button" onClick={() => onPreview(product)}>
+                  {t.quick3dPreview}
+                </button>
+              ) : null}
+            </div>
+          </details>
         </div>
         <p>{product.description}</p>
         <div className="tag-list">
-          {product.applications.map((application) => (
+          {product.applications.slice(0, 2).map((application) => (
             <span key={application}>{application}</span>
           ))}
         </div>
-        <div className="product-card-actions">
-          <button type="button" className="text-link quick-view-button" onClick={() => onQuickView(product)}>
-            {t.quickView}
-          </button>
-          <button
-            type="button"
-            className={`text-link favorite-select-button ${favoriteSelected ? 'active' : ''}`}
-            onClick={() => onFavorite(product)}
-          >
-            {favoriteSelected ? t.removeFavorite : t.addFavorite}
-          </button>
-          <button
-            type="button"
-            className={`text-link project-select-button ${projectSelected ? 'active' : ''}`}
-            onClick={() => onProjectSelect(product)}
-          >
-            {projectSelected ? t.removeFromProject : t.addToProject}
-          </button>
-          <button
-            type="button"
-            className={`text-link compare-select-button ${compareSelected ? 'active' : ''}`}
-            onClick={() => onCompare(product)}
-            disabled={compareDisabled}
-          >
-            {compareSelected ? t.removeCompare : t.addCompare}
-          </button>
-          <button type="button" className="text-link product-3d-preview-button" onClick={() => onPreview(product)}>
-            {t.quick3dPreview}
-          </button>
-          <NavLink className="text-link" to={`/catalogue/${product.id || slugify(product.nom)}`}>
-            {t.productDetail}
+        {product.has3D && product.model3D ? (
+          <span className="product-3d-badge">
+            <CubeIcon />
+            {t.threeDAvailable}
+          </span>
+        ) : null}
+        <div className="product-card-actions" onClick={(event) => event.stopPropagation()}>
+          <NavLink className="text-link" to={productDetailPath}>
+            {t.viewProduct}
           </NavLink>
-          <NavLink className="text-link" to={`/devis?produit=${encodeURIComponent(product.nom)}`}>
+          <NavLink className="primary-link" to={`/devis?produit=${encodeURIComponent(product.nom)}`}>
             {t.requestQuote}
           </NavLink>
         </div>
@@ -1321,10 +1801,6 @@ function ProductDetailPage({ t }) {
     if (product) saveRecentProduct(product)
   }, [product])
 
-  useEffect(() => {
-    setShowDetail3d(false)
-  }, [productId])
-
   const relatedProducts = useMemo(() => {
     if (!product) return []
     return officialProducts
@@ -1348,6 +1824,8 @@ function ProductDetailPage({ t }) {
     )
   }
 
+  const heroSpecs = getProductHeroSpecs(t)
+
   return (
     <main className="product-detail-page">
       <section className="legacy-product-detail">
@@ -1361,15 +1839,15 @@ function ProductDetailPage({ t }) {
             <dl className="product-hero-specs">
               <div>
                 <dt>{t.purity}</dt>
-                <dd>{product.purete || '-'}</dd>
+                <dd>{heroSpecs.purity}</dd>
               </div>
               <div>
                 <dt>{t.dimensions}</dt>
-                <dd>{product.dimensions || '-'}</dd>
+                <dd>{heroSpecs.dimensions}</dd>
               </div>
               <div>
                 <dt>{t.standards}</dt>
-                <dd>{product.normes || '-'}</dd>
+                <dd>{heroSpecs.standards}</dd>
               </div>
             </dl>
             <div className="legacy-product-actions">
@@ -1386,16 +1864,24 @@ function ProductDetailPage({ t }) {
 
           <aside className="legacy-product-media">
             {showDetail3d ? (
-              <Suspense fallback={<div className="product-3d-viewer product-3d-fallback"><span>3D</span></div>}>
-                <Product3DViewer product={product} />
-              </Suspense>
-            ) : (
-              <div className="legacy-product-image-preview">
-                <img src={product.imageUrl} alt={product.nom} />
-                <button type="button" onClick={() => setShowDetail3d(true)}>
-                  {t.quick3dPreview}
-                </button>
+              <div className="product-gallery product-3d-panel">
+                <div className="product-gallery-toolbar">
+                  <strong>{t.quick3dPreview}</strong>
+                  <button type="button" className="secondary-button compact-button" onClick={() => setShowDetail3d(false)}>
+                    {t.closePreview}
+                  </button>
+                </div>
+                <Suspense fallback={<div className="product-3d-viewer product-3d-fallback"><span>3D</span></div>}>
+                  <Product3DViewer product={product} />
+                </Suspense>
               </div>
+            ) : (
+              <ProductGallery
+                key={product.id || product.nom}
+                product={product}
+                onOpen3d={() => setShowDetail3d(true)}
+                t={t}
+              />
             )}
           </aside>
         </div>
@@ -1453,24 +1939,29 @@ function ProductDetailPage({ t }) {
             </NavLink>
           </div>
           <div className="related-products-grid">
-            {relatedProducts.map((relatedProduct) => (
-              <article className="related-product-card" key={relatedProduct.id || relatedProduct.nom}>
-                <img src={relatedProduct.imageUrl} alt={relatedProduct.nom} />
-                <div>
-                  <span>{relatedProduct.categorie}</span>
-                  <h3>{relatedProduct.nom}</h3>
-                  <p>{relatedProduct.description}</p>
+            {relatedProducts.map((relatedProduct) => {
+              const relatedProductPath = `/catalogue/${relatedProduct.id || slugify(relatedProduct.nom)}`
+              return (
+                <article className="related-product-card" key={relatedProduct.id || relatedProduct.nom}>
+                  <NavLink className="related-product-main-link" to={relatedProductPath} aria-label={`${t.productDetail}: ${relatedProduct.nom}`}>
+                    <img src={relatedProduct.imageUrl} alt={relatedProduct.nom} />
+                    <div>
+                      <span>{relatedProduct.categorie}</span>
+                      <h3>{relatedProduct.nom}</h3>
+                      <p>{relatedProduct.description}</p>
+                    </div>
+                  </NavLink>
                   <nav>
-                    <NavLink className="text-link" to={`/catalogue/${relatedProduct.id || slugify(relatedProduct.nom)}`}>
+                    <NavLink className="text-link" to={relatedProductPath}>
                       {t.productDetail}
                     </NavLink>
                     <NavLink className="primary-link" to={`/devis?produit=${encodeURIComponent(relatedProduct.nom)}`}>
                       {t.requestQuote}
                     </NavLink>
                   </nav>
-                </div>
-              </article>
-            ))}
+                </article>
+              )
+            })}
           </div>
         </section>
       ) : null}
@@ -1491,6 +1982,37 @@ function ProductDetailPage({ t }) {
         </nav>
       </section>
     </main>
+  )
+}
+
+function ProductGallery({ product, onOpen3d, t }) {
+  const shownImage = getMainProductImage(product) || PRODUCT_PLACEHOLDER_IMAGE
+
+  return (
+    <div className="product-gallery">
+      <div className="product-gallery-main">
+        <img
+          src={shownImage}
+          alt={product.nom}
+          width="960"
+          height="640"
+          loading="eager"
+          onError={(event) => {
+            event.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE
+            event.currentTarget.classList.add('is-placeholder')
+          }}
+        />
+      </div>
+      <div className="product-gallery-footer">
+        {product.has3D && product.model3D ? (
+          <button type="button" className="secondary-button compact-button" onClick={onOpen3d}>
+            {t.quick3dPreview}
+          </button>
+        ) : (
+          <span className="product-gallery-note">{t.no3dPreview}</span>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -1567,6 +2089,49 @@ function ResourcesPage({ t }) {
     const matchesType = !resourceType || resource.type === resourceType
     return matchesSearch && matchesType
   })
+  const primaryResources = [
+    {
+      ...resources[0],
+      badge: t.resourceBadgeBrochure,
+      status: t.available,
+      meta: 'PDF · 4.2 Mo',
+      preview: 'brochure',
+    },
+    {
+      ...resources[1],
+      badge: t.resourceBadgeProcess,
+      status: t.available,
+      meta: 'PDF · 1.8 Mo',
+      preview: 'process',
+    },
+    {
+      ...resources[2],
+      badge: t.resourceBadgeQuality,
+      status: t.onRequest,
+      meta: t.resourceMetaOnRequest,
+      preview: 'certificate',
+    },
+  ]
+  const secondaryResources = filteredResources.filter(
+    (resource) => !primaryResources.some((primaryResource) => primaryResource.title === resource.title),
+  )
+  const visiblePrimaryResources = primaryResources.filter((resource) =>
+    filteredResources.some((filteredResource) => filteredResource.title === resource.title),
+  )
+  const frequentDocuments = [
+    { title: 'Fiche technique Copper Rod', type: 'PDF', tone: 'copper' },
+    { title: 'Certificat matiere Cu-ETP / 99.99%', type: 'PDF', tone: 'green' },
+    { title: 'Certificat d analyse Copper Anodes', type: 'PDF', tone: 'green' },
+    { title: 'Conditions generales de vente', type: 'PDF', tone: 'neutral' },
+    { title: 'Guide stockage produits cuivre', type: 'PDF', tone: 'green' },
+  ]
+  const faqItems = [
+    { question: t.faqDocumentsQuestion, answer: t.faqDocumentsAnswer },
+    { question: t.faqPurityQuestion, answer: t.faqPurityAnswer },
+    { question: t.faqCustomQuestion, answer: t.faqCustomAnswer },
+    { question: t.faqStandardsQuestion, answer: t.faqStandardsAnswer },
+    { question: t.faqDeliveryQuestion, answer: t.faqDeliveryAnswer },
+  ]
 
   async function submitDocumentRequest(event) {
     event.preventDefault()
@@ -1589,7 +2154,12 @@ function ResourcesPage({ t }) {
   return (
     <main className="resources-page">
       <section className="resources-hero">
-        <div>
+        <div className="resources-hero-content">
+          <nav className="resources-breadcrumb" aria-label={t.breadcrumbLabel}>
+            <NavLink to="/">{t.navHome}</NavLink>
+            <span>/</span>
+            <span>{t.navResources}</span>
+          </nav>
           <p className="eyebrow">{t.resourcesEyebrow}</p>
           <h2>{t.resourcesTitle}</h2>
           <p>{t.resourcesText}</p>
@@ -1602,7 +2172,10 @@ function ResourcesPage({ t }) {
       <section className="page-section resource-tools">
         <label>
           {t.documentSearch}
-          <input value={resourceSearch} onChange={(event) => setResourceSearch(event.target.value)} placeholder={t.documentSearchPlaceholder} />
+          <span className="resource-search-control">
+            <input value={resourceSearch} onChange={(event) => setResourceSearch(event.target.value)} placeholder={t.documentSearchPlaceholder} />
+            <SearchIcon />
+          </span>
         </label>
         <label>
           {t.documentType}
@@ -1618,70 +2191,152 @@ function ResourcesPage({ t }) {
       </section>
 
       <section className="page-section resource-grid">
-        {filteredResources.map((resource) => (
+        {visiblePrimaryResources.map((resource) => (
           <article className="resource-card" key={resource.title}>
+            <div className={`resource-card-preview resource-card-preview-${resource.preview}`}>
+              {resource.preview === 'process' ? (
+                <img src="/documents/mcf-flow-chart-production.svg" alt="" aria-hidden="true" />
+              ) : null}
+              {resource.preview === 'certificate' ? (
+                <div className="certificate-preview" aria-hidden="true">
+                  <span>SGS</span>
+                  <span>Certificate</span>
+                  <span>Quality report</span>
+                </div>
+              ) : null}
+              {resource.preview === 'brochure' ? (
+                <div className="brochure-preview" aria-hidden="true">
+                  <span>G-ROD</span>
+                  <strong>Solutions cuivre</strong>
+                </div>
+              ) : null}
+            </div>
             <div className="resource-card-header">
-              <span>{resource.type}</span>
-              <strong>{resource.href ? t.available : t.onRequest}</strong>
+              <span>{resource.badge || resource.type}</span>
+              <strong>{resource.status}</strong>
             </div>
             <h3>{resource.title}</h3>
             <p>{resource.text}</p>
-            {resource.product ? <span className="resource-product">{resource.product}</span> : null}
-            {resource.href ? (
-              <a className="text-link" href={resource.href} download>
-                {t.download}
-              </a>
-            ) : (
-              <NavLink className="text-link" to={`/demande-document?document=${encodeURIComponent(resource.title)}&type=${encodeURIComponent(resource.type || '')}&produit=${encodeURIComponent(resource.product || '')}`}>
-                {t.requestDocument}
-              </NavLink>
-            )}
+            <div className="resource-card-footer">
+              {resource.href ? (
+                <a className="text-link" href={resource.href} download>
+                  {t.download}
+                </a>
+              ) : (
+                <NavLink className="text-link" to={`/demande-document?document=${encodeURIComponent(resource.title)}&type=${encodeURIComponent(resource.type || '')}&produit=${encodeURIComponent(resource.product || '')}`}>
+                  {t.requestDocument}
+                </NavLink>
+              )}
+              <span>{resource.meta}</span>
+            </div>
           </article>
         ))}
       </section>
 
+      {secondaryResources.length ? (
+        <section className="page-section resource-secondary-list">
+          <div>
+            <p className="eyebrow">{t.resourceLibraryEyebrow}</p>
+            <h3>{t.resourceLibraryTitle}</h3>
+          </div>
+          {secondaryResources.map((resource) => (
+            <article key={resource.title}>
+              <span>{resource.type}</span>
+              <strong>{resource.title}</strong>
+              <p>{resource.text}</p>
+              {resource.href ? (
+                <a className="text-link" href={resource.href} download>
+                  {t.download}
+                </a>
+              ) : (
+                <NavLink className="text-link" to={`/demande-document?document=${encodeURIComponent(resource.title)}&type=${encodeURIComponent(resource.type || '')}&produit=${encodeURIComponent(resource.product || '')}`}>
+                  {t.requestDocument}
+                </NavLink>
+              )}
+            </article>
+          ))}
+        </section>
+      ) : null}
+
+      <section className="page-section frequent-documents">
+        <div className="frequent-documents-heading">
+          <h3>{t.frequentDocumentsTitle}</h3>
+          <a href="#document-request">{t.viewAllDocuments}</a>
+        </div>
+        <div className="frequent-document-row">
+          {frequentDocuments.map((document) => (
+            <a
+              className="frequent-document-item"
+              href={`#document-request`}
+              key={document.title}
+              onClick={() => setRequest((current) => ({ ...current, titreDocument: document.title, typeDocument: document.type }))}
+            >
+              <span className={`frequent-document-icon frequent-document-icon-${document.tone}`}>
+                <CatalogCtaIcon />
+              </span>
+              <strong>{document.title}</strong>
+              <small>{document.type}</small>
+            </a>
+          ))}
+        </div>
+      </section>
+
       <section className="page-section faq-section">
-        <div>
+        <div className="faq-intro">
           <p className="eyebrow">{t.technicalFaq}</p>
           <h2>{t.faqTitle}</h2>
+          <p>{t.faqIntro}</p>
         </div>
         <div className="faq-list">
-          <article className="faq-item">
-            <h3>{t.faqDocumentsQuestion}</h3>
-            <p>{t.faqDocumentsAnswer}</p>
-          </article>
-          <article className="faq-item">
-            <h3>{t.faqPurityQuestion}</h3>
-            <p>{t.faqPurityAnswer}</p>
-          </article>
-          <article className="faq-item">
-            <h3>{t.faqCustomQuestion}</h3>
-            <p>{t.faqCustomAnswer}</p>
-          </article>
-          <article className="faq-item">
-            <h3>{t.faqStandardsQuestion}</h3>
-            <p>{t.faqStandardsAnswer}</p>
-          </article>
+          {faqItems.map((item) => (
+            <details className="faq-item" key={item.question}>
+              <summary>
+                <span>{item.question}</span>
+                <strong>+</strong>
+              </summary>
+              <p>{item.answer}</p>
+            </details>
+          ))}
         </div>
       </section>
 
       <section className="page-section document-request-form" id="document-request">
-        <div>
+        <div className="document-request-copy">
           <p className="eyebrow">{t.documentRequestEyebrow}</p>
           <h2>{t.documentRequestTitle}</h2>
           <p>{t.documentRequestText}</p>
+          <div className="document-trust-note">
+            <MetricIcon type="shield" />
+            <span>{t.documentTrustNote}</span>
+          </div>
         </div>
         <form className="quote-form" onSubmit={submitDocumentRequest}>
           <Field label={t.company} name="societe" value={request.societe} onChange={(event) => setProductFormValue(setRequest, event)} required />
           <Field label={t.contact} name="nomContact" value={request.nomContact} onChange={(event) => setProductFormValue(setRequest, event)} required />
           <Field label={t.email} name="email" type="email" value={request.email} onChange={(event) => setProductFormValue(setRequest, event)} required />
           <Field label={t.phone} name="telephone" value={request.telephone} onChange={(event) => setProductFormValue(setRequest, event)} required />
-          <Field label={t.documentType} name="typeDocument" value={request.typeDocument} onChange={(event) => setProductFormValue(setRequest, event)} required />
-          <Field label={t.documentTitle} name="titreDocument" value={request.titreDocument} onChange={(event) => setProductFormValue(setRequest, event)} required />
-          <Field label={t.concernedProduct} name="produitConcerne" value={request.produitConcerne} onChange={(event) => setProductFormValue(setRequest, event)} />
           <label>
+            {t.documentType}
+            <select name="typeDocument" value={request.typeDocument} onChange={(event) => setProductFormValue(setRequest, event)} required>
+              <option value="">{t.selectDocumentType}</option>
+              {resourceTypes.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </label>
+          <Field label={t.documentTitle} name="titreDocument" value={request.titreDocument} onChange={(event) => setProductFormValue(setRequest, event)} required />
+          <label>
+            {t.concernedProduct}
+            <select name="produitConcerne" value={request.produitConcerne} onChange={(event) => setProductFormValue(setRequest, event)}>
+              <option value="">{t.allProductsUnspecified}</option>
+              {officialProducts.map((product) => (
+                <option key={product.nom} value={product.nom}>{product.nom}</option>
+              ))}
+            </select>
+          </label>
+          <label className="field-wide">
             {t.message}
-            <textarea name="message" rows="4" value={request.message} onChange={(event) => setProductFormValue(setRequest, event)} />
+            <textarea name="message" rows="5" value={request.message} placeholder={t.documentMessagePlaceholder} onChange={(event) => setProductFormValue(setRequest, event)} />
           </label>
           <button type="submit">{t.submitDocumentRequest}</button>
           {status ? <p className="form-status">{status}</p> : null}
@@ -1693,33 +2348,38 @@ function ResourcesPage({ t }) {
 
 function ProductionProcessPage({ t }) {
   const processSteps = [
-    { number: '01', title: t.processStepReceptionTitle, text: t.processStepReceptionText, tag: t.processZoneRaw },
-    { number: '02', title: t.processStepSortingTitle, text: t.processStepSortingText, tag: t.processZoneRaw },
-    { number: '03', title: t.processStepWeighingTitle, text: t.processStepWeighingText, tag: t.processZoneControl },
-    { number: '04', title: t.processStepLabTitle, text: t.processStepLabText, tag: t.processZoneQuality },
-    { number: '05', title: t.processStepFurnaceTitle, text: t.processStepFurnaceText, tag: t.processZoneProduction },
-    { number: '06', title: t.processStepCastingTitle, text: t.processStepCastingText, tag: t.processZoneProduction },
-    { number: '07', title: t.processStepStockTitle, text: t.processStepStockText, tag: t.processZoneLogistics },
-    { number: '08', title: t.processStepExportTitle, text: t.processStepExportText, tag: t.processZoneLogistics },
+    { number: '01', title: t.processStepReceptionTitle, text: t.processStepReceptionText, tag: t.processZoneRaw, image: '/images/process/process-reception.jpg' },
+    { number: '02', title: t.processStepSortingTitle, text: t.processStepSortingText, tag: t.processZoneRaw, image: '/images/process/process-sorting.jpg' },
+    { number: '03', title: t.processStepWeighingTitle, text: t.processStepWeighingText, tag: t.processZoneControl, image: '/images/process/process-weighing.jpg' },
+    { number: '04', title: t.processStepLabTitle, text: t.processStepLabText, tag: t.processZoneQuality, image: '/images/process/process-lab.jpg' },
+    { number: '05', title: t.processStepFurnaceTitle, text: t.processStepFurnaceText, tag: t.processZoneProduction, image: '/images/process/process-furnace.jpg' },
+    { number: '06', title: t.processStepCastingTitle, text: t.processStepCastingText, tag: t.processZoneProduction, image: '/images/process/process-production.jpg' },
+    { number: '07', title: t.processStepStockTitle, text: t.processStepStockText, tag: t.processZoneLogistics, image: '/images/process/process-stock.jpg' },
+    { number: '08', title: t.processStepExportTitle, text: t.processStepExportText, tag: t.processZoneLogistics, image: '/images/process/process-expedition.jpg' },
   ]
 
   const controlPoints = [
-    { title: t.processControlSecurity, text: t.processControlSecurityText },
-    { title: t.processControlTraceability, text: t.processControlTraceabilityText },
-    { title: t.processControlQuality, text: t.processControlQualityText },
-    { title: t.processControlPerformance, text: t.processControlPerformanceText },
+    { title: t.processControlSecurity, text: t.processControlSecurityText, icon: 'security' },
+    { title: t.processControlTraceability, text: t.processControlTraceabilityText, icon: 'traceability' },
+    { title: t.processControlQuality, text: t.processControlQualityText, icon: 'quality' },
+    { title: t.processControlPerformance, text: t.processControlPerformanceText, icon: 'performance' },
   ]
 
   return (
     <main className="process-page">
       <section className="process-hero">
         <div>
+          <nav className="process-breadcrumb" aria-label={t.breadcrumbLabel}>
+            <NavLink to="/">{t.navHome}</NavLink>
+            <span>/</span>
+            <span>{t.navProcess}</span>
+          </nav>
           <p className="eyebrow">{t.processEyebrow}</p>
           <h2>{t.processTitle}</h2>
           <p>{t.processText}</p>
           <div className="process-hero-actions">
             <NavLink className="primary-link" to="/devis">{t.requestQuote}</NavLink>
-            <NavLink className="secondary-link" to="/resources">{t.navResources}</NavLink>
+            <NavLink className="secondary-link" to="/resources">{t.viewResources}</NavLink>
           </div>
         </div>
         <aside className="process-hero-card">
@@ -1744,10 +2404,13 @@ function ProductionProcessPage({ t }) {
         <div className="process-flow-line">
           {processSteps.map((step) => (
             <article className="process-step" key={step.number}>
-              <span>{step.number}</span>
-              <small>{step.tag}</small>
-              <h4>{step.title}</h4>
-              <p>{step.text}</p>
+              <img src={step.image} alt="" aria-hidden="true" loading="lazy" />
+              <div className="process-step-body">
+                <span>{step.number}</span>
+                <small>{step.tag}</small>
+                <h4>{step.title}</h4>
+                <p>{step.text}</p>
+              </div>
             </article>
           ))}
         </div>
@@ -1756,7 +2419,7 @@ function ProductionProcessPage({ t }) {
       <section className="process-control-grid">
         {controlPoints.map((point) => (
           <article key={point.title}>
-            <span />
+            <ProcessIcon type={point.icon} />
             <h3>{point.title}</h3>
             <p>{point.text}</p>
           </article>
@@ -1768,18 +2431,37 @@ function ProductionProcessPage({ t }) {
 
 function WhyGrodPage({ t }) {
   const reasons = [
-    { title: t.whyRecyclingTitle, text: t.whyRecyclingText, metric: t.whyRecyclingMetric },
-    { title: t.whyCarbonTitle, text: t.whyCarbonText, metric: t.whyCarbonMetric },
-    { title: t.whyMoroccoTitle, text: t.whyMoroccoText, metric: t.whyMoroccoMetric },
-    { title: t.whyQualityTitle, text: t.whyQualityText, metric: t.whyQualityMetric },
-    { title: t.whyTraceabilityTitle, text: t.whyTraceabilityText, metric: t.whyTraceabilityMetric },
-    { title: t.whyPartnersTitle, text: t.whyPartnersText, metric: t.whyPartnersMetric },
+    { title: t.whyRecyclingTitle, text: t.whyRecyclingText, icon: 'recycle' },
+    { title: t.whyCarbonTitle, text: t.whyCarbonText, icon: 'leaf' },
+    { title: t.whyMoroccoTitle, text: t.whyMoroccoText, icon: 'morocco' },
+    { title: t.whyQualityTitle, text: t.whyQualityText, icon: 'quality' },
+    { title: t.whyTraceabilityTitle, text: t.whyTraceabilityText, icon: 'traceability' },
+    { title: t.whyPartnersTitle, text: t.whyPartnersText, icon: 'partners' },
+  ]
+
+  const promisePoints = [
+    { title: t.aboutPromiseRecycledTitle, text: t.aboutPromiseRecycledText, icon: 'recycle' },
+    { title: t.aboutPromiseQualityTitle, text: t.aboutPromiseQualityText, icon: 'quality' },
+    { title: t.aboutPromiseTraceabilityTitle, text: t.aboutPromiseTraceabilityText, icon: 'traceability' },
+    { title: t.aboutPromiseSupportTitle, text: t.aboutPromiseSupportText, icon: 'support' },
+  ]
+
+  const identityPoints = [
+    { title: t.aboutIdentityLocalTitle, text: t.aboutIdentityLocalText },
+    { title: t.aboutIdentityRecyclingTitle, text: t.aboutIdentityRecyclingText },
+    { title: t.aboutIdentityQualityTitle, text: t.aboutIdentityQualityText },
+    { title: t.aboutIdentitySupportTitle, text: t.aboutIdentitySupportText },
   ]
 
   return (
     <main className="why-page">
       <section className="why-hero">
-        <div>
+        <div className="why-hero-copy">
+          <nav className="why-breadcrumb" aria-label={t.breadcrumbLabel}>
+            <NavLink to="/">{t.navHome}</NavLink>
+            <span>/</span>
+            <span>{t.navWhy}</span>
+          </nav>
           <p className="eyebrow">{t.whyEyebrow}</p>
           <h2>{t.whyTitle}</h2>
           <p>{t.whyText}</p>
@@ -1791,24 +2473,77 @@ function WhyGrodPage({ t }) {
         <aside className="why-impact-card">
           <span>{t.whyImpactEyebrow}</span>
           <strong>{t.whyImpactTitle}</strong>
-          <p>{t.whyImpactText}</p>
+          <div className="why-promise-list">
+            {promisePoints.map((point) => (
+              <div className="why-promise-item" key={point.title}>
+                <AboutIcon type={point.icon} />
+                <div>
+                  <b>{point.title}</b>
+                  <p>{point.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </aside>
       </section>
 
-      <section className="why-reasons-grid">
-        {reasons.map((reason) => (
-          <article key={reason.title}>
-            <span>{reason.metric}</span>
-            <h3>{reason.title}</h3>
-            <p>{reason.text}</p>
-          </article>
-        ))}
+      <section className="why-reasons-section">
+        <div className="why-section-heading">
+          <p className="eyebrow">{t.aboutCommitmentsEyebrow}</p>
+          <h2>{t.aboutCommitmentsTitle}</h2>
+        </div>
+        <div className="why-reasons-grid">
+          {reasons.map((reason) => (
+            <article key={reason.title}>
+              <span className="why-card-icon">
+                <AboutIcon type={reason.icon} />
+              </span>
+              <div>
+                <h3>{reason.title}</h3>
+                <p>{reason.text}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="why-identity-section">
+        <div className="why-identity-gallery">
+          <div className="why-identity-main-image">
+            <img src="/images/about/about-factory-exterior.jpg" alt="Usine industrielle G-ROD" loading="lazy" />
+            <span className="why-factory-logo">
+              <img src="/grod-logo.png" alt="G-ROD" />
+            </span>
+          </div>
+          <div className="why-identity-thumbs">
+            <img src="/images/about/about-molten-copper.jpg" alt="Cuivre en fusion" loading="lazy" />
+            <img src="/images/process/process-production.jpg" alt="Copper rods en production" loading="lazy" />
+            <img src="/images/about/about-lab-control.jpg" alt="Controle laboratoire cuivre" loading="lazy" />
+          </div>
+        </div>
+        <div className="why-identity-copy">
+          <p className="eyebrow">{t.aboutIdentityEyebrow}</p>
+          <h2>{t.aboutIdentityTitle}</h2>
+          <div className="why-identity-points">
+            {identityPoints.map((point) => (
+              <article className="why-identity-point" key={point.title}>
+                <span>
+                  <AboutIcon type="check" />
+                </span>
+                <div>
+                  <h3>{point.title}</h3>
+                  <p>{point.text}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
       </section>
 
       <section className="why-partners-panel">
         <div>
           <p className="eyebrow">{t.partnersEyebrow}</p>
-          <h3>{t.whyPartnersPanelTitle}</h3>
+          <h3>{t.aboutPartnersTitle}</h3>
           <p>{t.whyPartnersPanelText}</p>
         </div>
         <div className="why-partners-strip">
@@ -1942,8 +2677,8 @@ function QuotePage({ t }) {
   useEffect(() => {
     if (!hasQuoteDraftContent(form)) {
       localStorage.removeItem(QUOTE_DRAFT_KEY)
-      setDraftSaved(false)
-      return undefined
+      const timeout = window.setTimeout(() => setDraftSaved(false), 0)
+      return () => window.clearTimeout(timeout)
     }
 
     const timeout = window.setTimeout(() => {
@@ -2353,22 +3088,26 @@ function AdminDashboard({ t, token, onLogout }) {
   const [documentForm, setDocumentForm] = useState(emptyDocumentForm())
   const [editingProductId, setEditingProductId] = useState(null)
   const [editingDocumentId, setEditingDocumentId] = useState(null)
-  const [selectedClient, setSelectedClient] = useState('')
   const [selectedDemande, setSelectedDemande] = useState(null)
   const [search, setSearch] = useState('')
+  const [productSearch, setProductSearch] = useState('')
+  const [productCategoryFilter, setProductCategoryFilter] = useState('ALL')
+  const [productStatusFilter, setProductStatusFilter] = useState('ALL')
+  const [productDrawerOpen, setProductDrawerOpen] = useState(false)
+  const [productDrawerTab, setProductDrawerTab] = useState('info')
+  const [productPage, setProductPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState('TOUTES')
   const [priorityFilter, setPriorityFilter] = useState('ALL')
-  const [adminTab, setAdminTab] = useState(getAdminTabFromPath(location.pathname))
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const adminTab = getAdminTabFromPath(location.pathname)
   const isClientSection = adminTab === 'clients'
-
-  useEffect(() => {
-    setAdminTab(getAdminTabFromPath(location.pathname))
-  }, [location.pathname])
+  const productEditMatch = location.pathname.match(/\/admin\/produits\/([^/]+)\/modifier$/)
+  const productEditId = productEditMatch?.[1] || ''
+  const isProductEditPage = Boolean(productEditId)
+  const isDashboardRoute = location.pathname === '/admin' || location.pathname.includes('/admin/dashboard')
 
   function openAdminTab(tab, path) {
-    setAdminTab(tab)
     navigate(path)
   }
 
@@ -2417,7 +3156,18 @@ function AdminDashboard({ t, token, onLogout }) {
       }
     }
     loadAdminData()
-  }, [token, t.adminLoadError])
+  }, [navigate, token, t.adminLoadError])
+
+  useEffect(() => {
+    if (!productEditId || !products.length) return
+    const product = products.find((item) => String(item.id) === String(productEditId))
+    if (!product) return
+    // The edit page must hydrate the controlled form from the product selected in the URL.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEditingProductId(product.id)
+    setProductForm(getProductAdminForm(product))
+    setProductDrawerOpen(true)
+  }, [productEditId, products])
 
   const clients = useMemo(() => buildClientHistory(demandes), [demandes])
   const routeClientKey = location.pathname.includes('/admin/clients/')
@@ -2486,7 +3236,85 @@ function AdminDashboard({ t, token, onLogout }) {
     .map(([name, count]) => ({ name, count, percent: demandes.length ? Math.round((count / demandes.length) * 100) : 0 }))
     .sort((first, second) => second.count - first.count)
     .slice(0, 5)
-  const selectedClientData = clients.find((client) => client.key === selectedClient)
+  const productCategories = useMemo(
+    () => [...new Set(products.map((product) => product.categorie || 'Copper products'))].sort(),
+    [products],
+  )
+  const filteredAdminProducts = useMemo(() => {
+    const query = normalizeSearchText(productSearch)
+    return products.filter((product) => {
+      const normalized = normalizeProduct(product)
+      const haystack = normalizeSearchText([
+        normalized.nom,
+        normalized.description,
+        normalized.categorie,
+        normalized.applications.join(' '),
+        normalized.purete,
+        normalized.dimensions,
+        normalized.normes,
+      ].join(' '))
+      const matchesSearch = !query || haystack.includes(query)
+      const matchesCategory = productCategoryFilter === 'ALL' || (product.categorie || 'Copper products') === productCategoryFilter
+      const matchesStatus =
+        productStatusFilter === 'ALL' ||
+        (productStatusFilter === 'ACTIVE' && product.actif !== false) ||
+        (productStatusFilter === 'INACTIVE' && product.actif === false)
+      return matchesSearch && matchesCategory && matchesStatus
+    })
+  }, [productCategoryFilter, productSearch, productStatusFilter, products])
+  const productsPerPage = 10
+  const totalProductPages = Math.max(1, Math.ceil(filteredAdminProducts.length / productsPerPage))
+  const paginatedAdminProducts = filteredAdminProducts.slice((productPage - 1) * productsPerPage, productPage * productsPerPage)
+  const activeProductsCount = products.filter((product) => product.actif !== false).length
+  const inactiveProductsCount = products.length - activeProductsCount
+  const productsWith3DCount = products.filter((product) => {
+    const normalized = normalizeProduct(product)
+    return normalized.has3D && normalized.model3D
+  }).length
+  const newRequestsCount = demandes.filter((demande) => demande.statut === 'NOUVELLE').length
+  const unreadAdminCount = newRequestsCount + documentRequests.filter((request) => (request.statut || 'NOUVELLE') === 'NOUVELLE').length
+  const adminNavItems = [
+    { key: 'dashboard', label: 'Dashboard', path: '/admin/dashboard', icon: 'dashboard' },
+    { key: 'demandes', label: t.requestsMenu, path: '/admin/demandes', icon: 'requests', badge: demandes.length },
+    { key: 'clients', label: t.clients, path: '/admin/clients', icon: 'clients', badge: clients.length },
+    { key: 'produits', label: t.products, path: '/admin/produits', icon: 'products', badge: products.length },
+    { key: 'documents', label: t.documentRequests, path: '/admin/documents', icon: 'documents', badge: documentRequests.length },
+    { key: 'ressources', label: t.resourcesEyebrow, path: '/admin/ressources', icon: 'resources', badge: documents.length },
+    { key: 'settings', label: t.notifications, path: '/admin/dashboard', icon: 'bell', badge: unreadAdminCount },
+  ]
+  const activeAdminKey = isDashboardRoute ? 'dashboard' : adminTab
+  const kpiCards = [
+    { label: t.totalRequests, value: demandes.length, hint: '+100% ce mois', icon: 'requests', tone: 'green' },
+    { label: t.newRequests, value: newRequestsCount, hint: '+1 ce mois', icon: 'document-add', tone: 'copper' },
+    { label: t.documentRequests, value: documentRequests.length, hint: '+1 ce mois', icon: 'documents', tone: 'dark' },
+    { label: t.activeProducts, value: activeProductsCount, hint: '+2 ce mois', icon: 'products', tone: 'green' },
+  ]
+  const adminSearchPlaceholder = t.adminSearchPlaceholder || 'Rechercher reference, client, produit...'
+
+  useEffect(() => {
+    setProductPage(1)
+  }, [productCategoryFilter, productSearch, productStatusFilter])
+
+  function openProductDrawer(product = null) {
+    setProductDrawerTab('info')
+    setProductDrawerOpen(true)
+    if (product) {
+      setEditingProductId(product.id)
+      setProductForm(getProductAdminForm(product))
+      navigate('/admin/produits')
+      return
+    }
+    setEditingProductId(null)
+    setProductForm(emptyProductForm())
+  }
+
+  function closeProductDrawer() {
+    setProductDrawerOpen(false)
+    setProductDrawerTab('info')
+    setEditingProductId(null)
+    setProductForm(emptyProductForm())
+    if (isProductEditPage) navigate('/admin/produits')
+  }
 
   async function updateStatus(id, statut) {
     setSuccess('')
@@ -2668,7 +3496,9 @@ function AdminDashboard({ t, token, onLogout }) {
       )
       setProductForm(emptyProductForm())
       setEditingProductId(null)
+      setProductDrawerOpen(false)
       setSuccess(t.productSaved)
+      if (editingProductId) navigate('/admin/produits')
     } catch {
       setError(t.productSaveError)
     }
@@ -2814,9 +3644,84 @@ function AdminDashboard({ t, token, onLogout }) {
   }
 
   return (
-    <main className="page-section admin-dashboard-page">
+    <div className="admin-shell">
+      <aside className="admin-sidebar" aria-label="Administration G-ROD">
+        <NavLink className="admin-sidebar-brand" to="/admin/dashboard">
+          <img src="/grod-logo.png" alt="G-ROD" />
+          <span>Morocco Copper Foundry</span>
+        </NavLink>
+
+        <nav className="admin-sidebar-nav">
+          {adminNavItems.map((item) => (
+            <button
+              type="button"
+              key={item.key}
+              className={activeAdminKey === item.key ? 'active' : ''}
+              onClick={() => openAdminTab(item.key, item.path)}
+            >
+              <AdminIcon type={item.icon} />
+              <span>{item.label}</span>
+              {item.badge ? <strong>{item.badge}</strong> : null}
+            </button>
+          ))}
+        </nav>
+
+        <div className="admin-sidebar-export">
+          <span>Export & actions</span>
+          <button type="button" onClick={() => exportCsv(filteredDemandes)}>
+            <AdminIcon type="download" />
+            {t.exportCsv}
+          </button>
+          <button type="button" onClick={registerPasskey}>
+            <AdminIcon type="security" />
+            Face ID
+          </button>
+        </div>
+
+        <div className="admin-sidebar-profile">
+          <span className="admin-avatar">A</span>
+          <div>
+            <strong>Admin G-ROD</strong>
+            <small>Administrateur</small>
+            <em>En ligne</em>
+          </div>
+          <button type="button" onClick={onLogout} aria-label={t.logout}>×</button>
+        </div>
+      </aside>
+
+      <section className="admin-main">
+        <header className="admin-topbar">
+          <div className="admin-topbar-title">
+            <button type="button" className="admin-menu-button" aria-label="Menu admin">
+              <AdminIcon type="menu" />
+            </button>
+            <div>
+              <h1>{isDashboardRoute ? 'Bonjour Admin' : t.commercialDashboard}</h1>
+              <p>{t.dashboardIntro}</p>
+            </div>
+          </div>
+          <div className="admin-topbar-actions">
+            <label className="admin-global-search">
+              <AdminIcon type="search" />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={adminSearchPlaceholder} />
+            </label>
+            <button type="button" className="admin-notification-button" onClick={() => openAdminTab('settings', '/admin/dashboard')} aria-label={t.notifications}>
+              <AdminIcon type="bell" />
+              {unreadAdminCount ? <span>{unreadAdminCount}</span> : null}
+            </button>
+            <div className="admin-profile-chip">
+              <span className="admin-avatar">A</span>
+              <div>
+                <strong>Admin</strong>
+                <small>Administrateur</small>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="page-section admin-dashboard-page">
       {!isClientSection ? (
-      <section className="legacy-admin-hero">
+      <section className="legacy-admin-hero admin-welcome-panel">
         <div>
           <p className="eyebrow">{t.administration}</p>
           <h2>{t.commercialDashboard}</h2>
@@ -2833,11 +3738,18 @@ function AdminDashboard({ t, token, onLogout }) {
       ) : null}
 
       {!isClientSection ? (
-      <section className="metrics-row legacy-admin-metrics">
-        <Metric value={demandes.length} label={t.totalRequests} />
-        <Metric value={demandes.filter((demande) => demande.statut === 'NOUVELLE').length} label={t.newRequests} />
-        <Metric value={documentRequests.length} label={t.documentRequests} />
-        <Metric value={products.filter((product) => product.actif !== false).length} label={t.activeProducts} />
+      <section className="admin-kpi-grid">
+        {kpiCards.map((card) => (
+          <article className={`admin-kpi-card ${card.tone}`} key={card.label}>
+            <div>
+              <span>{card.label}</span>
+              <strong>{card.value}</strong>
+              <small>{card.hint}</small>
+            </div>
+            <AdminIcon type={card.icon} />
+            <i aria-hidden="true" />
+          </article>
+        ))}
       </section>
       ) : null}
 
@@ -2869,7 +3781,7 @@ function AdminDashboard({ t, token, onLogout }) {
           {t.products}
           <span>{products.length}</span>
         </button>
-        <button className={adminTab === 'ressources' ? 'active' : ''} onClick={() => openAdminTab('ressources', '/admin/documents')}>
+          <button className={adminTab === 'ressources' ? 'active' : ''} onClick={() => openAdminTab('ressources', '/admin/ressources')}>
           {t.resourcesEyebrow}
           <span>{documents.length}</span>
         </button>
@@ -2879,7 +3791,7 @@ function AdminDashboard({ t, token, onLogout }) {
       </nav>
       ) : null}
 
-      {location.pathname.includes('/admin/dashboard') ? (
+      {isDashboardRoute ? (
         <section className="dashboard-panels legacy-dashboard-panels">
           <article className="dashboard-panel">
             <div className="panel-heading">
@@ -2928,7 +3840,7 @@ function AdminDashboard({ t, token, onLogout }) {
         </section>
       ) : null}
 
-      {location.pathname.includes('/admin/dashboard') ? (
+      {isDashboardRoute ? (
         <section className="admin-analytics-panel">
           <div className="analytics-heading">
             <div>
@@ -2966,7 +3878,7 @@ function AdminDashboard({ t, token, onLogout }) {
         </section>
       ) : null}
 
-      {location.pathname.includes('/admin/dashboard') ? (
+      {isDashboardRoute ? (
       <section className="admin-workspace notification-settings-panel">
         <p className="eyebrow">{t.notifications}</p>
         <h3>{t.notificationSettings}</h3>
@@ -3084,20 +3996,6 @@ function AdminDashboard({ t, token, onLogout }) {
           ))}
         </div>
       </section>
-
-      {selectedClientData ? (
-        <section className="client-detail-panel">
-          <div>
-            <p className="eyebrow">{t.clientHistory}</p>
-            <h3>{selectedClientData.name}</h3>
-            <p>{selectedClientData.email} - {selectedClientData.phone}</p>
-          </div>
-          <div className="client-stats">
-            <span>{selectedClientData.total} {t.requests}</span>
-            <span>{selectedClientData.products.join(', ')}</span>
-          </div>
-        </section>
-      ) : null}
 
       <div className="table-wrap">
         <table className="admin-table legacy-requests-table">
@@ -3242,27 +4140,48 @@ function AdminDashboard({ t, token, onLogout }) {
           </div>
         </div>
         <div className="table-wrap">
-          <table className="admin-table">
+          <table className="admin-table admin-document-requests-table">
             <thead>
               <tr>
                 <th>{t.reference}</th>
                 <th>{t.company}</th>
+                <th>{t.contact}</th>
                 <th>{t.documentTitle}</th>
                 <th>{t.documentType}</th>
+                <th>{t.concernedProduct}</th>
+                <th>{t.message}</th>
                 <th>{t.status}</th>
               </tr>
             </thead>
             <tbody>
-              {documentRequests.map((request) => (
+              {documentRequests.length ? documentRequests.map((request) => (
                 <tr key={request.id}>
-                  <td>{request.referenceDemande || `#${request.id}`}</td>
+                  <td>
+                    <strong>{request.referenceDemande || `#${request.id}`}</strong>
+                  </td>
                   <td>
                     <strong>{request.societe}</strong>
                     <span>{request.email}</span>
                   </td>
-                  <td>{request.titreDocument}</td>
-                  <td>{request.typeDocument}</td>
                   <td>
+                    <strong>{request.nomContact || '-'}</strong>
+                    <span>{request.telephone || '-'}</span>
+                    {request.email ? (
+                      <a className="text-link" href={`mailto:${request.email}`}>
+                        {t.email}
+                      </a>
+                    ) : null}
+                  </td>
+                  <td>{request.titreDocument}</td>
+                  <td>
+                    <span className="resource-product">{request.typeDocument || '-'}</span>
+                  </td>
+                  <td>{request.produitConcerne || t.allProductsUnspecified}</td>
+                  <td>
+                    <span className="document-request-message">{request.message || t.noMessage}</span>
+                  </td>
+                  <td>
+                    <span className="status-badge">{request.statut || 'NOUVELLE'}</span>
                     <select value={request.statut} onChange={(event) => updateDocumentRequestStatus(request.id, event.target.value)}>
                       <option value="NOUVELLE">NOUVELLE</option>
                       <option value="EN_TRAITEMENT">EN_TRAITEMENT</option>
@@ -3271,7 +4190,13 @@ function AdminDashboard({ t, token, onLogout }) {
                     </select>
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan="8">
+                    <p className="form-status">{t.noData}</p>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -3283,10 +4208,10 @@ function AdminDashboard({ t, token, onLogout }) {
         <div className="admin-workspace-header">
           <div>
             <p className="eyebrow">{t.catalogueTitle}</p>
-            <h3>{t.addProduct}</h3>
+            <h3>{isProductEditPage ? t.editProduct : t.addProduct}</h3>
           </div>
         </div>
-        {!editingProductId ? (
+        {(!editingProductId || isProductEditPage) ? (
         <form className="admin-form-grid" onSubmit={saveProduct}>
           <Field label={t.productName} name="nom" value={productForm.nom} onChange={(event) => setProductFormValue(setProductForm, event)} required />
           <Field label="Categorie" name="categorie" value={productForm.categorie} onChange={(event) => setProductFormValue(setProductForm, event)} />
@@ -3313,10 +4238,25 @@ function AdminDashboard({ t, token, onLogout }) {
           </label>
           <div className="form-actions">
             <button type="submit">{editingProductId ? t.saveChanges : t.addProduct}</button>
+            {isProductEditPage ? (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => {
+                  setEditingProductId(null)
+                  setProductForm(emptyProductForm())
+                  navigate('/admin/produits')
+                }}
+              >
+                {t.cancel}
+              </button>
+            ) : null}
           </div>
         </form>
         ) : null}
 
+        {!isProductEditPage ? (
+        <>
         <div className="admin-workspace-header">
           <div>
             <p className="eyebrow">{t.products}</p>
@@ -3364,19 +4304,7 @@ function AdminDashboard({ t, token, onLogout }) {
                       <button
                         type="button"
                         onClick={() => {
-                          setEditingProductId(product.id)
-                          setProductForm({
-                            nom: product.nom || '',
-                            description: product.description || '',
-                            categorie: product.categorie || '',
-                            imageUrl: product.imageUrl || '',
-                            applications: product.applications || '',
-                            dimensions: product.dimensions || '',
-                            purete: product.purete || '',
-                            normes: product.normes || '',
-                            conditionnement: product.conditionnement || '',
-                            actif: Boolean(product.actif),
-                          })
+                          navigate(`/admin/produits/${product.id}/modifier`)
                         }}
                       >
                         {t.edit}
@@ -3437,6 +4365,8 @@ function AdminDashboard({ t, token, onLogout }) {
             </article>
           ))}
         </div>
+        </>
+        ) : null}
       </section>
       ) : null}
 
@@ -3704,7 +4634,9 @@ function AdminDashboard({ t, token, onLogout }) {
           </div>
         </section>
       ) : null}
-    </main>
+        </main>
+      </section>
+    </div>
   )
 }
 
@@ -3805,6 +4737,8 @@ function AssistantChat({ t, language }) {
 
 function normalizeProduct(product) {
   const fallback = officialProducts.find((item) => item.nom === product.nom) || officialProducts[0]
+  const productKey = product.id || fallback.id || slugify(product.nom || fallback.nom)
+  const visuals = productVisuals[productKey] || productVisuals[fallback.id] || { images: [], model3D: null, has3D: false }
   const applications = Array.isArray(product.applications)
     ? product.applications
     : String(product.applications || fallback.applications.join(','))
@@ -3818,12 +4752,33 @@ function normalizeProduct(product) {
     ...fallback,
     ...product,
     applications,
-    imageUrl: product.imageUrl || fallback.imageUrl,
+    imageUrl: product.imageUrl || fallback.imageUrl || visuals.images[0] || PRODUCT_PLACEHOLDER_IMAGE,
+    images: normalizeProductImages(product.images, product.imageUrl || fallback.imageUrl, visuals.images),
+    model3D: product.model3D || visuals.model3D,
+    has3D: Boolean(product.has3D ?? visuals.has3D) && Boolean(product.model3D || visuals.model3D),
     dimensions: product.dimensions || fallback.dimensions,
     purete: product.purete || fallback.purete,
     normes: product.normes || fallback.normes,
     conditionnement: product.conditionnement || fallback.conditionnement,
   }
+}
+
+function normalizeProductImages(productImages, imageUrl, fallbackImages = []) {
+  const images = Array.isArray(productImages)
+    ? productImages
+    : typeof productImages === 'string'
+      ? productImages.split(',')
+      : []
+
+  return [...new Set([...images, imageUrl, ...fallbackImages].map((image) => String(image || '').trim()).filter(Boolean))]
+}
+
+function getProductImages(product) {
+  return normalizeProductImages(product.images, product.imageUrl, productVisuals[product.id]?.images).slice(0, 5)
+}
+
+function getMainProductImage(product) {
+  return getProductImages(product)[0] || PRODUCT_PLACEHOLDER_IMAGE
 }
 
 function emptyProductForm() {
@@ -3838,6 +4793,21 @@ function emptyProductForm() {
     normes: '',
     conditionnement: '',
     actif: true,
+  }
+}
+
+function getProductAdminForm(product) {
+  return {
+    nom: product.nom || '',
+    description: product.description || '',
+    categorie: product.categorie || '',
+    imageUrl: product.imageUrl || '',
+    applications: Array.isArray(product.applications) ? product.applications.join('\n') : product.applications || '',
+    dimensions: product.dimensions || '',
+    purete: product.purete || '',
+    normes: product.normes || '',
+    conditionnement: product.conditionnement || '',
+    actif: Boolean(product.actif),
   }
 }
 
@@ -4156,8 +5126,17 @@ function getProductUsage(product) {
   return applications || product.description || '-'
 }
 
+function getProductHeroSpecs(t) {
+  return {
+    purity: t.specPurityShort,
+    dimensions: t.specDimensionsShort,
+    standards: t.specStandardsShort,
+  }
+}
+
 function getAdminTabFromPath(pathname) {
   if (pathname.includes('/admin/produits')) return 'produits'
+  if (pathname.includes('/admin/ressources')) return 'ressources'
   if (pathname.includes('/admin/documents')) return 'documents'
   if (pathname.includes('/admin/clients')) return 'clients'
   if (pathname.includes('/admin/demandes')) return 'demandes'
@@ -4214,8 +5193,9 @@ const dictionary = {
     navCatalogue: 'Catalogue',
     navResources: 'Ressources',
     navProcess: 'Processus',
-    navWhy: 'Pourquoi',
+    navWhy: 'À propos',
     navQuote: 'Demande de devis',
+    headerQuoteCta: 'Demander un devis',
     navAdmin: 'Admin',
     commandTrigger: 'Recherche rapide',
     commandEyebrow: 'Navigation intelligente',
@@ -4225,7 +5205,7 @@ const dictionary = {
     commandCatalogueHint: 'Voir les produits cuivre, comparer et ouvrir la 3D.',
     commandResourcesHint: 'Documents, certificats, FAQ et brochure.',
     commandProcessHint: 'Comprendre le flow industriel, la qualite et la tracabilite.',
-    commandWhyHint: 'Voir les preuves de confiance, durabilite, qualite et partenaires.',
+    commandWhyHint: 'Decouvrir G-ROD, ses engagements, sa qualite et ses partenaires.',
     commandQuoteHint: 'Creer une nouvelle demande client.',
     commandAdminHint: 'Ouvrir le dashboard commercial.',
     quickDockLabel: 'Actions rapides',
@@ -4246,7 +5226,7 @@ const dictionary = {
     metaCatalogue: 'Catalogue professionnel G-ROD: copper rod, anodes, bus bars, tubes, sheets, wire et pieces cuivre sur mesure.',
     metaResources: 'Ressources techniques G-ROD: brochure, certificats, fiches techniques, FAQ et documents pour acheteurs cuivre.',
     metaProcess: 'Processus industriel G-ROD: reception, tri, laboratoire, production, controle qualite et export du cuivre recycle.',
-    metaWhy: 'Pourquoi choisir G-ROD: cuivre recycle, faible empreinte carbone, production marocaine, qualite, tracabilite et partenaires strategiques.',
+    metaWhy: 'A propos de G-ROD: cuivre recycle, faible empreinte carbone, production marocaine, qualite, tracabilite et partenaires strategiques.',
     metaQuote: 'Formulaire de demande de devis G-ROD pour produits cuivre, dimensions, quantites, plans et specifications.',
     metaAdmin: 'Espace administration G-ROD pour suivre les demandes, clients, produits, documents et opportunites commerciales.',
     connectionLost: 'Connexion interrompue',
@@ -4257,11 +5237,12 @@ const dictionary = {
     installAppText: 'Acces plus rapide depuis votre appareil.',
     installApp: 'Installer',
     brandTitle: 'Solutions cuivre industrielles',
+    companyLine: 'Morocco Copper Foundry',
     heroTitle: 'Plateforme industrielle cuivre G-ROD',
     heroText:
       'Une plateforme B2B pour les acheteurs industriels qui recherchent du cuivre, des anodes, des rods et des solutions non ferreuses avec une approche qualite, rapidite commerciale et supply chain claire.',
     heroCatalogue: 'Explorer le catalogue',
-    heroQuote: 'Demander une cotation',
+    heroQuote: 'Demander un devis',
     trustRecycled: 'Cuivre recycle',
     trustQuality: 'Qualite controlee',
     trustMorocco: 'Production marocaine',
@@ -4284,9 +5265,25 @@ const dictionary = {
     documentsText: 'Mettez a disposition des acheteurs une presentation claire et un flow chart industriel de qualite.',
     downloadBrochure: 'Telecharger la brochure',
     downloadFlow: 'Telecharger le schema production',
+    identityEyebrow: 'Identite industrielle',
+    identityTitle: "G-ROD, l'IACS 100% marocain",
+    identityText: 'Le cuivre recycle pour une transition energetique durable.',
+    contactUs: 'Contactez-nous',
+    footerDescription: 'Cuivre recycle pour une transition energetique durable, avec une approche industrielle B2B claire.',
+    footerProducts: 'Produits',
+    footerResources: 'Ressources',
+    footerContact: 'Contact',
     catalogueEyebrow: 'Catalogue',
-    catalogueTitle: 'Produits cuivre G-ROD',
+    catalogueTitle: 'Catalogue G-ROD',
+    catalogueSubtitle: 'Solutions cuivre pour applications industrielles',
     requestQuote: 'Demander un devis',
+    viewResources: 'Voir les ressources',
+    viewProduct: 'Voir le produit',
+    secondaryActions: 'Actions secondaires',
+    threeDAvailable: '3D disponible',
+    catalogueCustomTitle: 'Vous ne trouvez pas le produit dont vous avez besoin ?',
+    catalogueCustomText: 'Notre equipe vous accompagne pour vos besoins specifiques en cuivre sur mesure.',
+    catalogueCustomCta: 'Demander un devis personnalise',
     productSearch: 'Recherche produit',
     productSearchPlaceholder: 'Rod, anodes, bus bars...',
     applicationFilter: 'Application',
@@ -4315,6 +5312,9 @@ const dictionary = {
     quickViewEyebrow: 'Fiche rapide',
     productDetail: 'Voir la fiche produit',
     quick3dPreview: 'Apercu 3D',
+    closePreview: 'Fermer l apercu',
+    no3dPreview: 'Apercu 3D non disponible',
+    productGalleryLabel: 'Galerie produit',
     productActionBar: 'Fiche produit',
     relatedProductsEyebrow: 'Selection associee',
     relatedProductsTitle: 'Produits souvent compares',
@@ -4340,6 +5340,8 @@ const dictionary = {
     clearSelection: 'Vider la selection',
     advisorEyebrow: 'Assistant produit',
     advisorTitle: 'Trouver le bon cuivre rapidement',
+    advisorText: 'Selectionnez l application et le besoin principal pour obtenir des recommandations pertinentes.',
+    advisorFind: 'Trouver',
     advisorApplication: 'Application',
     advisorNeed: 'Besoin principal',
     advisorChoose: 'Choisir',
@@ -4388,17 +5390,27 @@ const dictionary = {
     quoteInfoTitle: 'Informations a preciser pour devis',
     applicationNeed: 'Application',
     applicationNeedValue: 'Usage industriel, environnement et contraintes techniques',
-    normReference: 'Norme ou reference',
     drawingPlan: 'Plan',
     drawingPlanValue: 'Dessin technique ou lien document pour les pieces sur mesure',
     techInfo: 'Informations techniques',
     dimensions: 'Dimensions',
     standards: 'Normes',
+    specPurityShort: 'Selon besoin',
+    specDimensionsShort: 'Sur mesure',
+    specStandardsShort: 'ASTM / EN / IEC sur demande',
     packaging: 'Conditionnement',
     loading: 'Chargement...',
     resourcesEyebrow: 'Ressources techniques',
     resourcesTitle: 'Documents, certificats et FAQ pour acheteurs cuivre',
     resourcesText: 'Un espace organise pour preparer les demandes B2B: fiches techniques, certificats, informations de conformite, exigences de plans et guides de stockage.',
+    resourceBadgeBrochure: 'Brochure',
+    resourceBadgeProcess: 'Processus',
+    resourceBadgeQuality: 'Qualite',
+    resourceMetaOnRequest: 'Selon lot et commande',
+    resourceLibraryEyebrow: 'Bibliotheque',
+    resourceLibraryTitle: 'Autres documents disponibles',
+    frequentDocumentsTitle: 'Documents frequemment consultes',
+    viewAllDocuments: 'Voir tous les documents',
     processEyebrow: 'Flow industriel',
     processTitle: 'Processus de production cuivre recycle',
     processText: 'Une lecture visuelle du parcours industriel MCF: reception, tri, controle laboratoire, transformation, stockage et expedition.',
@@ -4438,7 +5450,7 @@ const dictionary = {
     processControlQualityText: 'Controles laboratoire et documents techniques selon demande client.',
     processControlPerformance: 'Performance',
     processControlPerformanceText: 'Optimisation continue de la production, du stockage et de la livraison.',
-    whyEyebrow: 'Pourquoi G-ROD',
+    whyEyebrow: 'À propos de G-ROD',
     whyTitle: 'Une plateforme cuivre construite pour les acheteurs industriels exigeants',
     whyText: 'G-ROD associe cuivre recycle, production marocaine, controle qualite, tracabilite et accompagnement B2B pour simplifier les achats cuivre.',
     whyImpactEyebrow: 'Promesse industrielle',
@@ -4464,6 +5476,27 @@ const dictionary = {
     whyPartnersMetric: '5+',
     whyPartnersPanelTitle: 'Un ecosysteme qui soutient la transition industrielle',
     whyPartnersPanelText: 'OCP, Tamwilcom, ANAPEC, Maroc PME et CFYE representent un signal de confiance pour les clients B2B et les partenaires du projet.',
+    aboutCommitmentsEyebrow: 'Nos engagements',
+    aboutCommitmentsTitle: 'Des valeurs qui guident chaque etape',
+    aboutPromiseRecycledTitle: 'Cuivre recycle',
+    aboutPromiseRecycledText: 'Approvisionnement responsable',
+    aboutPromiseQualityTitle: 'Controle qualite',
+    aboutPromiseQualityText: 'Qualite constante et suivie',
+    aboutPromiseTraceabilityTitle: 'Tracabilite complete',
+    aboutPromiseTraceabilityText: 'Suivi de la matiere au produit fini',
+    aboutPromiseSupportTitle: 'Accompagnement B2B',
+    aboutPromiseSupportText: 'Service reactif et dedie',
+    aboutIdentityEyebrow: 'Notre identite industrielle',
+    aboutIdentityTitle: 'Un partenaire industriel fiable pour vos approvisionnements cuivre',
+    aboutIdentityLocalTitle: 'Fabrication au Maroc',
+    aboutIdentityLocalText: 'Une unite moderne basee au Maroc pour une production locale competitive et flexible.',
+    aboutIdentityRecyclingTitle: 'Recyclage et valorisation',
+    aboutIdentityRecyclingText: 'Nous transformons le cuivre recycle en produits de haute qualite, prets pour les exigences industrielles.',
+    aboutIdentityQualityTitle: 'Controle qualite rigoureux',
+    aboutIdentityQualityText: 'Des tests en laboratoire et des procedures strictes pour garantir purete, conformite et performance.',
+    aboutIdentitySupportTitle: 'Accompagnement sur mesure',
+    aboutIdentitySupportText: 'De la demande de devis a la livraison, notre equipe accompagne chaque etape avec reactivite et transparence.',
+    aboutPartnersTitle: 'Un reseau de partenaires qui soutient la transition industrielle',
     requestADocument: 'Demander un document',
     documentSearch: 'Recherche document',
     documentSearchPlaceholder: 'Certificat, anodes, norme...',
@@ -4478,6 +5511,9 @@ const dictionary = {
     faqCustomAnswer: 'Le client doit envoyer les dimensions, la quantite, la finition souhaitee, la norme ou reference, et idealement un plan technique.',
     faqStandardsQuestion: 'Les normes sont-elles garanties automatiquement ?',
     faqStandardsAnswer: 'Non. Les normes ASTM, EN, IEC ou specifications internes doivent etre confirmees au moment du devis selon le produit, le lot et la production.',
+    faqDeliveryQuestion: 'Quels sont les delais de livraison moyens ?',
+    faqDeliveryAnswer: 'Les delais dependent du produit, de la quantite, des specifications et de la disponibilite du lot. Ils sont confirmes dans la reponse commerciale.',
+    faqIntro: 'Trouvez rapidement les reponses aux questions les plus courantes sur nos produits et documents.',
     available: 'Disponible',
     onRequest: 'Sur demande',
     download: 'Telecharger',
@@ -4486,6 +5522,8 @@ const dictionary = {
     documentRequestTitle: 'Demander un document technique',
     documentRequestText: 'Demandez une fiche technique, un certificat ou un document de conformite sans demander un prix.',
     documentRequestStandaloneText: 'Cette demande concerne uniquement une fiche technique, un certificat ou un document de conformite. Elle ne demande pas de prix.',
+    documentTrustNote: 'Vos informations sont securisees et utilisees uniquement pour traiter votre demande.',
+    selectDocumentType: 'Selectionner',
     requestedDocument: 'Document demande',
     chooseDocument: 'Choisir un document',
     allProductsUnspecified: 'Tous les produits / non precise',
@@ -4590,7 +5628,6 @@ const dictionary = {
     requestsMenu: 'Demandes',
     documentsMenu: 'Documents',
     activeProducts: 'Produits actifs',
-    priority: 'Priorite',
     recentRequests: 'Demandes recentes',
     viewAll: 'Voir tout',
     productStatus: 'Etat produits',
@@ -4729,10 +5766,6 @@ const dictionary = {
     widthLabel: 'Largeur',
     thicknessLabel: 'Épaisseur',
     deliveryLabel: 'Livraison',
-    finishUndefined: 'À définir',
-    finishBright: 'Brillant',
-    finishMatte: 'Mat',
-    finishTinned: 'Étamé',
     send: 'Envoyer',
   },
   en: {
@@ -4740,8 +5773,9 @@ const dictionary = {
     navCatalogue: 'Catalog',
     navResources: 'Resources',
     navProcess: 'Process',
-    navWhy: 'Why G-ROD',
+    navWhy: 'About',
     navQuote: 'Request a quote',
+    headerQuoteCta: 'Request a quote',
     navAdmin: 'Admin',
     commandTrigger: 'Quick search',
     commandEyebrow: 'Smart navigation',
@@ -4751,7 +5785,7 @@ const dictionary = {
     commandCatalogueHint: 'View copper products, compare and open 3D.',
     commandResourcesHint: 'Documents, certificates, FAQ and brochure.',
     commandProcessHint: 'Understand the industrial flow, quality and traceability.',
-    commandWhyHint: 'See trust proof, sustainability, quality and partners.',
+    commandWhyHint: 'Discover G-ROD, its commitments, quality and partners.',
     commandQuoteHint: 'Create a new client request.',
     commandAdminHint: 'Open the commercial dashboard.',
     quickDockLabel: 'Quick actions',
@@ -4772,7 +5806,7 @@ const dictionary = {
     metaCatalogue: 'Professional G-ROD catalog: copper rod, anodes, bus bars, tubes, sheets, wire and custom copper parts.',
     metaResources: 'G-ROD technical resources: brochure, certificates, data sheets, FAQ and documents for copper buyers.',
     metaProcess: 'G-ROD industrial process: receiving, sorting, laboratory, production, quality control and export of recycled copper.',
-    metaWhy: 'Why choose G-ROD: recycled copper, lower carbon footprint, Moroccan production, quality, traceability and strategic partners.',
+    metaWhy: 'About G-ROD: recycled copper, lower carbon footprint, Moroccan production, quality, traceability and strategic partners.',
     metaQuote: 'G-ROD quote request form for copper products, dimensions, quantities, drawings and specifications.',
     metaAdmin: 'G-ROD administration area to track requests, clients, products, documents and commercial opportunities.',
     connectionLost: 'Connection interrupted',
@@ -4783,6 +5817,7 @@ const dictionary = {
     installAppText: 'Faster access from your device.',
     installApp: 'Install',
     brandTitle: 'Industrial copper solutions',
+    companyLine: 'Morocco Copper Foundry',
     heroTitle: 'G-ROD industrial copper platform',
     heroText:
       'A B2B platform for industrial buyers looking for copper, anodes, rods and non-ferrous solutions with a clear quality, commercial speed and supply chain approach.',
@@ -4810,9 +5845,25 @@ const dictionary = {
     documentsText: 'Provide buyers with a clear corporate presentation and a quality industrial flow chart.',
     downloadBrochure: 'Download brochure',
     downloadFlow: 'Download production diagram',
+    identityEyebrow: 'Industrial identity',
+    identityTitle: 'G-ROD, 100% Moroccan IACS',
+    identityText: 'Recycled copper for a sustainable energy transition.',
+    contactUs: 'Contact us',
+    footerDescription: 'Recycled copper for a sustainable energy transition, with a clear industrial B2B approach.',
+    footerProducts: 'Products',
+    footerResources: 'Resources',
+    footerContact: 'Contact',
     catalogueEyebrow: 'Catalog',
-    catalogueTitle: 'G-ROD copper products',
+    catalogueTitle: 'G-ROD Catalog',
+    catalogueSubtitle: 'Copper solutions for industrial applications',
     requestQuote: 'Request a quote',
+    viewResources: 'View resources',
+    viewProduct: 'View product',
+    secondaryActions: 'Secondary actions',
+    threeDAvailable: '3D available',
+    catalogueCustomTitle: 'Can’t find the product you need?',
+    catalogueCustomText: 'Our team supports specific custom copper requirements.',
+    catalogueCustomCta: 'Request a custom quote',
     productSearch: 'Product search',
     productSearchPlaceholder: 'Rod, anodes, bus bars...',
     applicationFilter: 'Application',
@@ -4841,6 +5892,9 @@ const dictionary = {
     quickViewEyebrow: 'Quick sheet',
     productDetail: 'View product sheet',
     quick3dPreview: '3D preview',
+    closePreview: 'Close preview',
+    no3dPreview: '3D preview unavailable',
+    productGalleryLabel: 'Product gallery',
     productActionBar: 'Product sheet',
     relatedProductsEyebrow: 'Related selection',
     relatedProductsTitle: 'Often compared products',
@@ -4866,6 +5920,8 @@ const dictionary = {
     clearSelection: 'Clear selection',
     advisorEyebrow: 'Product assistant',
     advisorTitle: 'Find the right copper quickly',
+    advisorText: 'Select the application and main need to get relevant recommendations.',
+    advisorFind: 'Find',
     advisorApplication: 'Application',
     advisorNeed: 'Main need',
     advisorChoose: 'Choose',
@@ -4914,18 +5970,28 @@ const dictionary = {
     quoteInfoTitle: 'Information to specify for quote',
     applicationNeed: 'Application',
     applicationNeedValue: 'Industrial use, environment and technical constraints',
-    normReference: 'Standard or reference',
     normReferencePlaceholder: 'Ex: ASTM, EN, IEC, internal specification...',
     drawingPlan: 'Drawing',
     drawingPlanValue: 'Technical drawing or document link for custom parts',
     techInfo: 'Technical information',
     dimensions: 'Dimensions',
     standards: 'Standards',
+    specPurityShort: 'As required',
+    specDimensionsShort: 'Custom made',
+    specStandardsShort: 'ASTM / EN / IEC on request',
     packaging: 'Packaging',
     loading: 'Loading...',
     resourcesEyebrow: 'Technical resources',
     resourcesTitle: 'Documents, certificates and FAQ for copper buyers',
     resourcesText: 'An organized space to prepare B2B requests: technical sheets, certificates, compliance information, drawing requirements and storage guides.',
+    resourceBadgeBrochure: 'Brochure',
+    resourceBadgeProcess: 'Process',
+    resourceBadgeQuality: 'Quality',
+    resourceMetaOnRequest: 'Per batch and order',
+    resourceLibraryEyebrow: 'Library',
+    resourceLibraryTitle: 'Other available documents',
+    frequentDocumentsTitle: 'Frequently viewed documents',
+    viewAllDocuments: 'View all documents',
     processEyebrow: 'Industrial flow',
     processTitle: 'Recycled copper production process',
     processText: 'A visual reading of the MCF industrial journey: receiving, sorting, laboratory control, transformation, storage and shipment.',
@@ -4965,7 +6031,7 @@ const dictionary = {
     processControlQualityText: 'Laboratory controls and technical documents according to client request.',
     processControlPerformance: 'Performance',
     processControlPerformanceText: 'Continuous optimization of production, storage and delivery.',
-    whyEyebrow: 'Why G-ROD',
+    whyEyebrow: 'About G-ROD',
     whyTitle: 'A copper platform built for demanding industrial buyers',
     whyText: 'G-ROD combines recycled copper, Moroccan production, quality control, traceability and B2B support to simplify copper sourcing.',
     whyImpactEyebrow: 'Industrial promise',
@@ -4991,6 +6057,27 @@ const dictionary = {
     whyPartnersMetric: '5+',
     whyPartnersPanelTitle: 'An ecosystem supporting industrial transition',
     whyPartnersPanelText: 'OCP, Tamwilcom, ANAPEC, Maroc PME and CFYE are trust signals for B2B clients and project partners.',
+    aboutCommitmentsEyebrow: 'Our commitments',
+    aboutCommitmentsTitle: 'Values guiding every step',
+    aboutPromiseRecycledTitle: 'Recycled copper',
+    aboutPromiseRecycledText: 'Responsible sourcing',
+    aboutPromiseQualityTitle: 'Quality control',
+    aboutPromiseQualityText: 'Consistent and monitored quality',
+    aboutPromiseTraceabilityTitle: 'Complete traceability',
+    aboutPromiseTraceabilityText: 'From material to finished product',
+    aboutPromiseSupportTitle: 'B2B support',
+    aboutPromiseSupportText: 'Responsive dedicated service',
+    aboutIdentityEyebrow: 'Our industrial identity',
+    aboutIdentityTitle: 'A reliable industrial partner for your copper sourcing',
+    aboutIdentityLocalTitle: 'Manufacturing in Morocco',
+    aboutIdentityLocalText: 'A modern unit based in Morocco for competitive and flexible local production.',
+    aboutIdentityRecyclingTitle: 'Recycling and valorization',
+    aboutIdentityRecyclingText: 'We transform recycled copper into high-quality products ready for industrial requirements.',
+    aboutIdentityQualityTitle: 'Rigorous quality control',
+    aboutIdentityQualityText: 'Laboratory testing and strict procedures to secure purity, conformity and performance.',
+    aboutIdentitySupportTitle: 'Tailored support',
+    aboutIdentitySupportText: 'From quotation request to delivery, our team supports each step with responsiveness and transparency.',
+    aboutPartnersTitle: 'A partner network supporting industrial transition',
     requestADocument: 'Request a document',
     documentSearch: 'Document search',
     documentSearchPlaceholder: 'Certificate, anodes, standard...',
@@ -5005,6 +6092,9 @@ const dictionary = {
     faqCustomAnswer: 'The client should send dimensions, quantity, desired finish, standard or reference, and ideally a technical drawing.',
     faqStandardsQuestion: 'Are standards automatically guaranteed?',
     faqStandardsAnswer: 'No. ASTM, EN, IEC standards or internal specifications must be confirmed at quotation stage depending on the product, batch and production.',
+    faqDeliveryQuestion: 'What are the average delivery times?',
+    faqDeliveryAnswer: 'Delivery times depend on the product, quantity, specifications and batch availability. They are confirmed in the commercial response.',
+    faqIntro: 'Quickly find answers to common questions about our products and technical documents.',
     available: 'Available',
     onRequest: 'On request',
     download: 'Download',
@@ -5013,6 +6103,8 @@ const dictionary = {
     documentRequestTitle: 'Request a technical document',
     documentRequestText: 'Request a datasheet, certificate or compliance document without requesting a price.',
     documentRequestStandaloneText: 'This request only concerns a technical sheet, certificate or compliance document. It is not a price request.',
+    documentTrustNote: 'Your information is secured and used only to process your request.',
+    selectDocumentType: 'Select',
     requestedDocument: 'Requested document',
     chooseDocument: 'Choose a document',
     allProductsUnspecified: 'All products / unspecified',
@@ -5111,7 +6203,6 @@ const dictionary = {
     requestsMenu: 'Requests',
     documentsMenu: 'Documents',
     activeProducts: 'Active products',
-    priority: 'Priority',
     recentRequests: 'Recent requests',
     viewAll: 'View all',
     productStatus: 'Product status',

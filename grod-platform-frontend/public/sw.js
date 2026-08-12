@@ -1,6 +1,5 @@
-const CACHE_NAME = 'grod-shell-v1'
+const CACHE_NAME = 'grod-shell-v2'
 const SHELL_ASSETS = [
-  '/',
   '/favicon.svg',
   '/grod-logo.png',
   '/manifest.webmanifest',
@@ -31,6 +30,11 @@ self.addEventListener('fetch', (event) => {
   const requestUrl = new URL(event.request.url)
 
   if (requestUrl.pathname.startsWith('/api') || event.request.method !== 'GET') {
+    return
+  }
+
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(fetch(event.request).catch(() => caches.match('/')))
     return
   }
 

@@ -11,8 +11,8 @@ export function CopperScene() {
 
     const performanceProfile = get3DPerformanceProfile()
     const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100)
-    camera.position.set(0, 1.6, 7.2)
+    const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100)
+    camera.position.set(0.15, 1.35, 6.2)
 
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
@@ -23,70 +23,119 @@ export function CopperScene() {
     renderer.setPixelRatio(performanceProfile.pixelRatio)
     renderer.shadowMap.enabled = performanceProfile.shadows
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    renderer.toneMapping = THREE.ACESFilmicToneMapping
+    renderer.toneMappingExposure = 1.08
+    renderer.outputColorSpace = THREE.SRGBColorSpace
     mount.appendChild(renderer.domElement)
 
-    const copper = new THREE.MeshStandardMaterial({ color: 0xc8753d, metalness: 0.86, roughness: 0.26 })
-    const darkCopper = new THREE.MeshStandardMaterial({ color: 0x8d3f25, metalness: 0.8, roughness: 0.32 })
-    const cutFace = new THREE.MeshStandardMaterial({ color: 0xffb56d, metalness: 0.78, roughness: 0.22 })
     const group = new THREE.Group()
     scene.add(group)
 
-    const rodGeometry = new THREE.CylinderGeometry(0.15, 0.15, 3.4, 40)
-    const capGeometries = []
-    for (let row = 0; row < 3; row += 1) {
-      for (let index = 0; index < 5 - row; index += 1) {
-        const rod = new THREE.Mesh(rodGeometry, copper)
-        rod.rotation.z = Math.PI / 2
-        rod.position.set(index * 0.34 - 0.72 + row * 0.17, row * 0.31 - 0.45, 0)
-        rod.castShadow = true
-        rod.receiveShadow = true
-        group.add(rod)
+    const heroCopper = new THREE.MeshPhysicalMaterial({
+      color: 0xb86538,
+      metalness: 1,
+      roughness: 0.18,
+      clearcoat: 0.34,
+      clearcoatRoughness: 0.2,
+      envMapIntensity: 1.35,
+    })
+    const heroCopperDark = new THREE.MeshPhysicalMaterial({
+      color: 0x7b321f,
+      metalness: 0.92,
+      roughness: 0.28,
+      clearcoat: 0.2,
+      envMapIntensity: 1.05,
+    })
+    const heroCopperLight = new THREE.MeshPhysicalMaterial({
+      color: 0xf4aa68,
+      metalness: 0.96,
+      roughness: 0.16,
+      clearcoat: 0.38,
+      envMapIntensity: 1.45,
+    })
+    const shadowDark = new THREE.MeshStandardMaterial({ color: 0x2b1510, metalness: 0.4, roughness: 0.55 })
+    const fallbackGeometries = []
 
-        const capGeometry = new THREE.CircleGeometry(0.151, 40)
-        capGeometries.push(capGeometry)
-        const cap = new THREE.Mesh(capGeometry, cutFace)
-        cap.rotation.y = Math.PI / 2
-        cap.position.set(1.7 + index * 0.34 - 0.72 + row * 0.17, row * 0.31 - 0.45, 0)
-        group.add(cap)
-      }
+    function addFallbackMesh(geometry, material, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1]) {
+      fallbackGeometries.push(geometry)
+      const mesh = new THREE.Mesh(geometry, material)
+      mesh.position.set(...position)
+      mesh.rotation.set(...rotation)
+      mesh.scale.set(...scale)
+      mesh.castShadow = performanceProfile.shadows
+      mesh.receiveShadow = performanceProfile.shadows
+      group.add(mesh)
+      return mesh
     }
 
-    const busBarGeometry = new THREE.BoxGeometry(2.8, 0.18, 0.38)
-    for (let index = 0; index < 4; index += 1) {
-      const bar = new THREE.Mesh(busBarGeometry, index % 2 ? darkCopper : copper)
-      bar.position.set(-1.55, -1.15 + index * 0.22, -0.9 - index * 0.05)
-      bar.rotation.y = -0.32
-      bar.castShadow = true
-      bar.receiveShadow = true
-      group.add(bar)
+    const loader = new GLTFLoader()
+    let modelRoot = null
+    let fallbackBuilt = false
+
+    function prepareHeroModel(root) {
+      modelRoot = root
+      modelRoot.traverse((object) => {
+        if (object.isMesh) {
+          object.castShadow = performanceProfile.shadows
+          object.receiveShadow = performanceProfile.shadows
+          object.material = object.name?.toLowerCase().includes('cap') ? heroCopperLight : heroCopper
+        }
+      })
+
+      const bounds = new THREE.Box3().setFromObject(modelRoot)
+      const size = bounds.getSize(new THREE.Vector3())
+      const center = bounds.getCenter(new THREE.Vector3())
+      modelRoot.position.sub(center)
+      const maxAxis = Math.max(size.x, size.y, size.z) || 1
+      modelRoot.scale.setScalar(3.45 / maxAxis)
+      modelRoot.rotation.set(-0.12, -0.46, 0.03)
+      group.add(modelRoot)
     }
 
-    const anodeGeometry = new THREE.BoxGeometry(0.28, 1.25, 0.12)
-    for (let index = 0; index < 6; index += 1) {
-      const anode = new THREE.Mesh(anodeGeometry, copper)
-      anode.position.set(1.05 + index * 0.22, -0.75, -0.65)
-      anode.rotation.y = 0.22
-      anode.castShadow = true
-      anode.receiveShadow = true
-      group.add(anode)
+    function buildFallbackHero() {
+      if (fallbackBuilt) return
+      fallbackBuilt = true
+      buildProductModel('rod', addFallbackMesh, {
+        copper: heroCopper,
+        copperDark: heroCopperDark,
+        copperLight: heroCopperLight,
+        shadowDark,
+      })
+      group.scale.setScalar(1.2)
+      group.rotation.set(-0.12, -0.46, 0.03)
     }
+
+    loader.load('/models/copper-rod.glb', (gltf) => prepareHeroModel(gltf.scene), undefined, buildFallbackHero)
 
     const floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(6.5, 3.8),
-      new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.24 }),
+      new THREE.CircleGeometry(2.9, 72),
+      new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.32 }),
     )
     floor.rotation.x = -Math.PI / 2
-    floor.position.y = -1.45
+    floor.position.y = -1.28
+    floor.position.z = -0.12
     floor.receiveShadow = true
     scene.add(floor)
 
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x2d170e, 1.6))
-    const keyLight = new THREE.DirectionalLight(0xffd9af, 2.9)
-    keyLight.position.set(2.2, 4, 4.8)
+    const studioGlow = new THREE.Mesh(
+      new THREE.RingGeometry(1.05, 2.95, 96),
+      new THREE.MeshBasicMaterial({ color: 0xff9f55, transparent: true, opacity: 0.08, side: THREE.DoubleSide }),
+    )
+    studioGlow.rotation.x = -Math.PI / 2
+    studioGlow.position.y = -1.255
+    scene.add(studioGlow)
+
+    scene.add(new THREE.HemisphereLight(0xfff4e8, 0x1b0f0a, 1.25))
+    const keyLight = new THREE.DirectionalLight(0xffdfbd, 4.2)
+    keyLight.position.set(2.8, 4.6, 4.2)
     keyLight.castShadow = performanceProfile.shadows
+    keyLight.shadow.mapSize.set(1024, 1024)
     scene.add(keyLight)
-    const rimLight = new THREE.PointLight(0xff7f32, 2.2, 8)
-    rimLight.position.set(-2.4, 1.1, 2.3)
+    const fillLight = new THREE.PointLight(0xff8a3d, 1.9, 7)
+    fillLight.position.set(-2.8, 1.2, 2.3)
+    scene.add(fillLight)
+    const rimLight = new THREE.DirectionalLight(0x7fffd4, 1.05)
+    rimLight.position.set(-3.2, 2.1, -2.4)
     scene.add(rimLight)
 
     function resize() {
@@ -104,9 +153,10 @@ export function CopperScene() {
     const animate = () => {
       frameId = requestAnimationFrame(animate)
       const time = performance.now() * 0.001
-      group.rotation.y = performanceProfile.reducedMotion ? -0.22 : Math.sin(time * 0.55) * 0.22 - 0.22
-      group.rotation.x = performanceProfile.reducedMotion ? 0 : Math.sin(time * 0.38) * 0.04
-      group.position.y = performanceProfile.reducedMotion ? 0 : Math.sin(time * 0.8) * 0.08
+      const baseY = -0.46
+      group.rotation.y = performanceProfile.reducedMotion ? baseY : baseY + Math.sin(time * 0.34) * 0.16
+      group.rotation.x = performanceProfile.reducedMotion ? -0.12 : -0.12 + Math.sin(time * 0.26) * 0.025
+      group.position.y = performanceProfile.reducedMotion ? 0 : Math.sin(time * 0.55) * 0.045
       renderer.render(scene, camera)
     }
     animate()
@@ -116,14 +166,15 @@ export function CopperScene() {
       observer.disconnect()
       if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement)
       renderer.dispose()
-      rodGeometry.dispose()
-      busBarGeometry.dispose()
-      anodeGeometry.dispose()
-      capGeometries.forEach((geometry) => geometry.dispose())
       floor.geometry.dispose()
-      copper.dispose()
-      darkCopper.dispose()
-      cutFace.dispose()
+      studioGlow.geometry.dispose()
+      studioGlow.material.dispose()
+      fallbackGeometries.forEach((geometry) => geometry.dispose())
+      if (modelRoot) disposeObject3D(modelRoot)
+      heroCopper.dispose()
+      heroCopperDark.dispose()
+      heroCopperLight.dispose()
+      shadowDark.dispose()
     }
   }, [])
 
@@ -585,6 +636,15 @@ function slugify(value) {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
+}
+
+function disposeObject3D(object3D) {
+  object3D.traverse((object) => {
+    if (!object.isMesh) return
+    object.geometry?.dispose?.()
+    const materials = Array.isArray(object.material) ? object.material : [object.material]
+    materials.filter(Boolean).forEach((material) => material.dispose?.())
+  })
 }
 
 function getProductLabels(product) {
