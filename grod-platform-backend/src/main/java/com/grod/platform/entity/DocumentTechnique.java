@@ -6,7 +6,10 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "documents_techniques")
+@Table(name = "documents_techniques", indexes = {
+        @Index(name="idx_resource_actif_public", columnList="actif,telechargementPublic"),
+        @Index(name="idx_resource_type", columnList="typeDocument")
+})
 @Getter
 @Setter
 @NoArgsConstructor

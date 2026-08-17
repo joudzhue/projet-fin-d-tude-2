@@ -1,6 +1,7 @@
 package com.grod.platform.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Getter
@@ -11,20 +12,20 @@ import lombok.*;
 public class DocumentTechniqueRequestDTO {
 
     @NotBlank(message = "Le titre du document est obligatoire")
-    private String titre;
+    @Size(max = 255) private String titre;
 
     @NotBlank(message = "Le type de document est obligatoire")
-    private String typeDocument;
+    @Size(max = 255) private String typeDocument;
 
-    private String produitConcerne;
+    @Size(max = 255) private String produitConcerne;
 
-    private String description;
+    @Size(max = 1000) private String description;
 
     @NotBlank(message = "Le fichier PDF est obligatoire")
-    private String fichierUrl;
+    @Size(max = 255) private String fichierUrl;
 
     @NotBlank(message = "Le nom du fichier est obligatoire")
-    private String fichierNom;
+    @Size(max = 255) private String fichierNom;
 
     private boolean actif;
 

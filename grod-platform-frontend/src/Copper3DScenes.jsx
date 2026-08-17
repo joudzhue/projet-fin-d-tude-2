@@ -2,188 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
-export function CopperScene() {
-  const mountRef = useRef(null)
-
-  useEffect(() => {
-    const mount = mountRef.current
-    if (!mount) return undefined
-
-    const performanceProfile = get3DPerformanceProfile()
-    const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100)
-    camera.position.set(0.15, 1.35, 6.2)
-
-    const renderer = new THREE.WebGLRenderer({
-      alpha: true,
-      antialias: performanceProfile.antialias,
-      powerPreference: performanceProfile.powerPreference,
-      preserveDrawingBuffer: true,
-    })
-    renderer.setPixelRatio(performanceProfile.pixelRatio)
-    renderer.shadowMap.enabled = performanceProfile.shadows
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap
-    renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 1.08
-    renderer.outputColorSpace = THREE.SRGBColorSpace
-    mount.appendChild(renderer.domElement)
-
-    const group = new THREE.Group()
-    scene.add(group)
-
-    const heroCopper = new THREE.MeshPhysicalMaterial({
-      color: 0xb86538,
-      metalness: 1,
-      roughness: 0.18,
-      clearcoat: 0.34,
-      clearcoatRoughness: 0.2,
-      envMapIntensity: 1.35,
-    })
-    const heroCopperDark = new THREE.MeshPhysicalMaterial({
-      color: 0x7b321f,
-      metalness: 0.92,
-      roughness: 0.28,
-      clearcoat: 0.2,
-      envMapIntensity: 1.05,
-    })
-    const heroCopperLight = new THREE.MeshPhysicalMaterial({
-      color: 0xf4aa68,
-      metalness: 0.96,
-      roughness: 0.16,
-      clearcoat: 0.38,
-      envMapIntensity: 1.45,
-    })
-    const shadowDark = new THREE.MeshStandardMaterial({ color: 0x2b1510, metalness: 0.4, roughness: 0.55 })
-    const fallbackGeometries = []
-
-    function addFallbackMesh(geometry, material, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1]) {
-      fallbackGeometries.push(geometry)
-      const mesh = new THREE.Mesh(geometry, material)
-      mesh.position.set(...position)
-      mesh.rotation.set(...rotation)
-      mesh.scale.set(...scale)
-      mesh.castShadow = performanceProfile.shadows
-      mesh.receiveShadow = performanceProfile.shadows
-      group.add(mesh)
-      return mesh
-    }
-
-    const loader = new GLTFLoader()
-    let modelRoot = null
-    let fallbackBuilt = false
-
-    function prepareHeroModel(root) {
-      modelRoot = root
-      modelRoot.traverse((object) => {
-        if (object.isMesh) {
-          object.castShadow = performanceProfile.shadows
-          object.receiveShadow = performanceProfile.shadows
-          object.material = object.name?.toLowerCase().includes('cap') ? heroCopperLight : heroCopper
-        }
-      })
-
-      const bounds = new THREE.Box3().setFromObject(modelRoot)
-      const size = bounds.getSize(new THREE.Vector3())
-      const center = bounds.getCenter(new THREE.Vector3())
-      modelRoot.position.sub(center)
-      const maxAxis = Math.max(size.x, size.y, size.z) || 1
-      modelRoot.scale.setScalar(3.45 / maxAxis)
-      modelRoot.rotation.set(-0.12, -0.46, 0.03)
-      group.add(modelRoot)
-    }
-
-    function buildFallbackHero() {
-      if (fallbackBuilt) return
-      fallbackBuilt = true
-      buildProductModel('rod', addFallbackMesh, {
-        copper: heroCopper,
-        copperDark: heroCopperDark,
-        copperLight: heroCopperLight,
-        shadowDark,
-      })
-      group.scale.setScalar(1.2)
-      group.rotation.set(-0.12, -0.46, 0.03)
-    }
-
-    loader.load('/models/copper-rod.glb', (gltf) => prepareHeroModel(gltf.scene), undefined, buildFallbackHero)
-
-    const floor = new THREE.Mesh(
-      new THREE.CircleGeometry(2.9, 72),
-      new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.32 }),
-    )
-    floor.rotation.x = -Math.PI / 2
-    floor.position.y = -1.28
-    floor.position.z = -0.12
-    floor.receiveShadow = true
-    scene.add(floor)
-
-    const studioGlow = new THREE.Mesh(
-      new THREE.RingGeometry(1.05, 2.95, 96),
-      new THREE.MeshBasicMaterial({ color: 0xff9f55, transparent: true, opacity: 0.08, side: THREE.DoubleSide }),
-    )
-    studioGlow.rotation.x = -Math.PI / 2
-    studioGlow.position.y = -1.255
-    scene.add(studioGlow)
-
-    scene.add(new THREE.HemisphereLight(0xfff4e8, 0x1b0f0a, 1.25))
-    const keyLight = new THREE.DirectionalLight(0xffdfbd, 4.2)
-    keyLight.position.set(2.8, 4.6, 4.2)
-    keyLight.castShadow = performanceProfile.shadows
-    keyLight.shadow.mapSize.set(1024, 1024)
-    scene.add(keyLight)
-    const fillLight = new THREE.PointLight(0xff8a3d, 1.9, 7)
-    fillLight.position.set(-2.8, 1.2, 2.3)
-    scene.add(fillLight)
-    const rimLight = new THREE.DirectionalLight(0x7fffd4, 1.05)
-    rimLight.position.set(-3.2, 2.1, -2.4)
-    scene.add(rimLight)
-
-    function resize() {
-      const { width, height } = mount.getBoundingClientRect()
-      renderer.setSize(width, height, false)
-      camera.aspect = width / Math.max(height, 1)
-      camera.updateProjectionMatrix()
-    }
-
-    const observer = new ResizeObserver(resize)
-    observer.observe(mount)
-    resize()
-
-    let frameId = 0
-    const animate = () => {
-      frameId = requestAnimationFrame(animate)
-      const time = performance.now() * 0.001
-      const baseY = -0.46
-      group.rotation.y = performanceProfile.reducedMotion ? baseY : baseY + Math.sin(time * 0.34) * 0.16
-      group.rotation.x = performanceProfile.reducedMotion ? -0.12 : -0.12 + Math.sin(time * 0.26) * 0.025
-      group.position.y = performanceProfile.reducedMotion ? 0 : Math.sin(time * 0.55) * 0.045
-      renderer.render(scene, camera)
-    }
-    animate()
-
-    return () => {
-      cancelAnimationFrame(frameId)
-      observer.disconnect()
-      if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement)
-      renderer.dispose()
-      floor.geometry.dispose()
-      studioGlow.geometry.dispose()
-      studioGlow.material.dispose()
-      fallbackGeometries.forEach((geometry) => geometry.dispose())
-      if (modelRoot) disposeObject3D(modelRoot)
-      heroCopper.dispose()
-      heroCopperDark.dispose()
-      heroCopperLight.dispose()
-      shadowDark.dispose()
-    }
-  }, [])
-
-  return <div className="copper-3d" ref={mountRef} aria-hidden="true" />
-}
-
 export function Product3DViewer({ product }) {
   const mountRef = useRef(null)
   const [fullscreen, setFullscreen] = useState(false)
+  const [modelStatus, setModelStatus] = useState('loading')
   const labels = getProductLabels(product)
 
   useEffect(() => {
@@ -203,7 +25,7 @@ export function Product3DViewer({ product }) {
     })
     renderer.setPixelRatio(performanceProfile.pixelRatio)
     renderer.shadowMap.enabled = performanceProfile.shadows
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    renderer.shadowMap.type = THREE.PCFShadowMap
     mount.appendChild(renderer.domElement)
 
     const group = new THREE.Group()
@@ -228,10 +50,16 @@ export function Product3DViewer({ product }) {
     const kind = getProduct3DKind(product)
     const loader = new GLTFLoader()
     let modelRoot = null
+    let disposed = false
+    setModelStatus('loading')
 
     loader.load(
       getModelUrl(kind),
       (gltf) => {
+        if (disposed) {
+          disposeObject3D(gltf.scene)
+          return
+        }
         modelRoot = gltf.scene
         modelRoot.traverse((object) => {
           if (object.isMesh) {
@@ -240,9 +68,14 @@ export function Product3DViewer({ product }) {
           }
         })
         group.add(modelRoot)
+        setModelStatus('ready')
       },
       undefined,
-      () => buildProductModel(kind, addMesh, { copper, copperDark, copperLight, shadowDark }),
+      () => {
+        if (disposed) return
+        buildProductModel(kind, addMesh, { copper, copperDark, copperLight, shadowDark })
+        setModelStatus('fallback')
+      },
     )
 
     group.rotation.x = -0.18
@@ -344,7 +177,7 @@ export function Product3DViewer({ product }) {
 
     let frameId = 0
     const animate = () => {
-      frameId = requestAnimationFrame(animate)
+      frameId = 0
       const time = performance.now() * 0.001
       if (!interaction.dragging && !performanceProfile.reducedMotion) interaction.targetY += 0.002
       group.rotation.x += (interaction.targetX - group.rotation.x) * 0.08
@@ -352,12 +185,24 @@ export function Product3DViewer({ product }) {
       camera.position.z += (interaction.targetZoom - camera.position.z) * 0.08
       group.position.y = performanceProfile.reducedMotion ? 0 : Math.sin(time * 0.9) * 0.05
       renderer.render(scene, camera)
+      frameId = requestAnimationFrame(animate)
     }
-    animate()
+    const syncPageVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(frameId)
+        frameId = 0
+      } else if (!frameId) {
+        frameId = requestAnimationFrame(animate)
+      }
+    }
+    document.addEventListener('visibilitychange', syncPageVisibility)
+    syncPageVisibility()
 
     return () => {
+      disposed = true
       cancelAnimationFrame(frameId)
       observer.disconnect()
+      document.removeEventListener('visibilitychange', syncPageVisibility)
       mount.removeEventListener('pointerdown', onPointerDown)
       mount.removeEventListener('pointermove', onPointerMove)
       mount.removeEventListener('pointerup', onPointerUp)
@@ -366,21 +211,27 @@ export function Product3DViewer({ product }) {
       mount.removeEventListener('product-3d-view', onSetView)
       mount.removeEventListener('product-3d-capture', onCapture)
       if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement)
+      if (modelRoot) disposeObject3D(modelRoot)
       group.traverse((object) => {
-        if (object.geometry) object.geometry.dispose()
+        if (object.geometry && !modelRoot) object.geometry.dispose()
       })
       floor.geometry.dispose()
+      floor.material.dispose()
       copper.dispose()
       copperDark.dispose()
       copperLight.dispose()
       shadowDark.dispose()
+      renderer.renderLists.dispose()
       renderer.dispose()
+      renderer.forceContextLoss()
     }
   }, [product])
 
   return (
     <div className="product-3d-viewer">
       <div className="product-3d-canvas" ref={mountRef} />
+      {modelStatus === 'loading' ? <p className="product-3d-status">Chargement du modèle 3D…</p> : null}
+      {modelStatus === 'fallback' ? <p className="product-3d-status is-warning">Le modèle détaillé est momentanément indisponible. Aperçu simplifié affiché.</p> : null}
       <dl className="product-3d-labels">
         {labels.map((label) => (
           <div key={label.term}>
@@ -418,6 +269,7 @@ export function Product3DViewer({ product }) {
 
 function Product3DStage({ product, labels, fullscreen = false }) {
   const mountRef = useRef(null)
+  const [modelStatus, setModelStatus] = useState('loading')
 
   useEffect(() => {
     const mount = mountRef.current
@@ -436,7 +288,7 @@ function Product3DStage({ product, labels, fullscreen = false }) {
     })
     renderer.setPixelRatio(performanceProfile.pixelRatio)
     renderer.shadowMap.enabled = performanceProfile.shadows
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    renderer.shadowMap.type = THREE.PCFShadowMap
     mount.appendChild(renderer.domElement)
 
     const group = new THREE.Group()
@@ -460,19 +312,32 @@ function Product3DStage({ product, labels, fullscreen = false }) {
 
     const kind = getProduct3DKind(product)
     const loader = new GLTFLoader()
+    let modelRoot = null
+    let disposed = false
+    setModelStatus('loading')
     loader.load(
       getModelUrl(kind),
       (gltf) => {
-        gltf.scene.traverse((object) => {
+        if (disposed) {
+          disposeObject3D(gltf.scene)
+          return
+        }
+        modelRoot = gltf.scene
+        modelRoot.traverse((object) => {
           if (object.isMesh) {
             object.castShadow = performanceProfile.shadows
             object.receiveShadow = performanceProfile.shadows
           }
         })
-        group.add(gltf.scene)
+        group.add(modelRoot)
+        setModelStatus('ready')
       },
       undefined,
-      () => buildProductModel(kind, addMesh, { copper, copperDark, copperLight, shadowDark }),
+      () => {
+        if (disposed) return
+        buildProductModel(kind, addMesh, { copper, copperDark, copperLight, shadowDark })
+        setModelStatus('fallback')
+      },
     )
 
     group.rotation.x = -0.18
@@ -565,7 +430,7 @@ function Product3DStage({ product, labels, fullscreen = false }) {
 
     let frameId = 0
     const animate = () => {
-      frameId = requestAnimationFrame(animate)
+      frameId = 0
       const time = performance.now() * 0.001
       if (!interaction.dragging && !performanceProfile.reducedMotion) interaction.targetY += 0.002
       group.rotation.x += (interaction.targetX - group.rotation.x) * 0.08
@@ -573,12 +438,24 @@ function Product3DStage({ product, labels, fullscreen = false }) {
       camera.position.z += (interaction.targetZoom - camera.position.z) * 0.08
       group.position.y = performanceProfile.reducedMotion ? 0 : Math.sin(time * 0.9) * 0.05
       renderer.render(scene, camera)
+      frameId = requestAnimationFrame(animate)
     }
-    animate()
+    const syncPageVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(frameId)
+        frameId = 0
+      } else if (!frameId) {
+        frameId = requestAnimationFrame(animate)
+      }
+    }
+    document.addEventListener('visibilitychange', syncPageVisibility)
+    syncPageVisibility()
 
     return () => {
+      disposed = true
       cancelAnimationFrame(frameId)
       observer.disconnect()
+      document.removeEventListener('visibilitychange', syncPageVisibility)
       mount.removeEventListener('pointerdown', onPointerDown)
       mount.removeEventListener('pointermove', onPointerMove)
       mount.removeEventListener('pointerup', onPointerUp)
@@ -586,21 +463,27 @@ function Product3DStage({ product, labels, fullscreen = false }) {
       mount.removeEventListener('wheel', onWheel)
       mount.removeEventListener('product-3d-view', onSetView)
       if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement)
+      if (modelRoot) disposeObject3D(modelRoot)
       group.traverse((object) => {
-        if (object.geometry) object.geometry.dispose()
+        if (object.geometry && !modelRoot) object.geometry.dispose()
       })
       floor.geometry.dispose()
+      floor.material.dispose()
       copper.dispose()
       copperDark.dispose()
       copperLight.dispose()
       shadowDark.dispose()
+      renderer.renderLists.dispose()
       renderer.dispose()
+      renderer.forceContextLoss()
     }
   }, [product, fullscreen])
 
   return (
     <>
       <div className="product-3d-canvas" ref={mountRef} />
+      {modelStatus === 'loading' ? <p className="product-3d-status">Chargement du modèle 3D…</p> : null}
+      {modelStatus === 'fallback' ? <p className="product-3d-status is-warning">Le modèle détaillé est momentanément indisponible. Aperçu simplifié affiché.</p> : null}
       <dl className="product-3d-labels">
         {labels.map((label) => (
           <div key={label.term}>

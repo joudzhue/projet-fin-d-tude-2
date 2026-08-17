@@ -1,0 +1,22 @@
+[Unit]
+Description=Sauvegarde quotidienne G-ROD
+Documentation=file:/opt/grod/current/deploy/backup/README.md
+After=network-online.target mysql.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=grod
+Group=grod
+EnvironmentFile=/etc/grod/grod.env
+EnvironmentFile=/etc/grod/backup.env
+WorkingDirectory=/opt/grod/current
+ExecStart=/opt/grod/current/deploy/backup/backup-grod.sh
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/backups/grod /var/lib/grod/uploads
+
+[Install]
+WantedBy=multi-user.target

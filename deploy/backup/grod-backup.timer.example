@@ -1,0 +1,11 @@
+[Unit]
+Description=Planification quotidienne de la sauvegarde G-ROD
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+Persistent=true
+RandomizedDelaySec=10m
+Unit=grod-backup.service
+
+[Install]
+WantedBy=timers.target

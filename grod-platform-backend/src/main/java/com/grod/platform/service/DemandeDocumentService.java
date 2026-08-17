@@ -4,11 +4,14 @@ import com.grod.platform.dto.DemandeDocumentRequestDTO;
 import com.grod.platform.dto.DemandeDocumentResponseDTO;
 import com.grod.platform.entity.DemandeDocument;
 import com.grod.platform.entity.StatutDemande;
+import com.grod.platform.event.DemandeDocumentCreatedEvent;
 import com.grod.platform.exception.ResourceNotFoundException;
 import com.grod.platform.repository.DemandeDocumentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Year;
 import java.util.List;
@@ -18,7 +21,10 @@ import java.util.List;
 public class DemandeDocumentService {
 
     private final DemandeDocumentRepository demandeDocumentRepository;
+    private final NotificationService notificationService;
+    private final ApplicationEventPublisher eventPublisher;
 
+    @Transactional
     public DemandeDocumentResponseDTO ajouter(DemandeDocumentRequestDTO request) {
         DemandeDocument demande = DemandeDocument.builder()
                 .societe(request.getSociete())
@@ -34,7 +40,13 @@ public class DemandeDocumentService {
 
         demande = demandeDocumentRepository.save(demande);
         demande.setReferenceDemande("DOC-%s-%05d".formatted(Year.now().getValue(), demande.getId()));
-        return convertir(demandeDocumentRepository.save(demande));
+        demande = demandeDocumentRepository.save(demande);
+        notificationService.notifierNouvelleDemandeDocument(demande);
+        eventPublisher.publishEvent(new DemandeDocumentCreatedEvent(demande.getReferenceDemande(),
+                demande.getSociete(), demande.getNomContact(), demande.getEmail(), demande.getTelephone(),
+                demande.getTypeDocument(), demande.getTitreDocument(), demande.getProduitConcerne(),
+                demande.getDateCreation()));
+        return convertir(demande);
     }
 
     public List<DemandeDocumentResponseDTO> lister() {

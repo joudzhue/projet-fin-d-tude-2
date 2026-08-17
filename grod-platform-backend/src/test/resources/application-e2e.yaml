@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:grod_e2e;DB_CLOSE_DELAY=-1;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+    clean-disabled: true
+    placeholders:
+      textLobType: CLOB
+app:
+  rate-limit:
+    enabled: true
+    trust-proxy-headers: true
+  cors:
+    allowed-origins: http://127.0.0.1:15173
+  upload-cleanup:
+    enabled: false
+  notifications:
+    enabled: false
+    email:
+      enabled: false
+    sms:
+      enabled: false

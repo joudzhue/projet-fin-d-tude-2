@@ -1,0 +1,20 @@
+[Unit]
+Description=G-ROD Spring Boot backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=grod
+Group=grod
+WorkingDirectory=/opt/grod/backend
+EnvironmentFile=/etc/grod/grod.env
+ExecStart=/usr/bin/java -jar /opt/grod/backend/grod-platform-backend.jar
+Restart=on-failure
+RestartSec=5
+SuccessExitStatus=143
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

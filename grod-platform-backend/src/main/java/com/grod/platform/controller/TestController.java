@@ -4,10 +4,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.context.annotation.Profile;
 
 import java.util.Map;
 
 @RestController
+@Profile("!prod")
 @Tag(name = "Test", description = "Endpoint simple pour verifier le fonctionnement du backend")
 public class TestController {
 

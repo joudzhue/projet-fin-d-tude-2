@@ -10,6 +10,7 @@ import com.grod.platform.repository.AdminPasskeyCredentialRepository;
 import com.grod.platform.repository.UtilisateurRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -24,7 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class WebAuthnService {
 
-    private static final String RP_ID = "localhost";
     private static final Base64.Encoder ENCODER = Base64.getUrlEncoder().withoutPadding();
     private static final Base64.Decoder DECODER = Base64.getUrlDecoder();
 
@@ -35,6 +35,12 @@ public class WebAuthnService {
     private final SecureRandom secureRandom = new SecureRandom();
     private final Map<String, String> challenges = new ConcurrentHashMap<>();
 
+    @Value("${app.webauthn.rp-id:localhost}")
+    private String rpId;
+
+    @Value("${app.webauthn.allowed-origins:http://localhost:5173}")
+    private List<String> allowedOrigins;
+
     public Map<String, Object> startRegistration(String email) {
         Utilisateur utilisateur = utilisateurRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
@@ -43,7 +49,7 @@ public class WebAuthnService {
 
         return Map.of(
                 "challenge", challenge,
-                "rp", Map.of("name", "G-ROD Admin", "id", RP_ID),
+                "rp", Map.of("name", "G-ROD Admin", "id", rpId),
                 "user", Map.of(
                         "id", encode(email.getBytes(StandardCharsets.UTF_8)),
                         "name", utilisateur.getEmail(),
@@ -107,6 +113,7 @@ public class WebAuthnService {
         consumeChallenge("login:" + credential.getEmail(), clientData.get("challenge").asText());
 
         byte[] authenticatorData = decode(request.getAuthenticatorData());
+        validateRpIdHash(authenticatorData);
         byte[] clientDataHash = sha256(decode(request.getClientDataJSON()));
         byte[] signedData = concat(authenticatorData, clientDataHash);
         PublicKey publicKey = coseToPublicKey(decode(credential.getPublicKeyCose()));
@@ -156,6 +163,10 @@ public class WebAuthnService {
             if (!expectedType.equals(clientData.get("type").asText())) {
                 throw new IllegalArgumentException("Type WebAuthn invalide");
             }
+            String origin = clientData.path("origin").asText();
+            if (origin.isBlank() || allowedOrigins.stream().noneMatch(origin::equals)) {
+                throw new IllegalArgumentException("Origine WebAuthn invalide");
+            }
             return clientData;
         } catch (Exception exception) {
             throw new IllegalArgumentException("Donnees WebAuthn invalides", exception);
@@ -166,6 +177,7 @@ public class WebAuthnService {
     private RegistrationData parseAttestationObject(byte[] attestationObject) {
         Map<Object, Object> attestation = (Map<Object, Object>) new CborReader(attestationObject).read();
         byte[] authData = (byte[]) attestation.get("authData");
+        validateRpIdHash(authData);
         int signCount = ByteBuffer.wrap(authData, 33, 4).getInt();
         int credentialIdLength = ((authData[53] & 0xff) << 8) | (authData[54] & 0xff);
         byte[] credentialId = Arrays.copyOfRange(authData, 55, 55 + credentialIdLength);
@@ -195,6 +207,17 @@ public class WebAuthnService {
             return MessageDigest.getInstance("SHA-256").digest(value);
         } catch (NoSuchAlgorithmException exception) {
             throw new IllegalStateException(exception);
+        }
+    }
+
+    private void validateRpIdHash(byte[] authenticatorData) {
+        if (authenticatorData == null || authenticatorData.length < 37) {
+            throw new IllegalArgumentException("Donnees authentificateur invalides");
+        }
+        byte[] actualRpIdHash = Arrays.copyOfRange(authenticatorData, 0, 32);
+        byte[] expectedRpIdHash = sha256(rpId.getBytes(StandardCharsets.UTF_8));
+        if (!MessageDigest.isEqual(actualRpIdHash, expectedRpIdHash)) {
+            throw new IllegalArgumentException("RP ID WebAuthn invalide");
         }
     }
 

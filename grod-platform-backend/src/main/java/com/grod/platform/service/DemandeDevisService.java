@@ -4,6 +4,7 @@ import com.grod.platform.dto.DemandeDevisRequestDTO;
 import com.grod.platform.dto.DemandeDevisResponseDTO;
 import com.grod.platform.dto.ClientFideleUpdateDTO;
 import com.grod.platform.entity.StatutDemande;
+import org.springframework.core.io.Resource;
 
 import java.util.List;
 
@@ -14,6 +15,8 @@ public interface DemandeDevisService {
     List<DemandeDevisResponseDTO> listerDemandes();
 
     DemandeDevisResponseDTO trouverDemandeParId(Long id);
+
+    Resource chargerPieceJointe(Long id);
 
     List<DemandeDevisResponseDTO> listerDemandesParStatut(StatutDemande statut);
 

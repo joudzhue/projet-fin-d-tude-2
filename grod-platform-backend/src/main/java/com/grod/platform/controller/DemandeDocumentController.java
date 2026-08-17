@@ -15,7 +15,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/demandes-documents")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Demandes de documents", description = "Gestion des demandes de documents techniques")
 public class DemandeDocumentController {
 

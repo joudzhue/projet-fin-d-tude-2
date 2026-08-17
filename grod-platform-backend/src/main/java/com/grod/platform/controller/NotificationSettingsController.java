@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/settings/notifications")
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Tag(name = "Admin settings", description = "Configuration admin des notifications")
 public class NotificationSettingsController {

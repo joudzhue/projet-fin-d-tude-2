@@ -26,6 +26,10 @@ public class DemandeDevisResponseDTO {
 
     private String produitDemande;
 
+    private Long produitId;
+
+    private Long clientId;
+
     private Double pureteCuivre;
 
     private Double longueur;
@@ -37,6 +41,16 @@ public class DemandeDevisResponseDTO {
     private Integer quantite;
 
     private String besoinLivraison;
+
+    private String applicationProjet;
+
+    private String finitionSouhaitee;
+
+    private String normeReference;
+
+    private String lienPlanTechnique;
+
+    private String diametreSouhaite;
 
     private boolean clientFidele;
 

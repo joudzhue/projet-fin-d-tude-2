@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
 
 @Component
 @RequiredArgsConstructor
@@ -18,15 +19,17 @@ public class DataInitializer implements CommandLineRunner {
     private final ProduitRepository produitRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Value("${app.bootstrap-admin.email:}") private String adminEmail;
+    @Value("${app.bootstrap-admin.password:}") private String adminPassword;
+    @Value("${app.bootstrap-admin.name:Administrateur G-ROD}") private String adminName;
+
     @Override
     public void run(String... args) {
-        String adminEmail = "admin@grod.ma";
-
-        if (!utilisateurRepository.existsByEmail(adminEmail)) {
+        if (!isBlank(adminEmail) && !isBlank(adminPassword) && !utilisateurRepository.existsByEmail(adminEmail)) {
             Utilisateur admin = Utilisateur.builder()
-                    .nomComplet("Administrateur G-ROD")
+                    .nomComplet(adminName)
                     .email(adminEmail)
-                    .motDePasse(passwordEncoder.encode("admin123"))
+                    .motDePasse(passwordEncoder.encode(adminPassword))
                     .role(Role.ADMIN)
                     .actif(true)
                     .build();
@@ -34,93 +37,72 @@ public class DataInitializer implements CommandLineRunner {
             utilisateurRepository.save(admin);
         }
 
-        upsertProduit(
+        creerProduitSiAbsent(
                 "Copper Rod",
                 "Copper products",
                 "Barres rondes en cuivre haute purete offrant une excellente conductivite electrique et thermique pour les applications industrielles.",
                 "https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/rod-index-770x460.jpg"
         );
-        upsertProduit(
+        creerProduitSiAbsent(
                 "Copper Anodes",
                 "Copper products",
                 "Anodes en cuivre destinees aux procedes industriels, electrolytiques et metallurgiques.",
                 "https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/ImagebildROD_1-kopiera-616x460.jpg"
         );
-        upsertProduit(
+        creerProduitSiAbsent(
                 "Copper Bus Bars",
                 "Copper products",
                 "Barres conductrices en cuivre concues pour les systemes electriques, tableaux industriels et installations energetiques.",
                 "https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/rod-index-770x460.jpg"
         );
-        upsertProduit(
+        creerProduitSiAbsent(
                 "Copper Flat Bars",
                 "Copper products",
                 "Meplats en cuivre adaptes aux applications electriques, techniques et industrielles.",
                 "https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/ImagebildROD_1-kopiera-616x460.jpg"
         );
-        upsertProduit(
+        creerProduitSiAbsent(
                 "Copper Tubes",
                 "Copper products",
                 "Tubes en cuivre utilises pour la plomberie, la climatisation, l industrie et les installations techniques.",
                 "https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/rod-index-770x460.jpg"
         );
-        upsertProduit(
+        creerProduitSiAbsent(
                 "Copper Sheets",
                 "Copper products",
                 "Feuilles et plaques de cuivre destinees a la fabrication, au revetement, a l electricite et aux usages industriels.",
                 "https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/ImagebildROD_1-kopiera-616x460.jpg"
         );
-        upsertProduit(
+        creerProduitSiAbsent(
                 "Copper Wire",
                 "Copper products",
                 "Fil de cuivre haute conductivite utilise dans les cables, bobinages, connexions electriques et applications industrielles.",
                 "https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/rod-index-770x460.jpg"
         );
-        upsertProduit(
+        creerProduitSiAbsent(
                 "Custom Copper Parts",
                 "Copper products",
                 "Pieces en cuivre sur mesure fabriquees selon les besoins specifiques des clients et les plans techniques.",
                 "https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/ImagebildROD_1-kopiera-616x460.jpg"
         );
 
-        disableObsoleteProduit("Quality");
-        disableObsoleteProduit("Specials");
-        disableObsoleteProduit("Anodes cuivre");
-        disableObsoleteProduit("Bus Bars cuivre");
-        disableObsoleteProduit("Meplats cuivre");
-        disableObsoleteProduit("Tubes cuivre");
-        disableObsoleteProduit("Solutions speciales");
     }
 
-    private void upsertProduit(String nom, String categorie, String description, String imageUrl) {
-        Produit produit = produitRepository.findByNom(nom)
-                .orElseGet(Produit::new);
-
-        boolean nouveauProduit = produit.getId() == null;
-
-        produit.setNom(nom);
-        if (nouveauProduit || isBlank(produit.getCategorie())) {
-            produit.setCategorie(categorie);
+    private void creerProduitSiAbsent(String nom, String categorie, String description, String imageUrl) {
+        if (produitRepository.existsByNom(nom)) {
+            return;
         }
-        if (nouveauProduit || isBlank(produit.getDescription())) {
-            produit.setDescription(description);
-        }
-        if (nouveauProduit || isBlank(produit.getImageUrl())) {
-            produit.setImageUrl(imageUrl);
-        }
-        produit.setActif(true);
 
-        produitRepository.save(produit);
+        produitRepository.save(Produit.builder()
+                .nom(nom)
+                .categorie(categorie)
+                .description(description)
+                .imageUrl(imageUrl)
+                .actif(true)
+                .build());
     }
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
-    }
-
-    private void disableObsoleteProduit(String nom) {
-        produitRepository.findByNom(nom).ifPresent(produit -> {
-            produit.setActif(false);
-            produitRepository.save(produit);
-        });
     }
 }

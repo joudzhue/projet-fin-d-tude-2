@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/assistant")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Assistant IA", description = "Assistant commercial cuivre G-ROD")
 public class AssistantController {
 

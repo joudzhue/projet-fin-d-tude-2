@@ -9,7 +9,10 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "demandes_devis")
+@Table(name = "demandes_devis", indexes = {
+        @Index(name="idx_devis_statut_date", columnList="statut,dateCreation"),
+        @Index(name="idx_devis_email", columnList="email")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -45,6 +48,12 @@ public class DemandeDevis {
     @Column(nullable = false)
     private String produitDemande;
 
+    private Long produitId;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "client_id")
+    private Client client;
+
     private Double pureteCuivre;
 
     private Double longueur;
@@ -57,6 +66,18 @@ public class DemandeDevis {
     private Integer quantite;
 
     private String besoinLivraison;
+
+    @Column(length = 1000)
+    private String applicationProjet;
+
+    private String finitionSouhaitee;
+
+    private String normeReference;
+
+    @Column(length = 1000)
+    private String lienPlanTechnique;
+
+    private String diametreSouhaite;
 
     private boolean clientFidele;
 

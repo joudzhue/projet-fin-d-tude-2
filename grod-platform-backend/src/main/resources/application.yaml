@@ -3,17 +3,27 @@ spring:
     name: grod-platform-backend
 
   datasource:
-    url: jdbc:mysql://localhost:3306/grod_platform?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
-    username: root
-    password: ""
+    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/grod_platform?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC}
+    username: ${DATABASE_USERNAME:root}
+    password: ${DATABASE_PASSWORD:}
 
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: validate
+    show-sql: ${SHOW_SQL:false}
     properties:
       hibernate:
         format_sql: true
+
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    locations: classpath:db/migration
+    baseline-on-migrate: ${FLYWAY_BASELINE_ON_MIGRATE:false}
+    baseline-version: 1
+    validate-on-migrate: true
+    clean-disabled: true
+    placeholders:
+      textLobType: ${FLYWAY_TEXT_LOB_TYPE:TINYTEXT}
 
   servlet:
     multipart:
@@ -30,18 +40,31 @@ spring:
         smtp:
           auth: true
           starttls:
-            enable: true
+            enable: ${SMTP_STARTTLS_ENABLED:true}
+          ssl:
+            enable: ${SMTP_SSL_ENABLED:false}
 
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 app:
-  upload-dir: uploads
+  upload-dir: ${UPLOAD_DIR:uploads}
+  upload-temp-retention-hours: ${UPLOAD_TEMP_RETENTION_HOURS:24}
+  upload-cleanup:
+    enabled: ${UPLOAD_CLEANUP_ENABLED:true}
+    interval-ms: ${UPLOAD_CLEANUP_INTERVAL_MS:21600000}
+  cors:
+    allowed-origins: ${FRONTEND_URL:http://localhost:5173}
+  webauthn:
+    rp-id: ${WEBAUTHN_RP_ID:localhost}
+    allowed-origins: ${WEBAUTHN_ORIGINS:http://localhost:5173}
   notifications:
     enabled: ${EMAIL_NOTIFICATIONS_ENABLED:false}
-    admin-email: ${ADMIN_NOTIFICATION_EMAIL:admin@grod.ma}
-    admin-phone: ${ADMIN_NOTIFICATION_PHONE:+212 6 68 61 56 08}
-    from-email: ${EMAIL_FROM:noreply@grod.ma}
+    admin-email: ${ADMIN_NOTIFICATION_EMAIL:}
+    admin-phone: ${ADMIN_NOTIFICATION_PHONE:}
+    from-email: ${SMTP_FROM:}
+    email:
+      enabled: ${EMAIL_NOTIFICATIONS_ENABLED:false}
     sms:
       enabled: ${SMS_NOTIFICATIONS_ENABLED:false}
       provider: ${SMS_PROVIDER:twilio}
@@ -49,8 +72,37 @@ app:
       twilio-auth-token: ${TWILIO_AUTH_TOKEN:}
       twilio-from-number: ${TWILIO_FROM_NUMBER:}
   jwt:
-    secret: "grod-platform-local-dev-secret-change-this-in-production"
-    expiration-ms: 86400000
+    secret: ${JWT_SECRET}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    trust-proxy-headers: ${RATE_LIMIT_TRUST_PROXY_HEADERS:false}
+    cleanup-interval-ms: ${RATE_LIMIT_CLEANUP_INTERVAL_MS:300000}
+    login:
+      requests: ${RATE_LIMIT_LOGIN_REQUESTS:8}
+      window-seconds: ${RATE_LIMIT_LOGIN_WINDOW_SECONDS:60}
+    assistant:
+      requests: ${RATE_LIMIT_ASSISTANT_REQUESTS:15}
+      window-seconds: ${RATE_LIMIT_ASSISTANT_WINDOW_SECONDS:60}
+    quote:
+      requests: ${RATE_LIMIT_QUOTE_REQUESTS:10}
+      window-seconds: ${RATE_LIMIT_QUOTE_WINDOW_SECONDS:600}
+    document:
+      requests: ${RATE_LIMIT_DOCUMENT_REQUESTS:10}
+      window-seconds: ${RATE_LIMIT_DOCUMENT_WINDOW_SECONDS:600}
+    quote-upload:
+      requests: ${RATE_LIMIT_UPLOAD_REQUESTS:12}
+      window-seconds: ${RATE_LIMIT_UPLOAD_WINDOW_SECONDS:600}
+  bootstrap-admin:
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_INITIAL_PASSWORD:}
+    name: ${ADMIN_NAME:Administrateur G-ROD}
   openai:
     api-key: ${OPENAI_API_KEY:}
     model: ${OPENAI_MODEL:gpt-5.5}
+
+springdoc:
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:false}
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}

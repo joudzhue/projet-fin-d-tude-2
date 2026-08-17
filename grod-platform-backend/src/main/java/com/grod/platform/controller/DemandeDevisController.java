@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,7 +21,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/demandes-devis")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Demandes de devis", description = "Gestion des demandes de devis clients")
 public class DemandeDevisController {
 
@@ -59,6 +59,19 @@ public class DemandeDevisController {
                 .contentType(MediaType.APPLICATION_PDF)
                 .contentLength(pdf.length)
                 .body(pdf);
+    }
+
+    @GetMapping("/{id}/attachment")
+    @Operation(summary = "Telecharger le plan joint", description = "Retourne le plan joint via un endpoint Admin authentifie")
+    public ResponseEntity<Resource> telechargerPieceJointe(@PathVariable Long id) {
+        DemandeDevisResponseDTO demande = demandeDevisService.trouverDemandeParId(id);
+        Resource resource = demandeDevisService.chargerPieceJointe(id);
+        String filename = demande.getFichierTechniqueNom() == null ? "plan-technique"
+                : demande.getFichierTechniqueNom().replaceAll("[\\r\\n\\\"]", "_");
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(resource);
     }
 
     @GetMapping("/statut/{statut}")

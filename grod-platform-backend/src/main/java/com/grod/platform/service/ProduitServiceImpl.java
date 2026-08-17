@@ -15,6 +15,7 @@ import java.util.List;
 public class ProduitServiceImpl implements ProduitService {
 
     private final ProduitRepository produitRepository;
+    private final StoredFileService storedFileService;
 
     @Override
     public ProduitResponseDTO ajouterProduit(ProduitRequestDTO produitDTO) {
@@ -62,6 +63,7 @@ public class ProduitServiceImpl implements ProduitService {
     @Override
     public ProduitResponseDTO modifierProduit(Long id, ProduitRequestDTO produitDTO) {
         Produit produitExistant = trouverEntityParId(id);
+        String ancienneImage = produitExistant.getImageUrl();
 
         produitExistant.setNom(produitDTO.getNom());
         produitExistant.setDescription(produitDTO.getDescription());
@@ -75,6 +77,9 @@ public class ProduitServiceImpl implements ProduitService {
         produitExistant.setActif(produitDTO.isActif());
 
         Produit updatedProduit = produitRepository.save(produitExistant);
+        if (ancienneImage != null && !ancienneImage.equals(updatedProduit.getImageUrl())) {
+            storedFileService.deleteManagedFile(ancienneImage, "products");
+        }
 
         return convertirEnResponseDTO(updatedProduit);
     }
@@ -83,6 +88,7 @@ public class ProduitServiceImpl implements ProduitService {
     public void supprimerProduit(Long id) {
         Produit produit = trouverEntityParId(id);
         produitRepository.delete(produit);
+        storedFileService.deleteManagedFile(produit.getImageUrl(), "products");
     }
 
     private Produit trouverEntityParId(Long id) {

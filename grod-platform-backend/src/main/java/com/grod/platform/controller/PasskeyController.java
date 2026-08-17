@@ -16,7 +16,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/passkeys")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Passkeys", description = "Connexion admin avec Face ID, Touch ID ou Windows Hello")
 public class PasskeyController {
 

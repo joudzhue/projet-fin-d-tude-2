@@ -1,13 +1,24 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
-import { NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Navigate, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import './App.css'
 
-const API_URL = 'http://localhost:8080/api'
+const API_URL = (import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:8080/api')).replace(/\/+$/, '')
+const API_ORIGIN = API_URL.replace(/\/api$/, '')
+const resolveBackendUrl = (value) => value && !/^https?:\/\//i.test(value)
+  ? `${API_ORIGIN}${value.startsWith('/') ? '' : '/'}${value}`
+  : value
 const ADMIN_TOKEN_KEY = 'grod_admin_token'
+const ADMIN_PROFILE_KEY = 'grod_admin_profile'
 const RECENT_PRODUCTS_KEY = 'grod_recent_products'
 const FAVORITE_PRODUCTS_KEY = 'grod_favorite_products'
 const QUOTE_DRAFT_KEY = 'grod_quote_draft'
 const Product3DViewer = lazy(() => import('./Copper3DScenes.jsx').then((module) => ({ default: module.Product3DViewer })))
+const ThreeDLoadingFallback = () => (
+  <div className="product-3d-viewer product-3d-fallback" role="status" aria-live="polite">
+    <span className="product-3d-loader" aria-hidden="true" />
+    <strong>Chargement du modèle 3D…</strong>
+  </div>
+)
 const PRODUCT_PLACEHOLDER_IMAGE = '/images/products/product-placeholder.svg'
 const PRODUCT_IMAGE_BASE = '/images/products'
 const productVisuals = {
@@ -85,7 +96,7 @@ const officialProducts = [
       'Barres rondes en cuivre haute purete offrant une excellente conductivite electrique et thermique pour les applications industrielles.',
     categorie: 'Copper products',
     imageUrl:
-      'https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/rod-index-770x460.jpg',
+      '/images/home/home-copper-rod.webp',
     applications: ['Cables electriques', 'Conducteurs industriels'],
     dimensions: 'Diametres et longueurs selon demande client',
     normes: 'ASTM, EN, IEC ou specification interne',
@@ -98,7 +109,7 @@ const officialProducts = [
     description: 'Anodes en cuivre destinees aux procedes industriels, electrolytiques et metallurgiques.',
     categorie: 'Copper products',
     imageUrl:
-      'https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/ImagebildROD_1-kopiera-616x460.jpg',
+      '/images/home/home-copper-anodes.webp',
     applications: ['Electrolyse', 'Traitement metallurgique'],
     dimensions: 'Formats et epaisseurs selon installation',
     normes: 'Specification client et controle laboratoire',
@@ -112,7 +123,7 @@ const officialProducts = [
       'Barres conductrices en cuivre concues pour les systemes electriques, tableaux industriels et installations energetiques.',
     categorie: 'Copper products',
     imageUrl:
-      'https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/rod-index-770x460.jpg',
+      '/images/home/home-copper-rod.webp',
     applications: ['Tableaux electriques', 'Distribution energie'],
     dimensions: 'Largeur, epaisseur et percage sur demande',
     normes: 'Normes electriques industrielles',
@@ -125,7 +136,7 @@ const officialProducts = [
     description: 'Meplats en cuivre adaptes aux applications electriques, techniques et industrielles.',
     categorie: 'Copper products',
     imageUrl:
-      'https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/ImagebildROD_1-kopiera-616x460.jpg',
+      '/images/home/home-copper-anodes.webp',
     applications: ['Assemblage technique', 'Pieces conductrices'],
     dimensions: 'Largeur, epaisseur et longueur selon besoin',
     normes: 'EN 13601 ou equivalent selon specification',
@@ -138,7 +149,7 @@ const officialProducts = [
     description: 'Tubes en cuivre utilises pour la plomberie, la climatisation, l industrie et les installations techniques.',
     categorie: 'Copper products',
     imageUrl:
-      'https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/rod-index-770x460.jpg',
+      '/images/home/home-copper-rod.webp',
     applications: ['Plomberie', 'Climatisation'],
     dimensions: 'Diametres, epaisseurs et longueurs sur demande',
     normes: 'Normes plomberie, HVAC et industrie',
@@ -152,7 +163,7 @@ const officialProducts = [
       'Feuilles et plaques de cuivre destinees a la fabrication, au revetement, a l electricite et aux usages industriels.',
     categorie: 'Copper products',
     imageUrl:
-      'https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/ImagebildROD_1-kopiera-616x460.jpg',
+      '/images/home/home-copper-anodes.webp',
     applications: ['Fabrication', 'Revetement'],
     dimensions: 'Feuilles, plaques et epaisseurs selon besoin',
     normes: 'Specification client ou norme industrielle',
@@ -166,7 +177,7 @@ const officialProducts = [
       'Fil de cuivre haute conductivite utilise dans les cables, bobinages, connexions electriques et applications industrielles.',
     categorie: 'Copper products',
     imageUrl:
-      'https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/rod-index-770x460.jpg',
+      '/images/home/home-copper-rod.webp',
     applications: ['Cables', 'Bobinages'],
     dimensions: 'Sections et conditionnements selon application',
     normes: 'Normes cable, bobinage et connexion',
@@ -180,7 +191,7 @@ const officialProducts = [
       'Pieces en cuivre sur mesure fabriquees selon les besoins specifiques des clients et les plans techniques.',
     categorie: 'Copper products',
     imageUrl:
-      'https://grod.achrafchtouki.ma/Pages/Nos_solutions/Solution/Copper_rod/images/ImagebildROD_1-kopiera-616x460.jpg',
+      '/images/home/home-copper-anodes.webp',
     applications: ['Plans techniques', 'Fabrication sur mesure'],
     dimensions: 'Selon plan 2D/3D et cahier des charges',
     normes: 'Controle selon specification client',
@@ -372,6 +383,9 @@ function App() {
         <Route path="/admin/ressources" element={<AdminPage t={t} />} />
         <Route path="/admin/clients" element={<AdminPage t={t} />} />
         <Route path="/admin/clients/:clientKey" element={<AdminPage t={t} />} />
+        <Route path="/admin/notifications" element={<AdminPage t={t} />} />
+        <Route path="/admin/account" element={<AdminPage t={t} />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
       {!isAdminRoute ? <AssistantChat t={t} language={language} /> : null}
@@ -1139,6 +1153,9 @@ function AdminIcon({ type }) {
         <path d="M14 3v5h4M12 12v6M9 15h6" />
       </>
     ),
+    edit: <><path d="M4 20h4l11-11-4-4L4 16z" /><path d="m13.5 6.5 4 4" /></>,
+    trash: <><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13" /><path d="M10 11v5M14 11v5" /></>,
+    cube: <><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z" /><path d="M12 12 4.5 7.8M12 12l7.5-4.2M12 12v8.5" /></>,
   }
 
   return (
@@ -1164,6 +1181,8 @@ function InfoCard({ number, title, text, image }) {
 function ProductsPage({ t }) {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [catalogueError, setCatalogueError] = useState(false)
+  const [loadAttempt, setLoadAttempt] = useState(0)
   const [search, setSearch] = useState('')
   const [applicationFilter, setApplicationFilter] = useState('')
   const [sortMode, setSortMode] = useState('recommended')
@@ -1180,21 +1199,30 @@ function ProductsPage({ t }) {
 
   useEffect(() => {
     async function loadProducts() {
+      setLoading(true)
+      setCatalogueError(false)
       try {
         const response = await fetch(`${API_URL}/produits/actifs`)
         if (!response.ok) throw new Error('Backend unavailable')
         const data = await response.json()
-        setProducts(Array.isArray(data) && data.length ? data : officialProducts)
+        if (!Array.isArray(data)) throw new Error('Invalid catalogue response')
+        setProducts(data)
       } catch {
-        setProducts(officialProducts)
+        setProducts([])
+        setCatalogueError(true)
       } finally {
         setLoading(false)
       }
     }
     loadProducts()
-  }, [])
+  }, [loadAttempt])
 
   const normalizedProducts = useMemo(() => products.map((product) => normalizeProduct(product)), [products])
+  const productExistsInCatalogue = (savedProduct) => normalizedProducts.some((product) =>
+    String(product.id) === String(savedProduct.id) || product.nom === savedProduct.nom,
+  )
+  const availableRecentProducts = recentProducts.filter(productExistsInCatalogue)
+  const availableFavoriteProducts = favoriteProducts.filter(productExistsInCatalogue)
   const applications = useMemo(
     () => [...new Set(normalizedProducts.flatMap((product) => product.applications))].sort(),
     [normalizedProducts],
@@ -1256,7 +1284,7 @@ function ProductsPage({ t }) {
   }
 
   const projectQuoteUrl = `/devis?produit=${encodeURIComponent(projectProducts[0]?.nom || '')}&produits=${encodeURIComponent(projectProducts.map((product) => product.nom).join(','))}`
-  const favoriteQuoteUrl = `/devis?produit=${encodeURIComponent(favoriteProducts[0]?.nom || '')}&produits=${encodeURIComponent(favoriteProducts.map((product) => product.nom).join(','))}`
+  const favoriteQuoteUrl = `/devis?produit=${encodeURIComponent(availableFavoriteProducts[0]?.nom || '')}&produits=${encodeURIComponent(availableFavoriteProducts.map((product) => product.nom).join(','))}`
   const sortLabels = {
     recommended: t.sortRecommended,
     name: t.sortName,
@@ -1415,14 +1443,14 @@ function ProductsPage({ t }) {
         </section>
       ) : null}
 
-      {recentProducts.length ? (
+      {availableRecentProducts.length ? (
         <section className="recent-products-panel">
           <div>
             <p className="eyebrow">{t.recentProductsEyebrow}</p>
             <h3>{t.recentProductsTitle}</h3>
           </div>
           <div className="recent-products-list">
-            {recentProducts.map((product) => (
+            {availableRecentProducts.map((product) => (
               <NavLink to={`/catalogue/${product.id || slugify(product.nom)}`} key={product.id || product.nom}>
                 <img src={product.imageUrl} alt="" />
                 <span>{product.nom}</span>
@@ -1432,12 +1460,12 @@ function ProductsPage({ t }) {
         </section>
       ) : null}
 
-      {favoriteProducts.length ? (
+      {availableFavoriteProducts.length ? (
         <section className="favorite-products-panel">
           <div>
             <p className="eyebrow">{t.favoriteProductsEyebrow}</p>
             <h3>{t.favoriteProductsTitle}</h3>
-            <p>{favoriteProducts.map((product) => product.nom).join(' / ')}</p>
+            <p>{availableFavoriteProducts.map((product) => product.nom).join(' / ')}</p>
           </div>
           <div>
             <NavLink className="primary-link" to={favoriteQuoteUrl}>{t.prepareFavoriteQuote}</NavLink>
@@ -1503,7 +1531,32 @@ function ProductsPage({ t }) {
         </div>
       ) : null}
 
-      {!loading && !displayedProducts.length ? (
+      {!loading && catalogueError ? (
+        <section className="catalogue-empty-state catalogue-error-state" role="alert">
+          <p className="eyebrow">{t.catalogueErrorEyebrow}</p>
+          <h3>{t.catalogueErrorTitle}</h3>
+          <p>{t.catalogueErrorText}</p>
+          <div>
+            <button type="button" onClick={() => setLoadAttempt((attempt) => attempt + 1)}>
+              {t.retry}
+            </button>
+            <NavLink className="secondary-link" to="/devis">{t.requestQuote}</NavLink>
+          </div>
+        </section>
+      ) : null}
+
+      {!loading && !catalogueError && !normalizedProducts.length ? (
+        <section className="catalogue-empty-state">
+          <p className="eyebrow">{t.catalogueEmptyEyebrow}</p>
+          <h3>{t.catalogueEmptyTitle}</h3>
+          <p>{t.catalogueEmptyText}</p>
+          <div>
+            <NavLink className="primary-link" to="/devis">{t.requestQuote}</NavLink>
+          </div>
+        </section>
+      ) : null}
+
+      {!loading && !catalogueError && normalizedProducts.length && !displayedProducts.length ? (
         <section className="catalogue-empty-state">
           <p className="eyebrow">{t.noProductEyebrow}</p>
           <h3>{t.noProductTitle}</h3>
@@ -1524,7 +1577,7 @@ function ProductsPage({ t }) {
         </section>
       ) : null}
 
-      {!loading ? (
+      {!loading && !catalogueError && normalizedProducts.length ? (
       <>
       <section className="catalogue-result-summary">
         <div>
@@ -1585,7 +1638,7 @@ function ProductsPage({ t }) {
               </div>
               <button type="button" onClick={() => setPreviewProduct(null)}>{t.close}</button>
             </div>
-            <Suspense fallback={<div className="product-3d-viewer product-3d-fallback"><span>3D</span></div>}>
+            <Suspense fallback={<ThreeDLoadingFallback />}>
               <Product3DViewer product={previewProduct} />
             </Suspense>
           </div>
@@ -1648,7 +1701,7 @@ function ProductsPage({ t }) {
             <div className="compare-3d-grid">
               {compareProducts.map((product) => (
                 <article className="compare-3d-card" key={product.id || product.nom}>
-                  <Suspense fallback={<div className="product-3d-viewer product-3d-fallback"><span>3D</span></div>}>
+                  <Suspense fallback={<ThreeDLoadingFallback />}>
                     <Product3DViewer product={product} />
                   </Suspense>
                   <div className="compare-3d-info">
@@ -1767,28 +1820,29 @@ function ProductDetailPage({ t }) {
   const { productId } = useParams()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [detailError, setDetailError] = useState(null)
+  const [catalogueProducts, setCatalogueProducts] = useState([])
   const [showDetail3d, setShowDetail3d] = useState(false)
 
   useEffect(() => {
     async function loadProduct() {
       setLoading(true)
-      const localProduct = officialProducts.find((item) => item.id === productId || slugify(item.nom) === productId)
+      setDetailError(null)
+      setProduct(null)
 
       try {
-        if (/^\d+$/.test(productId)) {
-          const response = await fetch(`${API_URL}/produits/actifs`)
-          if (response.ok) {
-            const activeProducts = await response.json()
-            const backendProduct = activeProducts.find((item) => String(item.id) === String(productId))
-            if (backendProduct) {
-              setProduct(normalizeProduct(backendProduct))
-              return
-            }
-          }
-        }
-        setProduct(normalizeProduct(localProduct || officialProducts[0]))
+        const response = await fetch(`${API_URL}/produits/actifs`)
+        if (!response.ok) throw new Error('Backend unavailable')
+        const activeProducts = await response.json()
+        if (!Array.isArray(activeProducts)) throw new Error('Invalid catalogue response')
+        setCatalogueProducts(activeProducts)
+        const backendProduct = activeProducts.find((item) =>
+          String(item.id) === String(productId) || slugify(item.nom || '') === productId,
+        )
+        if (backendProduct) setProduct(normalizeProduct(backendProduct))
+        else setDetailError('not-found')
       } catch {
-        setProduct(normalizeProduct(localProduct || officialProducts[0]))
+        setDetailError('load')
       } finally {
         setLoading(false)
       }
@@ -1803,7 +1857,7 @@ function ProductDetailPage({ t }) {
 
   const relatedProducts = useMemo(() => {
     if (!product) return []
-    return officialProducts
+    return catalogueProducts
       .map((item) => normalizeProduct(item))
       .filter((item) => (item.id || item.nom) !== (product.id || product.nom))
       .map((item) => {
@@ -1814,9 +1868,9 @@ function ProductDetailPage({ t }) {
       .filter((item) => item.relationScore > 0)
       .sort((first, second) => second.relationScore - first.relationScore || first.nom.localeCompare(second.nom))
       .slice(0, 3)
-  }, [product])
+  }, [product, catalogueProducts])
 
-  if (loading || !product) {
+  if (loading) {
     return (
       <main className="page-section">
         <p>{t.loading}</p>
@@ -1824,7 +1878,18 @@ function ProductDetailPage({ t }) {
     )
   }
 
-  const heroSpecs = getProductHeroSpecs(t)
+  if (detailError || !product) {
+    return (
+      <main className="page-section">
+        <section className="catalogue-empty-state" role={detailError === 'load' ? 'alert' : undefined}>
+          <p className="eyebrow">{detailError === 'load' ? t.catalogueErrorEyebrow : t.productUnavailableEyebrow}</p>
+          <h1>{detailError === 'load' ? t.catalogueErrorTitle : t.productUnavailableTitle}</h1>
+          <p>{detailError === 'load' ? t.catalogueErrorText : t.productUnavailableText}</p>
+          <div><NavLink className="primary-link" to="/catalogue">{t.backCatalogue}</NavLink></div>
+        </section>
+      </main>
+    )
+  }
 
   return (
     <main className="product-detail-page">
@@ -1839,15 +1904,15 @@ function ProductDetailPage({ t }) {
             <dl className="product-hero-specs">
               <div>
                 <dt>{t.purity}</dt>
-                <dd>{heroSpecs.purity}</dd>
+                <dd>{product.purete || '-'}</dd>
               </div>
               <div>
                 <dt>{t.dimensions}</dt>
-                <dd>{heroSpecs.dimensions}</dd>
+                <dd>{product.dimensions || '-'}</dd>
               </div>
               <div>
                 <dt>{t.standards}</dt>
-                <dd>{heroSpecs.standards}</dd>
+                <dd>{product.normes || '-'}</dd>
               </div>
             </dl>
             <div className="legacy-product-actions">
@@ -1871,7 +1936,7 @@ function ProductDetailPage({ t }) {
                     {t.closePreview}
                   </button>
                 </div>
-                <Suspense fallback={<div className="product-3d-viewer product-3d-fallback"><span>3D</span></div>}>
+                <Suspense fallback={<ThreeDLoadingFallback />}>
                   <Product3DViewer product={product} />
                 </Suspense>
               </div>
@@ -2078,7 +2143,9 @@ function ResourcesPage({ t }) {
       title: document.titre,
       type: document.typeDocument,
       text: document.description || document.fichierNom,
-      href: document.telechargementPublic ? document.fichierUrl : null,
+      href: document.telechargementPublic
+        ? resolveBackendUrl(document.fichierUrl)
+        : null,
       product: document.produitConcerne,
     })),
   ]
@@ -2142,6 +2209,7 @@ function ResourcesPage({ t }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(request),
       })
+      if (response.status === 429) { setStatus(t.documentRateLimited); return }
       if (!response.ok) throw new Error('Document request failed')
       const data = await response.json()
       setRequest(emptyDocumentRequest())
@@ -2577,6 +2645,7 @@ function DocumentRequestPage({ t }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(request),
       })
+      if (response.status === 429) { setStatus(t.documentRateLimited); return }
       if (!response.ok) throw new Error('Document request failed')
       const data = await response.json()
       setStatus(`${t.documentRequestSuccess} ${data.referenceDemande || ''}`)
@@ -2655,6 +2724,7 @@ function QuotePage({ t }) {
     email: '',
     telephone: '',
     produitDemande: params.get('produit') || '',
+    produitId: null,
     pureteCuivre: '',
     longueur: '',
     largeur: '',
@@ -2673,6 +2743,27 @@ function QuotePage({ t }) {
   const [form, setForm] = useState(() => getQuoteDraftForm(initialQuoteForm, Boolean(params.get('produit') || groupedProducts.length)))
   const [status, setStatus] = useState('')
   const [draftSaved, setDraftSaved] = useState(false)
+  const [quoteProducts, setQuoteProducts] = useState([])
+
+  useEffect(() => {
+    async function loadQuoteProducts() {
+      try {
+        const response = await fetch(`${API_URL}/produits/actifs`)
+        if (!response.ok) throw new Error('Catalogue unavailable')
+        const data = await response.json()
+        const availableProducts = Array.isArray(data) ? data : []
+        setQuoteProducts(availableProducts)
+        setForm((current) => {
+          if (!current.produitDemande || current.produitId) return current
+          const product = availableProducts.find((item) => item.nom === current.produitDemande)
+          return product ? { ...current, produitId: product.id } : current
+        })
+      } catch {
+        setQuoteProducts([])
+      }
+    }
+    loadQuoteProducts()
+  }, [])
 
   useEffect(() => {
     if (!hasQuoteDraftContent(form)) {
@@ -2691,23 +2782,21 @@ function QuotePage({ t }) {
 
   function updateField(event) {
     const { name, value } = event.target
+    if (name === 'produitDemande') {
+      const product = quoteProducts.find((item) => item.nom === value)
+      setForm((current) => ({ ...current, produitDemande: value, produitId: product?.id || null }))
+      return
+    }
     setForm((current) => ({ ...current, [name]: value }))
   }
 
   async function submitQuote(event) {
     event.preventDefault()
     setStatus(t.sending)
-    const extraMessage = [
-      form.applicationProjet ? `${t.projectApplication}: ${form.applicationProjet}` : '',
-      form.finitionSouhaitee ? `${t.desiredFinish}: ${form.finitionSouhaitee}` : '',
-      form.normeReference ? `${t.normReference}: ${form.normeReference}` : '',
-      form.lienPlanTechnique ? `${t.technicalPlanLink}: ${form.lienPlanTechnique}` : '',
-      form.diametreSouhaite ? `${t.desiredDiameter}: ${form.diametreSouhaite}` : '',
-      form.message,
-    ].filter(Boolean).join('\n')
     const payload = {
       ...form,
-      message: extraMessage,
+      finitionSouhaitee: form.finitionSouhaitee === t.finishUndefined ? null : form.finitionSouhaitee,
+      message: form.message || null,
       quantite: Number(form.quantite),
       pureteCuivre: form.pureteCuivre ? Number(form.pureteCuivre) : null,
       longueur: form.longueur ? Number(form.longueur) : null,
@@ -2721,6 +2810,7 @@ function QuotePage({ t }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
+      if (response.status === 429) { setStatus(t.quoteRateLimited); return }
       if (!response.ok) throw new Error('Request failed')
       const data = await response.json()
       localStorage.removeItem(QUOTE_DRAFT_KEY)
@@ -2749,6 +2839,7 @@ function QuotePage({ t }) {
         method: 'POST',
         body: data,
       })
+      if (response.status === 429) { setStatus(t.uploadRateLimited); return }
       if (!response.ok) throw new Error('Upload failed')
       const result = await response.json()
       setForm((current) => ({
@@ -2764,7 +2855,7 @@ function QuotePage({ t }) {
 
   const isAnodes = form.produitDemande.toLowerCase().includes('anode')
   const selectedProduct = form.produitDemande
-    ? normalizeProduct(officialProducts.find((product) => product.nom === form.produitDemande) || { nom: form.produitDemande })
+    ? normalizeProduct(quoteProducts.find((product) => product.nom === form.produitDemande) || { nom: form.produitDemande })
     : null
   const quotePreviewProduct = selectedProduct
     ? {
@@ -2851,8 +2942,8 @@ function QuotePage({ t }) {
             {t.product}
             <select name="produitDemande" value={form.produitDemande} onChange={updateField} required>
               <option value="">{t.chooseProduct}</option>
-              {officialProducts.map((product) => (
-                <option key={product.nom} value={product.nom}>
+              {quoteProducts.map((product) => (
+                <option key={product.id} value={product.nom}>
                   {product.nom}
                 </option>
               ))}
@@ -2894,7 +2985,7 @@ function QuotePage({ t }) {
                 <h3>{quotePreviewProduct.nom}</h3>
                 <p>{quotePreviewProduct.dimensions}</p>
               </div>
-              <Suspense fallback={<div className="product-3d-viewer product-3d-fallback"><span>3D</span></div>}>
+              <Suspense fallback={<ThreeDLoadingFallback />}>
                 <Product3DViewer product={quotePreviewProduct} />
               </Suspense>
             </article>
@@ -2975,7 +3066,15 @@ function Field({ label, ...props }) {
 }
 
 function AdminPage({ t }) {
-  const [token, setToken] = useState(sessionStorage.getItem(ADMIN_TOKEN_KEY) || '')
+  const [token, setToken] = useState(() => {
+    const storedToken = sessionStorage.getItem(ADMIN_TOKEN_KEY) || ''
+    if (storedToken && storedToken.split('.').length !== 3) {
+      sessionStorage.removeItem(ADMIN_TOKEN_KEY)
+      sessionStorage.removeItem(ADMIN_PROFILE_KEY)
+      return ''
+    }
+    return storedToken
+  })
   const [login, setLogin] = useState({ email: 'admin@grod.ma', motDePasse: 'admin123' })
   const [error, setError] = useState('')
   const navigate = useNavigate()
@@ -2989,9 +3088,11 @@ function AdminPage({ t }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(login),
       })
+      if (response.status === 429) { setError(t.loginRateLimited); return }
       if (!response.ok) throw new Error('Login failed')
       const data = await response.json()
       sessionStorage.setItem(ADMIN_TOKEN_KEY, data.token)
+      sessionStorage.setItem(ADMIN_PROFILE_KEY, JSON.stringify({ email:data.email, nomComplet:data.nomComplet, role:data.role }))
       setToken(data.token)
       navigate('/admin/dashboard')
     } catch {
@@ -3033,6 +3134,7 @@ function AdminPage({ t }) {
       if (!loginResponse.ok) throw new Error('Passkey login failed')
       const data = await loginResponse.json()
       sessionStorage.setItem(ADMIN_TOKEN_KEY, data.token)
+      sessionStorage.setItem(ADMIN_PROFILE_KEY, JSON.stringify({ email:data.email, nomComplet:data.nomComplet, role:data.role }))
       setToken(data.token)
       navigate('/admin')
     } catch {
@@ -3072,6 +3174,7 @@ function AdminPage({ t }) {
 
   return <AdminDashboard t={t} token={token} onLogout={() => {
     sessionStorage.removeItem(ADMIN_TOKEN_KEY)
+    sessionStorage.removeItem(ADMIN_PROFILE_KEY)
     setToken('')
   }} />
 }
@@ -3080,6 +3183,8 @@ function AdminDashboard({ t, token, onLogout }) {
   const location = useLocation()
   const navigate = useNavigate()
   const [demandes, setDemandes] = useState([])
+  const [clients, setClients] = useState([])
+  const [clientDetails, setClientDetails] = useState({})
   const [documentRequests, setDocumentRequests] = useState([])
   const [products, setProducts] = useState([])
   const [documents, setDocuments] = useState([])
@@ -3089,6 +3194,45 @@ function AdminDashboard({ t, token, onLogout }) {
   const [editingProductId, setEditingProductId] = useState(null)
   const [editingDocumentId, setEditingDocumentId] = useState(null)
   const [selectedDemande, setSelectedDemande] = useState(null)
+  const [selectedClient, setSelectedClient] = useState(null)
+  const [selectedDocumentRequest, setSelectedDocumentRequest] = useState(null)
+  const [documentSearch, setDocumentSearch] = useState('')
+  const [documentStatusFilter, setDocumentStatusFilter] = useState('ALL')
+  const [documentTypeFilter, setDocumentTypeFilter] = useState('ALL')
+  const [documentSort, setDocumentSort] = useState('DESC')
+  const [documentPage, setDocumentPage] = useState(1)
+  const [documentsPerPage, setDocumentsPerPage] = useState(10)
+  const [resourceDrawerOpen, setResourceDrawerOpen] = useState(false)
+  const [resourceSearch, setResourceSearch] = useState('')
+  const [resourceTypeFilter, setResourceTypeFilter] = useState('ALL')
+  const [resourceProductFilter, setResourceProductFilter] = useState('ALL')
+  const [resourceStatusFilter, setResourceStatusFilter] = useState('ALL')
+  const [resourcePage, setResourcePage] = useState(1)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('adminSidebarCollapsed') === 'true')
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const requestedAccountTab = new URLSearchParams(location.search).get('tab')
+  const accountTab = ['profile', 'security', 'preferences'].includes(requestedAccountTab) ? requestedAccountTab : 'profile'
+  const [passwordForm, setPasswordForm] = useState({ currentPassword:'', newPassword:'', confirmPassword:'' })
+  const [passwordVisible, setPasswordVisible] = useState(false)
+  const [passwordMessage, setPasswordMessage] = useState({ type:'', text:'' })
+  const [notificationFilter, setNotificationFilter] = useState('ALL')
+  const [notificationPage, setNotificationPage] = useState(1)
+  const [adminNotifications, setAdminNotifications] = useState([])
+  const [unreadAdminCount, setUnreadAdminCount] = useState(0)
+  const notificationPanelRef = useRef(null)
+  const profileMenuRef = useRef(null)
+  const adminProfile = useMemo(() => {
+    try { return JSON.parse(sessionStorage.getItem(ADMIN_PROFILE_KEY) || '{}') } catch { return {} }
+  }, [])
+  const [clientStatusFilter, setClientStatusFilter] = useState('ALL')
+  const [clientPage, setClientPage] = useState(1)
+  const [clientsPerPage, setClientsPerPage] = useState(10)
+  const [demandPage, setDemandPage] = useState(1)
+  const [demandsPerPage, setDemandsPerPage] = useState(10)
+  const [pageMeta, setPageMeta] = useState({ demandes:{totalElements:0,totalPages:1}, clients:{totalElements:0,totalPages:1}, documents:{totalElements:0,totalPages:1}, produits:{totalElements:0,totalPages:1}, ressources:{totalElements:0,totalPages:1}, notifications:{totalElements:0,totalPages:1} })
+  const [dashboardSummary, setDashboardSummary] = useState({ demandesTotales:0, nouvellesDemandes:0, documentsEnAttente:0, produitsActifs:0, clients:0, demandesParStatut:{} })
   const [search, setSearch] = useState('')
   const [productSearch, setProductSearch] = useState('')
   const [productCategoryFilter, setProductCategoryFilter] = useState('ALL')
@@ -3108,55 +3252,92 @@ function AdminDashboard({ t, token, onLogout }) {
   const isDashboardRoute = location.pathname === '/admin' || location.pathname.includes('/admin/dashboard')
 
   function openAdminTab(tab, path) {
+    setMobileSidebarOpen(false)
     navigate(path)
+  }
+
+  function toggleAdminSidebar() {
+    if (window.matchMedia('(max-width: 760px)').matches) {
+      setMobileSidebarOpen((open) => !open)
+      return
+    }
+    setSidebarCollapsed((collapsed) => {
+      const next = !collapsed
+      localStorage.setItem('adminSidebarCollapsed', String(next))
+      return next
+    })
   }
 
   useEffect(() => {
     async function loadAdminData() {
       try {
-        const [demandesResponse, documentRequestsResponse, productsResponse, documentsResponse, settingsResponse] = await Promise.all([
-          fetch(`${API_URL}/demandes-devis`, {
+        const [demandesResponse, documentRequestsResponse, productsResponse, documentsResponse, settingsResponse, clientsResponse, notificationsResponse, unreadResponse] = await Promise.all([
+          fetch(`${API_URL}/admin/demandes?page=0&size=10`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch(`${API_URL}/demandes-documents`, {
+          fetch(`${API_URL}/admin/documents?page=0&size=10`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch(`${API_URL}/produits`, {
+          fetch(`${API_URL}/admin/produits?page=0&size=10`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch(`${API_URL}/documents-techniques`, {
+          fetch(`${API_URL}/admin/ressources?page=0&size=10`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
           fetch(`${API_URL}/admin/settings/notifications`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
+          fetch(`${API_URL}/admin/clients?page=0&size=10`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API_URL}/admin/notifications?limit=5`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API_URL}/admin/notifications/unread-count`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ])
         if (demandesResponse.status === 401 || demandesResponse.status === 403) {
           sessionStorage.removeItem(ADMIN_TOKEN_KEY)
+          sessionStorage.removeItem(ADMIN_PROFILE_KEY)
+          onLogout()
           navigate('/admin/login')
           return
         }
         if (!demandesResponse.ok) throw new Error('Admin request failed')
-        setDemandes(await demandesResponse.json())
+        const demandesData = await demandesResponse.json()
+        setDemandes(demandesData.content || [])
+        setPageMeta((current)=>({...current,demandes:demandesData}))
         if (documentRequestsResponse.ok) {
-          setDocumentRequests(await documentRequestsResponse.json())
+          const data = await documentRequestsResponse.json(); setDocumentRequests(data.content || []); setPageMeta((current)=>({...current,documents:data}))
         }
 
         if (productsResponse.ok) {
-          setProducts(await productsResponse.json())
+          const data = await productsResponse.json(); setProducts(data.content || []); setPageMeta((current)=>({...current,produits:data}))
         }
         if (documentsResponse.ok) {
-          setDocuments(await documentsResponse.json())
+          const data = await documentsResponse.json(); setDocuments(data.content || []); setPageMeta((current)=>({...current,ressources:data}))
         }
         if (settingsResponse.ok) {
           setSettings(await settingsResponse.json())
+        }
+        if (clientsResponse.ok) {
+          const data = await clientsResponse.json()
+          setClients((data.content || []).map(mapClientFromApi))
+          setPageMeta((current) => ({...current,clients:data}))
+        }
+        if (notificationsResponse.ok) {
+          setAdminNotifications((await notificationsResponse.json()).map(mapNotificationFromApi))
+        }
+        if (unreadResponse.ok) {
+          setUnreadAdminCount((await unreadResponse.json()).count || 0)
         }
       } catch {
         setError(t.adminLoadError)
       }
     }
     loadAdminData()
-  }, [navigate, token, t.adminLoadError])
+  }, [navigate, onLogout, token, t.adminLoadError])
 
   useEffect(() => {
     if (!productEditId || !products.length) return
@@ -3169,15 +3350,114 @@ function AdminDashboard({ t, token, onLogout }) {
     setProductDrawerOpen(true)
   }, [productEditId, products])
 
-  const clients = useMemo(() => buildClientHistory(demandes), [demandes])
+  useEffect(() => {
+    fetch(`${API_URL}/admin/dashboard/summary`, { headers:{ Authorization:`Bearer ${token}` } })
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then(setDashboardSummary)
+      .catch(() => {})
+  }, [token])
+
+  useEffect(() => {
+    const timeout = window.setTimeout(async () => {
+      const params = new URLSearchParams()
+      let endpoint = ''
+      let applyData = null
+      if (adminTab === 'demandes') {
+        endpoint = '/admin/demandes'; params.set('page', demandPage - 1); params.set('size', demandsPerPage); params.set('search', search)
+        if (statusFilter !== 'TOUTES') params.set('statut', statusFilter)
+        applyData = (data) => { setDemandes(data.content); setPageMeta((current)=>({...current,demandes:data})) }
+      } else if (adminTab === 'clients') {
+        endpoint = '/admin/clients'; params.set('page', clientPage - 1); params.set('size', clientsPerPage); params.set('search', search)
+        applyData = (data) => { setClients(data.content.map(mapClientFromApi)); setPageMeta((current)=>({...current,clients:data})) }
+      } else if (adminTab === 'documents') {
+        endpoint = '/admin/documents'; params.set('page', documentPage - 1); params.set('size', documentsPerPage); params.set('search', documentSearch)
+        if (documentStatusFilter !== 'ALL') params.set('statut', documentStatusFilter)
+        if (documentTypeFilter !== 'ALL') params.set('type', documentTypeFilter)
+        params.set('direction', documentSort === 'ASC' ? 'asc' : 'desc')
+        applyData = (data) => { setDocumentRequests(data.content); setPageMeta((current)=>({...current,documents:data})) }
+      } else if (adminTab === 'produits') {
+        endpoint = '/admin/produits'; params.set('page', productPage - 1); params.set('size', 10); params.set('search', productSearch)
+        if (productCategoryFilter !== 'ALL') params.set('categorie', productCategoryFilter)
+        if (productStatusFilter !== 'ALL') params.set('actif', productStatusFilter === 'ACTIVE')
+        applyData = (data) => { setProducts(data.content); setPageMeta((current)=>({...current,produits:data})) }
+      } else if (adminTab === 'ressources') {
+        endpoint = '/admin/ressources'; params.set('page', resourcePage - 1); params.set('size', 10); params.set('search', resourceSearch)
+        if (resourceTypeFilter !== 'ALL') params.set('type', resourceTypeFilter)
+        if (resourceProductFilter !== 'ALL') params.set('produit', resourceProductFilter)
+        if (resourceStatusFilter !== 'ALL') params.set('actif', resourceStatusFilter === 'ACTIVE')
+        applyData = (data) => { setDocuments(data.content); setPageMeta((current)=>({...current,ressources:data})) }
+      } else if (adminTab === 'notifications') {
+        endpoint = '/admin/notifications'; params.set('page', notificationPage - 1); params.set('size', 10)
+        if (notificationFilter === 'UNREAD') params.set('lue', 'false')
+        if (notificationFilter === 'REQUEST') params.set('referenceType', 'DEVIS')
+        if (notificationFilter === 'DOCUMENT') params.set('referenceType', 'DOCUMENT')
+        applyData = (data) => { setAdminNotifications(data.content.map(mapNotificationFromApi)); setPageMeta((current)=>({...current,notifications:data})) }
+      }
+      if (!endpoint) return
+      try {
+        const response = await fetch(`${API_URL}${endpoint}?${params}`, { headers:{ Authorization:`Bearer ${token}` } })
+        if (!response.ok) throw new Error('Paged request failed')
+        applyData(await response.json())
+      } catch { setError(t.adminLoadError) }
+    }, 400)
+    return () => window.clearTimeout(timeout)
+  }, [adminTab, clientPage, clientsPerPage, demandPage, demandsPerPage, documentPage, documentsPerPage, documentSearch, documentSort, documentStatusFilter, documentTypeFilter, notificationFilter, notificationPage, productCategoryFilter, productPage, productSearch, productStatusFilter, resourcePage, resourceProductFilter, resourceSearch, resourceStatusFilter, resourceTypeFilter, search, statusFilter, token, t.adminLoadError])
+
   const routeClientKey = location.pathname.includes('/admin/clients/')
-    ? decodeURIComponent(location.pathname.split('/admin/clients/')[1] || '').toLowerCase()
+    ? decodeURIComponent(location.pathname.split('/admin/clients/')[1] || '')
     : ''
-  const activeClientData = clients.find((client) => client.key === routeClientKey)
+
+  async function loadClientDetail(clientId) {
+    const response = await fetch(`${API_URL}/admin/clients/${clientId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!response.ok) throw new Error('Client request failed')
+    const client = mapClientFromApi(await response.json())
+    setClientDetails((current) => ({ ...current, [String(clientId)]: client }))
+    return client
+  }
+
+  useEffect(() => {
+    if (!routeClientKey || clientDetails[routeClientKey]) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadClientDetail(routeClientKey).catch(() => setError(t.adminLoadError))
+    // The route id is the source of truth; cached details prevent duplicate requests.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeClientKey, token])
+
+  async function openClientDetails(client) {
+    try {
+      const detail = clientDetails[client.key] || await loadClientDetail(client.key)
+      setSelectedClient(detail)
+    } catch {
+      setError(t.adminLoadError)
+    }
+  }
+
+  const activeClientData = clientDetails[routeClientKey]
   const visibleClients = clients.filter((client) => {
     const haystack = [client.name, client.contact, client.email, client.phone, client.products.join(' ')].join(' ').toLowerCase()
-    return haystack.includes(search.toLowerCase())
+    const hasOpenRequest = client.nombreDemandesOuvertes > 0
+    return haystack.includes(search.toLowerCase()) && (clientStatusFilter === 'ALL' || (clientStatusFilter === 'OPEN' ? hasOpenRequest : !hasOpenRequest))
   })
+  const totalClientPages = Math.max(1, pageMeta.clients.totalPages || 1)
+  const paginatedClients = visibleClients
+  const openClientsCount = clients.filter((client) => client.nombreDemandesOuvertes > 0).length
+  const uniqueRequestedProducts = new Set(clients.flatMap((client) => client.products)).size
+  const documentTypes = [...new Set(documentRequests.map((request) => request.typeDocument).filter(Boolean))].sort()
+  const filteredDocumentRequests = documentRequests.filter((request) => {
+    const haystack = [request.referenceDemande, request.societe, request.nomContact, request.email, request.titreDocument, request.typeDocument, request.produitConcerne].join(' ').toLowerCase()
+    return haystack.includes(documentSearch.toLowerCase()) && (documentStatusFilter === 'ALL' || (request.statut || 'NOUVELLE') === documentStatusFilter) && (documentTypeFilter === 'ALL' || request.typeDocument === documentTypeFilter)
+  }).sort((a,b) => (documentSort === 'DESC' ? -1 : 1) * (new Date(a.dateCreation || 0) - new Date(b.dateCreation || 0)))
+  const totalDocumentPages = Math.max(1, pageMeta.documents.totalPages || 1)
+  const paginatedDocumentRequests = filteredDocumentRequests
+  const documentStatusCounts = ['NOUVELLE','EN_TRAITEMENT','TRAITEE','ANNULEE'].map((status) => ({ status, count: documentRequests.filter((request) => (request.statut || 'NOUVELLE') === status).length }))
+  const documentTypeStats = documentTypes.map((type) => ({ type, count: documentRequests.filter((request) => request.typeDocument === type).length })).sort((a,b) => b.count-a.count).slice(0,4)
+  const resourceTypes = [...new Set(documents.map((document) => document.typeDocument).filter(Boolean))].sort()
+  const resourceProducts = [...new Set(documents.map((document) => document.produitConcerne).filter(Boolean))].sort()
+  const filteredResources = documents.filter((document) => [document.titre,document.typeDocument,document.produitConcerne,document.fichierNom,document.description].join(' ').toLowerCase().includes(resourceSearch.toLowerCase()) && (resourceTypeFilter==='ALL'||document.typeDocument===resourceTypeFilter) && (resourceProductFilter==='ALL'||document.produitConcerne===resourceProductFilter) && (resourceStatusFilter==='ALL'||(resourceStatusFilter==='ACTIVE'?document.actif:!document.actif)))
+  const resourcePages = Math.max(1,pageMeta.ressources.totalPages||1)
+  const paginatedResources = filteredResources
   const recentDemandes = [...demandes]
     .sort((a, b) => new Date(b.dateCreation || 0) - new Date(a.dateCreation || 0))
     .slice(0, 3)
@@ -3220,12 +3500,6 @@ function AdminDashboard({ t, token, onLogout }) {
       .sort((first, second) => getDemandPriority(second).score - getDemandPriority(first).score)
       .slice(0, 4),
   }))
-  const statusAnalytics = ['NOUVELLE', 'EN_TRAITEMENT', 'TRAITEE', 'ANNULEE'].map((status) => ({
-    status,
-    label: status.replace('_', ' '),
-    count: demandes.filter((demande) => demande.statut === status).length,
-    percent: demandes.length ? Math.round((demandes.filter((demande) => demande.statut === status).length / demandes.length) * 100) : 0,
-  }))
   const productAnalytics = Object.entries(
     demandes.reduce((accumulator, demande) => {
       const productName = demande.produitDemande || t.notProvided
@@ -3263,37 +3537,115 @@ function AdminDashboard({ t, token, onLogout }) {
     })
   }, [productCategoryFilter, productSearch, productStatusFilter, products])
   const productsPerPage = 10
-  const totalProductPages = Math.max(1, Math.ceil(filteredAdminProducts.length / productsPerPage))
-  const paginatedAdminProducts = filteredAdminProducts.slice((productPage - 1) * productsPerPage, productPage * productsPerPage)
+  const totalProductPages = Math.max(1, pageMeta.produits.totalPages || 1)
+  const paginatedAdminProducts = filteredAdminProducts
   const activeProductsCount = products.filter((product) => product.actif !== false).length
   const inactiveProductsCount = products.length - activeProductsCount
   const productsWith3DCount = products.filter((product) => {
     const normalized = normalizeProduct(product)
     return normalized.has3D && normalized.model3D
   }).length
-  const newRequestsCount = demandes.filter((demande) => demande.statut === 'NOUVELLE').length
-  const unreadAdminCount = newRequestsCount + documentRequests.filter((request) => (request.statut || 'NOUVELLE') === 'NOUVELLE').length
+  const newRequestsCount = dashboardSummary.nouvellesDemandes
+  const readNotificationIds = adminNotifications.filter((notification) => notification.lue).map((notification) => notification.id)
   const adminNavItems = [
     { key: 'dashboard', label: 'Dashboard', path: '/admin/dashboard', icon: 'dashboard' },
-    { key: 'demandes', label: t.requestsMenu, path: '/admin/demandes', icon: 'requests', badge: demandes.length },
-    { key: 'clients', label: t.clients, path: '/admin/clients', icon: 'clients', badge: clients.length },
-    { key: 'produits', label: t.products, path: '/admin/produits', icon: 'products', badge: products.length },
-    { key: 'documents', label: t.documentRequests, path: '/admin/documents', icon: 'documents', badge: documentRequests.length },
-    { key: 'ressources', label: t.resourcesEyebrow, path: '/admin/ressources', icon: 'resources', badge: documents.length },
-    { key: 'settings', label: t.notifications, path: '/admin/dashboard', icon: 'bell', badge: unreadAdminCount },
+    { key: 'demandes', label: t.requestsMenu, path: '/admin/demandes', icon: 'requests', badge: dashboardSummary.demandesTotales },
+    { key: 'clients', label: t.clients, path: '/admin/clients', icon: 'clients', badge: dashboardSummary.clients },
+    { key: 'produits', label: t.products, path: '/admin/produits', icon: 'products', badge: pageMeta.produits.totalElements || products.length },
+    { key: 'documents', label: t.documentRequests, path: '/admin/documents', icon: 'documents', badge: pageMeta.documents.totalElements || documentRequests.length },
+    { key: 'ressources', label: t.resourcesEyebrow, path: '/admin/ressources', icon: 'resources', badge: pageMeta.ressources.totalElements || documents.length },
+    { key: 'notifications', label: t.notifications, path: '/admin/notifications', icon: 'bell', badge: unreadAdminCount },
   ]
   const activeAdminKey = isDashboardRoute ? 'dashboard' : adminTab
   const kpiCards = [
-    { label: t.totalRequests, value: demandes.length, hint: '+100% ce mois', icon: 'requests', tone: 'green' },
-    { label: t.newRequests, value: newRequestsCount, hint: '+1 ce mois', icon: 'document-add', tone: 'copper' },
-    { label: t.documentRequests, value: documentRequests.length, hint: '+1 ce mois', icon: 'documents', tone: 'dark' },
-    { label: t.activeProducts, value: activeProductsCount, hint: '+2 ce mois', icon: 'products', tone: 'green' },
+    { label: 'Demandes totales', value: dashboardSummary.demandesTotales, icon: 'requests', tone: 'green' },
+    { label: 'Nouvelles demandes', value: newRequestsCount, icon: 'document-add', tone: 'copper' },
+    { label: 'Documents en attente', value: dashboardSummary.documentsEnAttente, icon: 'documents', tone: 'dark' },
+    { label: 'Produits actifs', value: dashboardSummary.produitsActifs, icon: 'products', tone: 'green' },
   ]
+  const dashboardStatusData = ['NOUVELLE', 'EN_TRAITEMENT', 'TRAITEE', 'ANNULEE'].map((status) => ({
+    status,
+    count: dashboardSummary.demandesParStatut?.[status] || 0,
+  }))
+  const dashboardEvolution = [...demandes]
+    .filter((demande) => demande.dateCreation)
+    .sort((first, second) => new Date(first.dateCreation) - new Date(second.dateCreation))
+    .reduce((points, demande) => {
+      const date = new Date(demande.dateCreation).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
+      const existing = points.find((point) => point.date === date)
+      if (existing) existing.count += 1
+      else points.push({ date, count: 1 })
+      return points
+    }, [])
+    .slice(-6)
+  const dashboardTopProducts = productAnalytics.slice(0, 3)
   const adminSearchPlaceholder = t.adminSearchPlaceholder || 'Rechercher reference, client, produit...'
 
   useEffect(() => {
-    setProductPage(1)
-  }, [productCategoryFilter, productSearch, productStatusFilter])
+    function closeNotifications(event) {
+      if (notificationPanelRef.current && !notificationPanelRef.current.contains(event.target)) setNotificationsOpen(false)
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) setProfileMenuOpen(false)
+    }
+    document.addEventListener('mousedown', closeNotifications)
+    return () => document.removeEventListener('mousedown', closeNotifications)
+  }, [])
+
+  useEffect(() => {
+    function closeSidebarWithEscape(event) {
+      if (event.key === 'Escape') setMobileSidebarOpen(false)
+    }
+    document.addEventListener('keydown', closeSidebarWithEscape)
+    return () => document.removeEventListener('keydown', closeSidebarWithEscape)
+  }, [])
+
+  async function changePassword(event) {
+    event.preventDefault()
+    setPasswordMessage({ type:'', text:'' })
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setPasswordMessage({ type:'error', text:'Tous les champs sont obligatoires.' }); return
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordMessage({ type:'error', text:'Les deux nouveaux mots de passe ne correspondent pas.' }); return
+    }
+    if (passwordForm.newPassword.length < 8) {
+      setPasswordMessage({ type:'error', text:'Le nouveau mot de passe doit contenir au moins 8 caractères.' }); return
+    }
+    try {
+      const response = await fetch(`${API_URL}/auth/password`, { method:'PUT', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' }, body:JSON.stringify({ currentPassword:passwordForm.currentPassword, newPassword:passwordForm.newPassword }) })
+      const data = await response.json().catch(()=>({}))
+      if (!response.ok) {
+        if (data.message === 'CURRENT_PASSWORD_INVALID') setPasswordMessage({ type:'error', text:'Le mot de passe actuel est incorrect.' })
+        else setPasswordMessage({ type:'error', text:'Impossible de mettre à jour le mot de passe. Veuillez réessayer.' })
+        return
+      }
+      setPasswordForm({ currentPassword:'', newPassword:'', confirmPassword:'' })
+      setPasswordMessage({ type:'success', text:'Mot de passe mis à jour avec succès.' })
+    } catch { setPasswordMessage({ type:'error', text:'Impossible de mettre à jour le mot de passe. Veuillez réessayer.' }) }
+  }
+
+  async function markNotificationsRead(ids) {
+    if (!ids.length) return
+    const readAll = ids.length === adminNotifications.length
+    const responses = readAll
+      ? [await fetch(`${API_URL}/admin/notifications/read-all`, { method:'PUT', headers:{ Authorization:`Bearer ${token}` } })]
+      : await Promise.all(ids.map((id) => fetch(`${API_URL}/admin/notifications/${id}/read`, { method:'PUT', headers:{ Authorization:`Bearer ${token}` } })))
+    if (responses.some((response) => !response.ok)) return
+    const idsSet = new Set(ids)
+    setAdminNotifications((current) => current.map((item) => readAll || idsSet.has(item.id) ? { ...item, lue:true } : item))
+    setUnreadAdminCount((current) => readAll ? 0 : Math.max(0, current - ids.filter((id) => !readNotificationIds.includes(id)).length))
+  }
+
+  async function openNotification(notification) {
+    if (!notification.lue) await markNotificationsRead([notification.id])
+    setNotificationsOpen(false)
+    if (notification.type === 'REQUEST') {
+      setSelectedDemande(demandes.find((item) => item.id === notification.referenceId) || null)
+      navigate('/admin/demandes')
+    } else {
+      setSelectedDocumentRequest(documentRequests.find((item) => item.id === notification.referenceId) || null)
+      navigate('/admin/documents')
+    }
+  }
 
   function openProductDrawer(product = null) {
     setProductDrawerTab('info')
@@ -3392,6 +3744,24 @@ function AdminDashboard({ t, token, onLogout }) {
     }
   }
 
+  async function downloadQuoteAttachment(demande) {
+    try {
+      const response = await fetch(resolveBackendUrl(demande.fichierTechniqueUrl), {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok) throw new Error('Attachment download failed')
+      const blob = await response.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = objectUrl
+      link.download = demande.fichierTechniqueNom || 'plan-technique'
+      link.click()
+      URL.revokeObjectURL(objectUrl)
+    } catch {
+      setError('Impossible de télécharger le fichier joint.')
+    }
+  }
+
   async function updateDocumentRequestStatus(id, statut) {
     setSuccess('')
     setError('')
@@ -3435,44 +3805,6 @@ function AdminDashboard({ t, token, onLogout }) {
       setSuccess(`${t.uploadSuccess} ${t.clickSaveProduct}`)
     } catch {
       setError(t.uploadError)
-    }
-  }
-
-  async function uploadAndSaveProductImage(product, event) {
-    const file = event.target.files?.[0]
-    if (!file) return
-    setSuccess('')
-    setError('')
-    try {
-      const result = await uploadFile(file, 'images')
-      const payload = {
-        nom: product.nom || '',
-        description: product.description || '',
-        categorie: product.categorie || '',
-        imageUrl: result.imageUrl,
-        applications: product.applications || '',
-        dimensions: product.dimensions || '',
-        purete: product.purete || '',
-        normes: product.normes || '',
-        conditionnement: product.conditionnement || '',
-        actif: Boolean(product.actif),
-      }
-      const response = await fetch(`${API_URL}/produits/${product.id}`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
-      if (!response.ok) throw new Error('Product image save failed')
-      const saved = await response.json()
-      setProducts((current) => current.map((item) => (item.id === saved.id ? saved : item)))
-      setSuccess(t.productImageSaved)
-    } catch {
-      setError(t.productImageSaveError)
-    } finally {
-      event.target.value = ''
     }
   }
 
@@ -3559,6 +3891,7 @@ function AdminDashboard({ t, token, onLogout }) {
       )
       setDocumentForm(emptyDocumentForm())
       setEditingDocumentId(null)
+      setResourceDrawerOpen(false)
       setSuccess(t.documentSaved)
     } catch {
       setError(t.documentSaveError)
@@ -3582,6 +3915,25 @@ function AdminDashboard({ t, token, onLogout }) {
     }
   }
 
+  async function downloadTechnicalResource(document, preview = false) {
+    try {
+      const endpoint = document.fichierUrl.startsWith('/api/')
+        ? resolveBackendUrl(document.fichierUrl)
+        : document.fichierUrl
+      const response = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}` } })
+      if (!response.ok) throw new Error('Download failed')
+      const objectUrl = URL.createObjectURL(await response.blob())
+      const link = window.document.createElement('a')
+      link.href = objectUrl
+      if (preview) link.target = '_blank'
+      else link.download = document.fichierNom || 'document.pdf'
+      link.click()
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
+    } catch {
+      setError('Impossible de télécharger cette ressource.')
+    }
+  }
+
   async function saveSettings(event) {
     event.preventDefault()
     setSuccess('')
@@ -3589,10 +3941,7 @@ function AdminDashboard({ t, token, onLogout }) {
     try {
       const response = await fetch(`${API_URL}/admin/settings/notifications`, {
         method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
       })
       if (!response.ok) throw new Error('Settings save failed')
@@ -3644,9 +3993,10 @@ function AdminDashboard({ t, token, onLogout }) {
   }
 
   return (
-    <div className="admin-shell">
-      <aside className="admin-sidebar" aria-label="Administration G-ROD">
-        <NavLink className="admin-sidebar-brand" to="/admin/dashboard">
+    <div className={`admin-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''} ${mobileSidebarOpen ? 'mobile-sidebar-open' : ''}`}>
+      <button type="button" className="admin-sidebar-overlay" aria-label="Fermer le menu" onClick={() => setMobileSidebarOpen(false)} />
+      <aside className="admin-sidebar" aria-label="Administration G-ROD" id="admin-sidebar">
+        <NavLink className="admin-sidebar-brand" to="/admin/dashboard" onClick={() => setMobileSidebarOpen(false)}>
           <img src="/grod-logo.png" alt="G-ROD" />
           <span>Morocco Copper Foundry</span>
         </NavLink>
@@ -3658,6 +4008,8 @@ function AdminDashboard({ t, token, onLogout }) {
               key={item.key}
               className={activeAdminKey === item.key ? 'active' : ''}
               onClick={() => openAdminTab(item.key, item.path)}
+              data-tooltip={item.label}
+              title={sidebarCollapsed ? item.label : undefined}
             >
               <AdminIcon type={item.icon} />
               <span>{item.label}</span>
@@ -3671,10 +4023,6 @@ function AdminDashboard({ t, token, onLogout }) {
           <button type="button" onClick={() => exportCsv(filteredDemandes)}>
             <AdminIcon type="download" />
             {t.exportCsv}
-          </button>
-          <button type="button" onClick={registerPasskey}>
-            <AdminIcon type="security" />
-            Face ID
           </button>
         </div>
 
@@ -3692,35 +4040,32 @@ function AdminDashboard({ t, token, onLogout }) {
       <section className="admin-main">
         <header className="admin-topbar">
           <div className="admin-topbar-title">
-            <button type="button" className="admin-menu-button" aria-label="Menu admin">
+            <button type="button" className="admin-menu-button" onClick={toggleAdminSidebar} aria-controls="admin-sidebar" aria-expanded={mobileSidebarOpen || !sidebarCollapsed} aria-label={mobileSidebarOpen ? 'Fermer le menu' : sidebarCollapsed ? 'Ouvrir le menu' : 'Réduire le menu'}>
               <AdminIcon type="menu" />
             </button>
             <div>
-              <h1>{isDashboardRoute ? 'Bonjour Admin' : t.commercialDashboard}</h1>
-              <p>{t.dashboardIntro}</p>
+              <h1>{adminTab === 'produits' ? 'Gestion des produits' : adminTab === 'clients' ? 'Clients' : adminTab === 'documents' ? 'Demandes de documents' : adminTab === 'ressources' ? 'Ressources techniques' : adminTab === 'notifications' ? 'Notifications' : adminTab === 'account' ? 'Mon compte' : isDashboardRoute ? 'Bonjour Admin' : t.commercialDashboard}</h1>
+              <p>{adminTab === 'produits' ? 'Gérez le catalogue des produits cuivre de G-ROD.' : adminTab === 'clients' ? 'Consultez les clients et leur historique de demandes.' : adminTab === 'documents' ? 'Consultez et gérez les demandes de documents techniques.' : adminTab === 'ressources' ? 'Gérez les documents, certificats et ressources destinés aux acheteurs.' : adminTab === 'notifications' ? 'Suivez les événements importants liés aux demandes et au catalogue.' : adminTab === 'account' ? 'Gérez vos informations personnelles et la sécurité de votre compte.' : isDashboardRoute ? 'Vue rapide sur les demandes clients, le catalogue et les actions prioritaires.' : t.dashboardIntro}</p>
             </div>
           </div>
           <div className="admin-topbar-actions">
             <label className="admin-global-search">
               <AdminIcon type="search" />
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={adminSearchPlaceholder} />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={isDashboardRoute ? 'Rechercher (référence, client, produit...)' : adminSearchPlaceholder} />
             </label>
-            <button type="button" className="admin-notification-button" onClick={() => openAdminTab('settings', '/admin/dashboard')} aria-label={t.notifications}>
-              <AdminIcon type="bell" />
-              {unreadAdminCount ? <span>{unreadAdminCount}</span> : null}
-            </button>
-            <div className="admin-profile-chip">
+            <div className="admin-notification-wrap" ref={notificationPanelRef}><button type="button" className="admin-notification-button" onClick={() => setNotificationsOpen((open)=>!open)} aria-label={t.notifications}><AdminIcon type="bell" />{unreadAdminCount ? <span>{unreadAdminCount}</span> : null}</button>{notificationsOpen?<aside className="notification-dropdown"><header><strong>Notifications</strong><button type="button" onClick={()=>markNotificationsRead(adminNotifications.map((item)=>item.id))}>Tout marquer comme lu</button></header><div>{adminNotifications.slice(0,5).map((notification)=><button type="button" className={!readNotificationIds.includes(notification.id)?'unread':''} onClick={()=>openNotification(notification)} key={notification.id}><AdminIcon type={notification.type==='REQUEST'?'requests':'documents'}/><span><strong>{notification.title}</strong><small>{notification.description}</small><time>{formatDate(notification.date)}</time></span><i/></button>)}{!adminNotifications.length?<p>Aucune notification disponible.</p>:null}</div><footer><button type="button" onClick={()=>{setNotificationsOpen(false);navigate('/admin/notifications')}}>Voir toutes les notifications →</button></footer></aside>:null}</div>
+            <div className="admin-profile-menu-wrap" ref={profileMenuRef}><button type="button" className="admin-profile-chip" onClick={()=>setProfileMenuOpen((open)=>!open)}>
               <span className="admin-avatar">A</span>
               <div>
-                <strong>Admin</strong>
+                <strong>{adminProfile.nomComplet || 'Admin G-ROD'}</strong>
                 <small>Administrateur</small>
               </div>
-            </div>
+</button>{profileMenuOpen?<div className="admin-profile-menu"><button onClick={()=>{setProfileMenuOpen(false);navigate('/admin/account?tab=profile')}}>Mon compte</button><button onClick={()=>{setProfileMenuOpen(false);navigate('/admin/account?tab=security')}}>Sécurité</button><button className="logout" onClick={onLogout}>Déconnexion</button></div>:null}</div>
           </div>
         </header>
 
         <main className="page-section admin-dashboard-page">
-      {!isClientSection ? (
+      {!isClientSection && adminTab !== 'produits' && adminTab !== 'account' && !isDashboardRoute ? (
       <section className="legacy-admin-hero admin-welcome-panel">
         <div>
           <p className="eyebrow">{t.administration}</p>
@@ -3737,7 +4082,7 @@ function AdminDashboard({ t, token, onLogout }) {
       </section>
       ) : null}
 
-      {!isClientSection ? (
+      {!isClientSection && adminTab !== 'produits' && adminTab !== 'account' && !isDashboardRoute ? (
       <section className="admin-kpi-grid">
         {kpiCards.map((card) => (
           <article className={`admin-kpi-card ${card.tone}`} key={card.label}>
@@ -3753,17 +4098,16 @@ function AdminDashboard({ t, token, onLogout }) {
       </section>
       ) : null}
 
-      {!isClientSection ? (
+      {!isClientSection && adminTab !== 'produits' && adminTab !== 'account' && !isDashboardRoute ? (
       <div className="admin-utility-actions">
         <button className="secondary-button" onClick={() => exportCsv(filteredDemandes)}>{t.exportCsv}</button>
-        <button className="secondary-button" onClick={registerPasskey}>{t.passkeyEnable}</button>
       </div>
       ) : null}
 
       {error ? <p className="error-text">{error}</p> : null}
       {success ? <p className="success-text">{success}</p> : null}
 
-      {!isClientSection ? (
+      {!isClientSection && adminTab !== 'produits' && adminTab !== 'account' && !isDashboardRoute ? (
       <nav className="admin-tabs">
         <button className={adminTab === 'demandes' ? 'active' : ''} onClick={() => openAdminTab('demandes', '/admin/demandes')}>
           {t.totalRequests}
@@ -3792,115 +4136,27 @@ function AdminDashboard({ t, token, onLogout }) {
       ) : null}
 
       {isDashboardRoute ? (
-        <section className="dashboard-panels legacy-dashboard-panels">
-          <article className="dashboard-panel">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">{t.priority}</p>
-                <h3>{t.recentRequests}</h3>
-              </div>
-              <button type="button" className="text-link" onClick={() => openAdminTab('demandes', '/admin/demandes')}>
-                {t.viewAll}
-              </button>
-            </div>
-            <div className="recent-list">
-              {recentDemandes.map((demande) => (
-                <article className="recent-item" key={demande.id}>
-                  <div>
-                    <strong>{demande.societe || demande.nomContact}</strong>
-                    <span>{demande.referenceDemande || `#${demande.id}`}</span>
-                    <span>{demande.produitDemande}</span>
-                  </div>
-                  <div>
-                    <span className="recent-status">{demande.statut}</span>
-                    <small>{formatDate(demande.dateCreation)}</small>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </article>
-
-          <article className="dashboard-panel">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">{t.catalogueEyebrow}</p>
-                <h3>{t.productStatus}</h3>
-              </div>
-              <button type="button" className="text-link" onClick={() => openAdminTab('produits', '/admin/produits')}>
-                {t.manage}
-              </button>
-            </div>
-            <dl className="dashboard-catalogue-state">
-              <div><dt>{t.activeProducts}</dt><dd>{products.filter((product) => product.actif !== false).length}</dd></div>
-              <div><dt>{t.totalCatalogue}</dt><dd>{products.length}</dd></div>
-            </dl>
-            <button type="button" onClick={() => openAdminTab('produits', '/admin/produits')}>{t.addProduct}</button>
-            <NavLink className="secondary-link" to="/catalogue">{t.viewPublicCatalogue}</NavLink>
-          </article>
+      <div className="commercial-dashboard">
+        <section className="dashboard-industrial-banner">
+          <div><p>Dashboard commercial</p><h2>G-ROD</h2><span>Pilotez vos demandes et votre catalogue en temps réel.</span></div>
+          <time dateTime={new Date().toISOString()}>{new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</time>
         </section>
-      ) : null}
-
-      {isDashboardRoute ? (
-        <section className="admin-analytics-panel">
-          <div className="analytics-heading">
-            <div>
-              <p className="eyebrow">{t.analyticsEyebrow}</p>
-              <h3>{t.analyticsTitle}</h3>
-            </div>
-            <span>{t.analyticsHint}</span>
-          </div>
-          <div className="analytics-grid">
-            <article className="analytics-card">
-              <h4>{t.statusDistribution}</h4>
-              <div className="analytics-bars">
-                {statusAnalytics.map((item) => (
-                  <div className="analytics-bar-row" key={item.status}>
-                    <span>{item.label}</span>
-                    <div><strong style={{ width: `${item.percent}%` }} /></div>
-                    <em>{item.count}</em>
-                  </div>
-                ))}
-              </div>
-            </article>
-            <article className="analytics-card">
-              <h4>{t.topRequestedProducts}</h4>
-              <div className="analytics-bars">
-                {productAnalytics.length ? productAnalytics.map((item) => (
-                  <div className="analytics-bar-row" key={item.name}>
-                    <span>{item.name}</span>
-                    <div><strong style={{ width: `${item.percent}%` }} /></div>
-                    <em>{item.count}</em>
-                  </div>
-                )) : <p>{t.noData}</p>}
-              </div>
-            </article>
-          </div>
+        <section className="dashboard-kpis">
+          {kpiCards.map((card) => <article className={card.tone} key={card.label}><span><AdminIcon type={card.icon} /></span><div><small>{card.label}</small><strong>{card.value}</strong></div></article>)}
         </section>
-      ) : null}
-
-      {isDashboardRoute ? (
-      <section className="admin-workspace notification-settings-panel">
-        <p className="eyebrow">{t.notifications}</p>
-        <h3>{t.notificationSettings}</h3>
-        <form className="notification-settings-form" onSubmit={saveSettings}>
-          <Field
-            label={t.adminEmail}
-            name="adminEmail"
-            type="email"
-            value={settings.adminEmail || ''}
-            onChange={(event) => setProductFormValue(setSettings, event)}
-            required
-          />
-          <Field
-            label={t.adminPhone}
-            name="adminPhone"
-            value={settings.adminPhone || ''}
-            onChange={(event) => setProductFormValue(setSettings, event)}
-          />
-          <button type="submit">{t.saveChanges}</button>
-        </form>
-        <p className="settings-note">{t.notificationHelp}</p>
-      </section>
+        <section className="dashboard-operations">
+          <article className="dashboard-box recent-requests-box"><header><h3>Demandes récentes</h3><button type="button" onClick={() => openAdminTab('demandes', '/admin/demandes')}>Voir tout →</button></header><div>
+            {recentDemandes.length ? recentDemandes.map((demande) => <button type="button" className="dashboard-request" onClick={() => { setSelectedDemande(demande); openAdminTab('demandes', '/admin/demandes') }} key={demande.id}><div><strong>{demande.societe || demande.nomContact || 'Client non renseigné'}</strong><span>{demande.referenceDemande || `#${demande.id}`}</span><small>{demande.produitDemande || 'Produit non renseigné'}</small></div><div><em className={`request-status ${String(demande.statut).toLowerCase()}`}>{String(demande.statut || '').replace('_', ' ')}</em><time>{formatDate(demande.dateCreation)}</time></div></button>) : <p className="dashboard-empty">Aucune demande disponible.</p>}
+          </div></article>
+          <article className="dashboard-box catalogue-box"><header><h3>État du catalogue</h3><button type="button" onClick={() => openAdminTab('produits', '/admin/produits')}>Gérer →</button></header><dl><div><dt>Produits actifs</dt><dd>{activeProductsCount}</dd><i style={{ width: `${products.length ? activeProductsCount / products.length * 100 : 0}%` }} /></div><div><dt>Total catalogue</dt><dd>{products.length}</dd><i style={{ width: products.length ? '100%' : '0%' }} /></div></dl><button type="button" onClick={() => openAdminTab('produits', '/admin/produits')}>+ Ajouter un produit</button><NavLink to="/catalogue">Voir le catalogue public ↗</NavLink></article>
+          <article className="dashboard-box quick-actions-box"><header><h3>Actions rapides</h3></header><button type="button" className="quick-action-primary" onClick={() => { setStatusFilter('NOUVELLE'); openAdminTab('demandes', '/admin/demandes') }}>Voir les nouvelles demandes <span>{newRequestsCount}</span></button><button type="button" onClick={() => openAdminTab('produits', '/admin/produits')}>+ Ajouter un produit</button><button type="button" onClick={() => openAdminTab('ressources', '/admin/ressources')}>+ Ajouter une ressource technique</button><button type="button" onClick={() => exportCsv(filteredDemandes)}><AdminIcon type="download" /> Exporter les données</button></article>
+        </section>
+        <section className="dashboard-box dashboard-analysis"><header><h3>Analyse commerciale</h3></header><div className="dashboard-analysis-grid">
+          <article><h4>Demandes par statut</h4><div className="status-analysis"><div className="status-donut" style={{ '--new': `${demandes.length ? dashboardStatusData[0].count / demandes.length * 100 : 0}%`, '--progress': `${demandes.length ? (dashboardStatusData[0].count + dashboardStatusData[1].count) / demandes.length * 100 : 0}%`, '--done': `${demandes.length ? (dashboardStatusData[0].count + dashboardStatusData[1].count + dashboardStatusData[2].count) / demandes.length * 100 : 0}%` }}><strong>{demandes.length}</strong><span>Total</span></div><ul>{dashboardStatusData.map((item) => <li key={item.status}><i className={item.status.toLowerCase()} /><span>{item.status.replace('_', ' ')}</span><strong>{item.count}</strong></li>)}</ul></div></article>
+          <article><h4>Évolution des demandes</h4>{dashboardEvolution.length ? <div className="evolution-chart">{dashboardEvolution.map((point) => <div key={point.date}><span style={{ height: `${Math.max(12, point.count / Math.max(...dashboardEvolution.map((item) => item.count)) * 100)}%` }} title={`${point.count} demande(s)`} /><small>{point.date}</small><strong>{point.count}</strong></div>)}</div> : <p className="dashboard-empty">Aucune date disponible.</p>}</article>
+          <article><h4>Produits les plus demandés</h4><div className="top-products-list">{dashboardTopProducts.length ? dashboardTopProducts.map((item) => <div key={item.name}><span><strong>{item.name}</strong><em>{item.count}</em></span><i><b style={{ width: `${item.percent}%` }} /></i></div>) : <p className="dashboard-empty">Aucune donnée disponible.</p>}</div></article>
+        </div></section>
+      </div>
       ) : null}
 
       {adminTab === 'demandes' && !location.pathname.includes('/admin/dashboard') ? (
@@ -4079,6 +4335,11 @@ function AdminDashboard({ t, token, onLogout }) {
           </tbody>
         </table>
       </div>
+      <footer className="document-pagination">
+        <span>Affichage {pageMeta.demandes.totalElements ? (demandPage - 1) * demandsPerPage + 1 : 0} à {Math.min(demandPage * demandsPerPage, pageMeta.demandes.totalElements || 0)} sur {pageMeta.demandes.totalElements || 0} demandes</span>
+        <div><button disabled={demandPage === 1} onClick={() => setDemandPage((page) => page - 1)}>‹</button>{visiblePageNumbers(demandPage, pageMeta.demandes.totalPages || 1).map((page) => <button className={demandPage === page ? 'active' : ''} onClick={() => setDemandPage(page)} key={page}>{page}</button>)}<button disabled={demandPage >= (pageMeta.demandes.totalPages || 1)} onClick={() => setDemandPage((page) => page + 1)}>›</button></div>
+        <select value={demandsPerPage} onChange={(event) => { setDemandsPerPage(Number(event.target.value)); setDemandPage(1) }}><option value="10">10 par page</option><option value="25">25 par page</option><option value="50">50 par page</option></select>
+      </footer>
       {selectedDemande ? (
         <section className="request-detail-panel">
           <div className="request-detail-heading">
@@ -4108,9 +4369,27 @@ function AdminDashboard({ t, token, onLogout }) {
               <dl className="admin-detail-list">
                 <div><dt>{t.product}</dt><dd>{selectedDemande.produitDemande || '-'}</dd></div>
                 <div><dt>{t.quantity}</dt><dd>{selectedDemande.quantite || '-'}</dd></div>
-                <div><dt>{t.purity}</dt><dd>{selectedDemande.pureteCuivre ? `${selectedDemande.pureteCuivre}%` : '-'}</dd></div>
-                <div><dt>{t.dimensions}</dt><dd>{formatDimensions(selectedDemande)}</dd></div>
                 <div><dt>{t.status}</dt><dd>{selectedDemande.statut || '-'}</dd></div>
+              </dl>
+            </div>
+
+            <div className="detail-card">
+              <h4>{t.technicalSpecifications}</h4>
+              <dl className="admin-detail-list">
+                {selectedDemande.pureteCuivre ? <div><dt>{t.purity}</dt><dd>{selectedDemande.pureteCuivre}%</dd></div> : null}
+                {(selectedDemande.longueur || selectedDemande.largeur || selectedDemande.epaisseur) ? <div><dt>{t.dimensions}</dt><dd>{formatDimensions(selectedDemande)}</dd></div> : null}
+                {selectedDemande.diametreSouhaite ? <div><dt>{t.desiredDiameter}</dt><dd>{selectedDemande.diametreSouhaite}</dd></div> : null}
+                {selectedDemande.normeReference ? <div><dt>{t.normReference}</dt><dd>{selectedDemande.normeReference}</dd></div> : null}
+                {selectedDemande.finitionSouhaitee ? <div><dt>{t.desiredFinish}</dt><dd>{selectedDemande.finitionSouhaitee}</dd></div> : null}
+              </dl>
+            </div>
+
+            <div className="detail-card">
+              <h4>{t.projectAndDelivery}</h4>
+              <dl className="admin-detail-list">
+                {selectedDemande.applicationProjet ? <div><dt>{t.projectApplication}</dt><dd>{selectedDemande.applicationProjet}</dd></div> : null}
+                {selectedDemande.besoinLivraison ? <div><dt>{t.deliveryNeed}</dt><dd>{selectedDemande.besoinLivraison}</dd></div> : null}
+                {selectedDemande.lienPlanTechnique ? <div><dt>{t.technicalPlanLink}</dt><dd>{/^https?:\/\//i.test(selectedDemande.lienPlanTechnique) ? <a href={selectedDemande.lienPlanTechnique} target="_blank" rel="noreferrer">{selectedDemande.lienPlanTechnique}</a> : selectedDemande.lienPlanTechnique}</dd></div> : null}
               </dl>
             </div>
 
@@ -4118,9 +4397,9 @@ function AdminDashboard({ t, token, onLogout }) {
               <h4>{t.message}</h4>
               <p className="request-message">{selectedDemande.message || t.noMessage}</p>
               {selectedDemande.fichierTechniqueUrl ? (
-                <a className="primary-link detail-download" href={selectedDemande.fichierTechniqueUrl} target="_blank" rel="noreferrer">
+                <button type="button" className="primary-link detail-download" onClick={() => downloadQuoteAttachment(selectedDemande)}>
                   {t.downloadAttachedFile}: {selectedDemande.fichierTechniqueNom || t.uploadedFile}
-                </a>
+                </button>
               ) : (
                 <p className="form-status">{t.noAttachedFile}</p>
               )}
@@ -4132,335 +4411,110 @@ function AdminDashboard({ t, token, onLogout }) {
       ) : null}
 
       {adminTab === 'documents' ? (
-      <section className="admin-workspace">
-        <div className="admin-workspace-header">
-          <div>
-            <p className="eyebrow">{t.resourcesEyebrow}</p>
-            <h3>{t.documentRequests}</h3>
-          </div>
-        </div>
-        <div className="table-wrap">
-          <table className="admin-table admin-document-requests-table">
-            <thead>
-              <tr>
-                <th>{t.reference}</th>
-                <th>{t.company}</th>
-                <th>{t.contact}</th>
-                <th>{t.documentTitle}</th>
-                <th>{t.documentType}</th>
-                <th>{t.concernedProduct}</th>
-                <th>{t.message}</th>
-                <th>{t.status}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {documentRequests.length ? documentRequests.map((request) => (
-                <tr key={request.id}>
-                  <td>
-                    <strong>{request.referenceDemande || `#${request.id}`}</strong>
-                  </td>
-                  <td>
-                    <strong>{request.societe}</strong>
-                    <span>{request.email}</span>
-                  </td>
-                  <td>
-                    <strong>{request.nomContact || '-'}</strong>
-                    <span>{request.telephone || '-'}</span>
-                    {request.email ? (
-                      <a className="text-link" href={`mailto:${request.email}`}>
-                        {t.email}
-                      </a>
-                    ) : null}
-                  </td>
-                  <td>{request.titreDocument}</td>
-                  <td>
-                    <span className="resource-product">{request.typeDocument || '-'}</span>
-                  </td>
-                  <td>{request.produitConcerne || t.allProductsUnspecified}</td>
-                  <td>
-                    <span className="document-request-message">{request.message || t.noMessage}</span>
-                  </td>
-                  <td>
-                    <span className="status-badge">{request.statut || 'NOUVELLE'}</span>
-                    <select value={request.statut} onChange={(event) => updateDocumentRequestStatus(request.id, event.target.value)}>
-                      <option value="NOUVELLE">NOUVELLE</option>
-                      <option value="EN_TRAITEMENT">EN_TRAITEMENT</option>
-                      <option value="TRAITEE">TRAITEE</option>
-                      <option value="ANNULEE">ANNULEE</option>
-                    </select>
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan="8">
-                    <p className="form-status">{t.noData}</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      <section className="document-management-page">
+        <div className="document-kpis">{[['documents',documentRequests.length,'Total demandes','green'],['document-add',documentStatusCounts[0].count,'Nouvelles demandes','copper'],['requests',documentStatusCounts[1].count,'En traitement','dark'],['products',documentStatusCounts[2].count,'Traitées','green']].map(([icon,value,label,tone])=><article className={tone} key={label}><span><AdminIcon type={icon}/></span><div><small>{label}</small><strong>{value}</strong></div></article>)}</div>
+        <section className="document-table-panel"><div className="document-toolbar"><label><AdminIcon type="search"/><input value={documentSearch} onChange={(e)=>{setDocumentSearch(e.target.value);setDocumentPage(1)}} placeholder="Rechercher une demande..."/></label><select value={documentStatusFilter} onChange={(e)=>{setDocumentStatusFilter(e.target.value);setDocumentPage(1)}}><option value="ALL">Statut : tous</option>{documentStatusCounts.map((item)=><option value={item.status} key={item.status}>{item.status.replace('_',' ')}</option>)}</select><select value={documentTypeFilter} onChange={(e)=>{setDocumentTypeFilter(e.target.value);setDocumentPage(1)}}><option value="ALL">Types : tous</option>{documentTypes.map((type)=><option key={type}>{type}</option>)}</select><select value={documentSort} onChange={(e)=>setDocumentSort(e.target.value)}><option value="DESC">Plus récentes</option><option value="ASC">Plus anciennes</option></select></div>
+          <div className="document-table-wrap"><table className="admin-table document-management-table"><thead><tr><th>Référence</th><th>Client / société</th><th>Document demandé</th><th>Produit concerné</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead><tbody>{paginatedDocumentRequests.map((request)=><tr key={request.id}><td><strong>{request.referenceDemande||`#${request.id}`}</strong></td><td><div className="document-client"><span>{(request.societe||request.nomContact||'C').charAt(0).toUpperCase()}</span><div><strong>{request.societe||request.nomContact||'Client'}</strong><small>{request.email||'Email non renseigné'}</small></div></div></td><td><strong>{request.titreDocument||'Non précisé'}</strong><span className="document-type-tag">{request.typeDocument||'Type non précisé'}</span></td><td><strong>{request.produitConcerne||'Non précisé'}</strong></td><td><strong>{formatDate(request.dateCreation)}</strong></td><td><select className={`document-status-select ${String(request.statut||'NOUVELLE').toLowerCase()}`} value={request.statut||'NOUVELLE'} onChange={(e)=>updateDocumentRequestStatus(request.id,e.target.value)}><option value="NOUVELLE">NOUVELLE</option><option value="EN_TRAITEMENT">EN TRAITEMENT</option><option value="TRAITEE">TRAITÉE</option><option value="ANNULEE">ANNULÉE</option></select></td><td><div className="document-actions"><button type="button" title="Voir le détail" onClick={()=>setSelectedDocumentRequest(request)}>◉</button>{(request.statut||'NOUVELLE')==='NOUVELLE'?<button type="button" title="Traiter" onClick={()=>updateDocumentRequestStatus(request.id,'EN_TRAITEMENT')}>→</button>:null}</div></td></tr>)}</tbody></table></div>
+          <footer className="document-pagination"><span>Affichage {filteredDocumentRequests.length?(documentPage-1)*documentsPerPage+1:0} à {Math.min(documentPage*documentsPerPage,filteredDocumentRequests.length)} sur {filteredDocumentRequests.length} demandes</span><div><button disabled={documentPage===1} onClick={()=>setDocumentPage((p)=>p-1)}>‹</button>{Array.from({length:totalDocumentPages},(_,i)=><button className={documentPage===i+1?'active':''} onClick={()=>setDocumentPage(i+1)} key={i+1}>{i+1}</button>)}<button disabled={documentPage===totalDocumentPages} onClick={()=>setDocumentPage((p)=>p+1)}>›</button></div><select value={documentsPerPage} onChange={(e)=>{setDocumentsPerPage(Number(e.target.value));setDocumentPage(1)}}><option value="10">10 par page</option><option value="25">25 par page</option><option value="50">50 par page</option></select></footer>
+        </section>
+        <section className="document-analytics"><article><h3>Demandes par statut</h3>{documentStatusCounts.map((item)=><div className="document-stat-bar" key={item.status}><span>{item.status.replace('_',' ')}</span><i><b style={{width:`${documentRequests.length?item.count/documentRequests.length*100:0}%`}}/></i><strong>{item.count}</strong></div>)}</article>{documentTypeStats.length?<article><h3>Types les plus demandés</h3>{documentTypeStats.map((item)=><div className="document-stat-bar" key={item.type}><span>{item.type}</span><i><b style={{width:`${documentRequests.length?item.count/documentRequests.length*100:0}%`}}/></i><strong>{item.count}</strong></div>)}</article>:null}</section>
+        {selectedDocumentRequest?<><button className="document-drawer-backdrop" aria-label="Fermer" onClick={()=>setSelectedDocumentRequest(null)}/><aside className="document-request-drawer"><header><div><small>Détail de la demande</small><h2>{selectedDocumentRequest.referenceDemande||`#${selectedDocumentRequest.id}`}</h2></div><button onClick={()=>setSelectedDocumentRequest(null)}>×</button></header><div><section><h3>Client</h3><dl><div><dt>Société</dt><dd>{selectedDocumentRequest.societe||'-'}</dd></div><div><dt>Contact</dt><dd>{selectedDocumentRequest.nomContact||'-'}</dd></div><div><dt>Email</dt><dd>{selectedDocumentRequest.email||'-'}</dd></div><div><dt>Téléphone</dt><dd>{selectedDocumentRequest.telephone||'-'}</dd></div></dl></section><section><h3>Document demandé</h3><strong>{selectedDocumentRequest.titreDocument||'-'}</strong><span>{selectedDocumentRequest.typeDocument||'-'}</span></section><section><h3>Produit concerné</h3><strong>{selectedDocumentRequest.produitConcerne||'Non précisé'}</strong></section><section><h3>Message du client</h3><p>{selectedDocumentRequest.message||'Aucun message.'}</p></section><section><h3>Date de création</h3><strong>{formatDate(selectedDocumentRequest.dateCreation)}</strong></section></div><footer><select value={selectedDocumentRequest.statut||'NOUVELLE'} onChange={async(e)=>{await updateDocumentRequestStatus(selectedDocumentRequest.id,e.target.value);setSelectedDocumentRequest((current)=>({...current,statut:e.target.value}))}}><option value="NOUVELLE">NOUVELLE</option><option value="EN_TRAITEMENT">EN TRAITEMENT</option><option value="TRAITEE">TRAITÉE</option><option value="ANNULEE">ANNULÉE</option></select></footer></aside></>:null}
       </section>
       ) : null}
 
       {adminTab === 'produits' ? (
-      <section className="admin-workspace">
-        <div className="admin-workspace-header">
-          <div>
-            <p className="eyebrow">{t.catalogueTitle}</p>
-            <h3>{isProductEditPage ? t.editProduct : t.addProduct}</h3>
-          </div>
-        </div>
-        {(!editingProductId || isProductEditPage) ? (
-        <form className="admin-form-grid" onSubmit={saveProduct}>
-          <Field label={t.productName} name="nom" value={productForm.nom} onChange={(event) => setProductFormValue(setProductForm, event)} required />
-          <Field label="Categorie" name="categorie" value={productForm.categorie} onChange={(event) => setProductFormValue(setProductForm, event)} />
-          <label>
-            {t.productImage}
-            <input type="file" accept="image/*" onChange={uploadProductImage} />
-          </label>
-          <label>
-            Description
-            <textarea name="description" rows="4" value={productForm.description} onChange={(event) => setProductFormValue(setProductForm, event)} />
-          </label>
-          <Field label="Applications" name="applications" value={productForm.applications} onChange={(event) => setProductFormValue(setProductForm, event)} />
-          <Field label="Dimensions" name="dimensions" value={productForm.dimensions} onChange={(event) => setProductFormValue(setProductForm, event)} />
-          <Field label={t.configPurity} name="purete" value={productForm.purete} onChange={(event) => setProductFormValue(setProductForm, event)} />
-          <Field label="Normes" name="normes" value={productForm.normes} onChange={(event) => setProductFormValue(setProductForm, event)} />
-          <Field label="Conditionnement" name="conditionnement" value={productForm.conditionnement} onChange={(event) => setProductFormValue(setProductForm, event)} />
-          <label className="toggle-control">
-            <input
-              type="checkbox"
-              checked={productForm.actif}
-              onChange={(event) => setProductForm((current) => ({ ...current, actif: event.target.checked }))}
-            />
-            {t.active}
-          </label>
-          <div className="form-actions">
-            <button type="submit">{editingProductId ? t.saveChanges : t.addProduct}</button>
-            {isProductEditPage ? (
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => {
-                  setEditingProductId(null)
-                  setProductForm(emptyProductForm())
-                  navigate('/admin/produits')
-                }}
-              >
-                {t.cancel}
-              </button>
-            ) : null}
-          </div>
-        </form>
-        ) : null}
-
-        {!isProductEditPage ? (
-        <>
-        <div className="admin-workspace-header">
-          <div>
-            <p className="eyebrow">{t.products}</p>
-            <h3>{t.productsVisible}</h3>
-          </div>
-        </div>
-        <div className="table-wrap">
-          <table className="admin-table legacy-products-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>{t.product}</th>
-                <th>{t.category}</th>
-                <th>{t.characteristics}</th>
-                <th>{t.status}</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((product, index) => (
-                <tr key={product.id || product.nom}>
-                  <td>#{product.id || index + 1}</td>
-                  <td>
-                    <div className="legacy-product-cell">
-                      <img className="admin-product-thumb" src={product.imageUrl || normalizeProduct(product).imageUrl} alt={product.nom} />
-                      <div>
-                        <strong>{product.nom}</strong>
-                        <span>{product.description}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{product.categorie}</td>
-                  <td>
-                    <strong>{product.purete || t.unspecifiedPurity}</strong>
-                    <span>{product.dimensions || t.unspecifiedDimensions}</span>
-                    <span>{product.normes || t.unspecifiedStandards}</span>
-                  </td>
-                  <td><span className="status-badge active">{product.actif ? t.active : t.inactive}</span></td>
-                  <td>
-                    <div className="row-actions legacy-table-actions">
-                      <label className="inline-upload">
-                        {t.uploadImage}
-                        <input type="file" accept="image/*" onChange={(event) => uploadAndSaveProductImage(product, event)} />
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigate(`/admin/produits/${product.id}/modifier`)
-                        }}
-                      >
-                        {t.edit}
-                      </button>
-                      <button type="button" className="danger-button" onClick={() => deleteProduct(product.id)}>
-                        {t.delete}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="products-admin-table">
-          {products.map((product) => (
-            <article className="product-admin-item" key={`edit-${product.id || product.nom}`}>
-              {editingProductId === product.id ? (
-                <form className="admin-form-grid inline-product-editor" onSubmit={saveProduct}>
-                  <Field label={t.productName} name="nom" value={productForm.nom} onChange={(event) => setProductFormValue(setProductForm, event)} required />
-                  <Field label="Categorie" name="categorie" value={productForm.categorie} onChange={(event) => setProductFormValue(setProductForm, event)} />
-                  <label>
-                    {t.productImage}
-                    <input type="file" accept="image/*" onChange={uploadProductImage} />
-                  </label>
-                  <label>
-                    Description
-                    <textarea name="description" rows="4" value={productForm.description} onChange={(event) => setProductFormValue(setProductForm, event)} />
-                  </label>
-                  <Field label="Applications" name="applications" value={productForm.applications} onChange={(event) => setProductFormValue(setProductForm, event)} />
-                  <Field label="Dimensions" name="dimensions" value={productForm.dimensions} onChange={(event) => setProductFormValue(setProductForm, event)} />
-                  <Field label={t.configPurity} name="purete" value={productForm.purete} onChange={(event) => setProductFormValue(setProductForm, event)} />
-                  <Field label="Normes" name="normes" value={productForm.normes} onChange={(event) => setProductFormValue(setProductForm, event)} />
-                  <Field label="Conditionnement" name="conditionnement" value={productForm.conditionnement} onChange={(event) => setProductFormValue(setProductForm, event)} />
-                  <label className="toggle-control">
-                    <input
-                      type="checkbox"
-                      checked={productForm.actif}
-                      onChange={(event) => setProductForm((current) => ({ ...current, actif: event.target.checked }))}
-                    />
-                    {t.active}
-                  </label>
-                  <div className="form-actions">
-                    <button type="submit">{t.saveChanges}</button>
-                    <button
-                      type="button"
-                      className="secondary-button"
-                      onClick={() => {
-                        setEditingProductId(null)
-                        setProductForm(emptyProductForm())
-                      }}
-                    >
-                      {t.cancel}
-                    </button>
-                  </div>
-                </form>
-              ) : null}
+      <section className="product-management-page">
+        <div className="product-kpi-grid">
+          {[
+            ['products', activeProductsCount, 'Produits actifs', 'green'],
+            ['products', inactiveProductsCount, 'Produits inactifs', 'copper'],
+            ['documents', productCategories.length, 'Catégories', 'dark'],
+            ['cube', productsWith3DCount, 'Avec modèle 3D', 'green'],
+          ].map(([icon, value, label, tone]) => (
+            <article className={`product-kpi ${tone}`} key={label}>
+              <span><AdminIcon type={icon} /></span><div><strong>{value}</strong><small>{label}</small></div>
             </article>
           ))}
         </div>
-        </>
-        ) : null}
+
+        <section className="product-catalogue-panel">
+          <div className="product-toolbar">
+            <button type="button" className="product-add-button" onClick={() => openProductDrawer()}>+ &nbsp; Ajouter un produit</button>
+            <label className="product-list-search"><AdminIcon type="search" /><input value={productSearch} onChange={(event) => { setProductSearch(event.target.value); setProductPage(1) }} placeholder="Rechercher un produit..." /></label>
+            <select value={productCategoryFilter} onChange={(event) => { setProductCategoryFilter(event.target.value); setProductPage(1) }} aria-label="Filtrer par catégorie">
+              <option value="ALL">Toutes les catégories</option>
+              {productCategories.map((category) => <option value={category} key={category}>{category}</option>)}
+            </select>
+            <select value={productStatusFilter} onChange={(event) => { setProductStatusFilter(event.target.value); setProductPage(1) }} aria-label="Filtrer par statut">
+              <option value="ALL">Statut : tous</option><option value="ACTIVE">Actifs</option><option value="INACTIVE">Inactifs</option>
+            </select>
+          </div>
+          <div className="table-wrap product-table-wrap">
+          <table className="admin-table product-management-table">
+            <thead>
+              <tr>
+                <th>Produit</th><th>Catégorie</th><th>Caractéristiques clés</th><th>Statut</th><th>Modèle 3D</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedAdminProducts.map((product) => {
+                const normalized = normalizeProduct(product)
+                const has3D = Boolean(normalized.has3D && normalized.model3D)
+                return (
+                <tr key={product.id || product.nom}>
+                  <td>
+                    <div className="product-table-identity">
+                      <img className="admin-product-thumb" src={product.imageUrl || normalized.imageUrl} alt="" loading="lazy" />
+                      <div>
+                        <strong>{product.nom}</strong>
+                        <span className="product-description-clamp">{product.description || 'Aucune description'}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{product.categorie || 'Non renseigné'}</td>
+                  <td>
+                    <ul className="product-key-specs"><li>Pureté : {product.purete || 'Non renseigné'}</li><li>Dimensions : {product.dimensions || 'Non renseigné'}</li><li>Norme : {product.normes || 'Non renseigné'}</li></ul>
+                  </td>
+                  <td><span className={`product-status ${product.actif !== false ? 'active' : 'inactive'}`}><i />{product.actif !== false ? 'Actif' : 'Inactif'}</span></td>
+                  <td><div className={`product-3d-state ${has3D ? 'available' : ''}`}><AdminIcon type="cube" /><strong>{has3D ? '3D disponible' : 'Aucun modèle'}</strong><small>{has3D ? 'Viewer à la demande' : 'Non disponible'}</small></div></td>
+                  <td>
+                    <div className="product-icon-actions">
+                      <button type="button" title="Modifier" aria-label={`Modifier ${product.nom}`} onClick={() => openProductDrawer(product)}><AdminIcon type="edit" /></button>
+                      <button type="button" className="danger" title="Supprimer" aria-label={`Supprimer ${product.nom}`} onClick={() => deleteProduct(product.id)}><AdminIcon type="trash" /></button>
+                    </div>
+                  </td>
+                </tr>
+              )})}
+            </tbody>
+          </table>
+        </div>
+        <footer className="product-pagination"><span>Affichage de {filteredAdminProducts.length ? (productPage - 1) * productsPerPage + 1 : 0} à {Math.min(productPage * productsPerPage, filteredAdminProducts.length)} sur {filteredAdminProducts.length} produits</span><div><button type="button" disabled={productPage === 1} onClick={() => setProductPage((page) => page - 1)}>‹</button>{Array.from({ length: totalProductPages }, (_, index) => <button type="button" className={productPage === index + 1 ? 'active' : ''} onClick={() => setProductPage(index + 1)} key={index + 1}>{index + 1}</button>)}<button type="button" disabled={productPage === totalProductPages} onClick={() => setProductPage((page) => page + 1)}>›</button></div><span>10 par page</span></footer>
+        </section>
+
+        {productDrawerOpen ? <><button className="product-drawer-backdrop" type="button" aria-label="Fermer" onClick={closeProductDrawer} /><aside className="product-drawer" aria-label={editingProductId ? 'Modifier le produit' : 'Ajouter un produit'}>
+          <header><h2>{editingProductId ? 'Modifier le produit' : 'Ajouter un produit'}</h2><button type="button" onClick={closeProductDrawer} aria-label="Fermer">×</button></header>
+          <nav>{[['info','Informations'],['images','Images'],['3d','Modèle 3D'],['other','Autres']].map(([key,label]) => <button type="button" className={productDrawerTab === key ? 'active' : ''} onClick={() => setProductDrawerTab(key)} key={key}>{label}</button>)}</nav>
+          <form className="product-drawer-form" onSubmit={saveProduct}>
+            <div className="product-drawer-body">
+              {productDrawerTab === 'info' ? <div className="drawer-fields"><Field label="Nom du produit" name="nom" value={productForm.nom} onChange={(event) => setProductFormValue(setProductForm, event)} required /><Field label="Catégorie" name="categorie" value={productForm.categorie} onChange={(event) => setProductFormValue(setProductForm, event)} /><label className="drawer-full">Description<textarea name="description" rows="5" value={productForm.description} onChange={(event) => setProductFormValue(setProductForm, event)} /></label><Field label="Pureté" name="purete" value={productForm.purete} onChange={(event) => setProductFormValue(setProductForm, event)} /><Field label="Dimensions" name="dimensions" value={productForm.dimensions} onChange={(event) => setProductFormValue(setProductForm, event)} /><Field label="Normes" name="normes" value={productForm.normes} onChange={(event) => setProductFormValue(setProductForm, event)} /><Field label="Applications" name="applications" value={productForm.applications} onChange={(event) => setProductFormValue(setProductForm, event)} /><label className="toggle-control drawer-full"><input type="checkbox" checked={productForm.actif} onChange={(event) => setProductForm((current) => ({ ...current, actif: event.target.checked }))} /> Afficher comme produit actif</label></div> : null}
+              {productDrawerTab === 'images' ? <div className="product-image-editor">{productForm.imageUrl ? <img src={productForm.imageUrl} alt="Aperçu du produit" /> : <div className="image-placeholder"><AdminIcon type="products" /><span>Aucune image principale</span></div>}<label className="image-upload-zone">Importer ou remplacer l’image<input type="file" accept="image/*" onChange={uploadProductImage} /></label>{productForm.imageUrl ? <button type="button" className="secondary-button" onClick={() => setProductForm((current) => ({ ...current, imageUrl: '' }))}>Retirer l’image</button> : null}</div> : null}
+              {productDrawerTab === '3d' ? <div className="drawer-empty-state"><AdminIcon type="cube" /><h3>{editingProductId && productsWith3DCount ? 'Gestion 3D technique' : 'Aucun fichier 3D associé'}</h3><p>Les aperçus 3D actuels sont générés côté interface et chargés uniquement à la demande. L’API produit ne prend pas encore en charge l’upload GLB/GLTF.</p></div> : null}
+              {productDrawerTab === 'other' ? <div className="drawer-fields"><Field label="Conditionnement" name="conditionnement" value={productForm.conditionnement} onChange={(event) => setProductFormValue(setProductForm, event)} /></div> : null}
+            </div>
+            <footer><button type="submit">{editingProductId ? 'Enregistrer les modifications' : 'Enregistrer le produit'}</button><button type="button" className="secondary-button" onClick={closeProductDrawer}>Annuler</button></footer>
+          </form>
+        </aside></> : null}
       </section>
       ) : null}
 
       {adminTab === 'ressources' ? (
-      <section className="admin-workspace">
-        <div className="admin-workspace-header">
-          <div>
-            <p className="eyebrow">{t.resourcesEyebrow}</p>
-            <h3>{editingDocumentId ? t.editDocument : t.addDocument}</h3>
-          </div>
-        </div>
-        <form className="admin-form-grid" onSubmit={saveDocument}>
-          <Field label={t.documentTitle} name="titre" value={documentForm.titre} onChange={(event) => setProductFormValue(setDocumentForm, event)} required />
-          <Field label={t.documentType} name="typeDocument" value={documentForm.typeDocument} onChange={(event) => setProductFormValue(setDocumentForm, event)} required />
-          <Field label={t.concernedProduct} name="produitConcerne" value={documentForm.produitConcerne} onChange={(event) => setProductFormValue(setDocumentForm, event)} />
-          <label>
-            PDF
-            <input type="file" accept="application/pdf" onChange={uploadTechnicalPdf} />
-          </label>
-          <Field label="Fichier URL" name="fichierUrl" value={documentForm.fichierUrl} onChange={(event) => setProductFormValue(setDocumentForm, event)} required />
-          <Field label="Nom fichier" name="fichierNom" value={documentForm.fichierNom} onChange={(event) => setProductFormValue(setDocumentForm, event)} required />
-          <label>
-            Description
-            <textarea name="description" rows="4" value={documentForm.description} onChange={(event) => setProductFormValue(setDocumentForm, event)} />
-          </label>
-          <label className="toggle-control">
-            <input
-              type="checkbox"
-              checked={documentForm.actif}
-              onChange={(event) => setDocumentForm((current) => ({ ...current, actif: event.target.checked }))}
-            />
-            {t.active}
-          </label>
-          <label className="toggle-control">
-            <input
-              type="checkbox"
-              checked={documentForm.telechargementPublic}
-              onChange={(event) => setDocumentForm((current) => ({ ...current, telechargementPublic: event.target.checked }))}
-            />
-            {t.publicDownload}
-          </label>
-          <div className="form-actions">
-            <button type="submit">{editingDocumentId ? t.saveChanges : t.addDocument}</button>
-            {editingDocumentId ? (
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => {
-                  setEditingDocumentId(null)
-                  setDocumentForm(emptyDocumentForm())
-                }}
-              >
-                {t.cancel}
-              </button>
-            ) : null}
-          </div>
-        </form>
-
-        <div className="admin-workspace-header">
-          <div>
-            <p className="eyebrow">{t.resourcesEyebrow}</p>
-            <h3>{t.resourcesTitle}</h3>
-          </div>
-        </div>
-        <div className="products-admin-table document-admin-list">
-          {documents.map((document) => (
-            <div key={document.id}>
-              <strong>{document.titre}</strong>
-              <span>{document.typeDocument}</span>
-              <span>{document.actif ? t.active : t.inactive}</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingDocumentId(document.id)
-                  setDocumentForm({
-                    titre: document.titre || '',
-                    typeDocument: document.typeDocument || '',
-                    produitConcerne: document.produitConcerne || '',
-                    description: document.description || '',
-                    fichierUrl: document.fichierUrl || '',
-                    fichierNom: document.fichierNom || '',
-                    actif: Boolean(document.actif),
-                    telechargementPublic: Boolean(document.telechargementPublic),
-                  })
-                }}
-              >
-                {t.edit}
-              </button>
-              <button type="button" className="danger-button" onClick={() => deleteDocument(document.id)}>
-                {t.delete}
-              </button>
-            </div>
-          ))}
-        </div>
+      <section className="resource-management-page">
+        <div className="resource-kpis">{[['documents',documents.length,'Toutes les ressources','green'],['download',documents.filter((d)=>d.telechargementPublic).length,'Téléchargement public','copper'],['security',documents.filter((d)=>!d.telechargementPublic).length,'Accès restreint','dark'],['products',new Set(documents.map((d)=>d.produitConcerne).filter(Boolean)).size,'Produits liés','green']].map(([icon,value,label,tone])=><article className={tone} key={label}><span><AdminIcon type={icon}/></span><div><small>{label}</small><strong>{value}</strong></div></article>)}</div>
+        <section className="resource-panel"><div className="resource-toolbar"><label><AdminIcon type="search"/><input value={resourceSearch} onChange={(e)=>{setResourceSearch(e.target.value);setResourcePage(1)}} placeholder="Rechercher une ressource..."/></label><select value={resourceTypeFilter} onChange={(e)=>{setResourceTypeFilter(e.target.value);setResourcePage(1)}}><option value="ALL">Types : tous</option>{resourceTypes.map((type)=><option key={type}>{type}</option>)}</select><select value={resourceProductFilter} onChange={(e)=>{setResourceProductFilter(e.target.value);setResourcePage(1)}}><option value="ALL">Produits : tous</option>{resourceProducts.map((product)=><option key={product}>{product}</option>)}</select><select value={resourceStatusFilter} onChange={(e)=>{setResourceStatusFilter(e.target.value);setResourcePage(1)}}><option value="ALL">Statuts : tous</option><option value="ACTIVE">Actifs</option><option value="INACTIVE">Inactifs</option></select><button onClick={()=>{setEditingDocumentId(null);setDocumentForm(emptyDocumentForm());setResourceDrawerOpen(true)}}>+ Ajouter une ressource</button></div>
+          <div className="resource-table-wrap"><table className="admin-table resource-table"><thead><tr><th>Document</th><th>Type</th><th>Produit concerné</th><th>Visibilité</th><th>Statut</th><th>Actions</th></tr></thead><tbody>{paginatedResources.map((document)=><tr key={document.id}><td><div className="resource-document"><span>PDF</span><div><strong>{document.titre}</strong><small>{document.fichierNom||'Nom non renseigné'}</small></div></div></td><td><span className="resource-type">{document.typeDocument||'-'}</span></td><td><strong>{document.produitConcerne||'Tous les produits'}</strong></td><td><span className={`resource-visibility ${document.telechargementPublic?'public':'restricted'}`}>{document.telechargementPublic?'PUBLIC':'RESTREINT'}</span></td><td><span className={`resource-status ${document.actif?'active':'inactive'}`}>{document.actif?'ACTIF':'INACTIF'}</span></td><td><div className="resource-actions">{document.fichierUrl?<><button type="button" onClick={()=>downloadTechnicalResource(document,true)} title="Aperçu">◉</button><button type="button" onClick={()=>downloadTechnicalResource(document)} title="Télécharger">↓</button></>:null}<button title="Modifier" onClick={()=>{setEditingDocumentId(document.id);setDocumentForm({titre:document.titre||'',typeDocument:document.typeDocument||'',produitConcerne:document.produitConcerne||'',description:document.description||'',fichierUrl:document.fichierUrl||'',fichierNom:document.fichierNom||'',actif:Boolean(document.actif),telechargementPublic:Boolean(document.telechargementPublic)});setResourceDrawerOpen(true)}}>✎</button><button className="danger" title="Supprimer" onClick={()=>deleteDocument(document.id)}>×</button></div></td></tr>)}</tbody></table></div>
+          <footer className="resource-pagination"><span>Affichage {filteredResources.length?(resourcePage-1)*10+1:0} à {Math.min(resourcePage*10,filteredResources.length)} sur {filteredResources.length} ressources</span><div><button disabled={resourcePage===1} onClick={()=>setResourcePage((p)=>p-1)}>‹</button>{Array.from({length:resourcePages},(_,i)=><button className={resourcePage===i+1?'active':''} onClick={()=>setResourcePage(i+1)} key={i+1}>{i+1}</button>)}<button disabled={resourcePage===resourcePages} onClick={()=>setResourcePage((p)=>p+1)}>›</button></div><span>10 par page</span></footer>
+        </section>
+        {resourceDrawerOpen?<><button className="resource-drawer-backdrop" aria-label="Fermer" onClick={()=>setResourceDrawerOpen(false)}/><aside className="resource-drawer"><header><h2>{editingDocumentId?'Modifier la ressource':'Ajouter une ressource'}</h2><button onClick={()=>setResourceDrawerOpen(false)}>×</button></header><form onSubmit={saveDocument}><div><Field label="Titre du document" name="titre" value={documentForm.titre} onChange={(e)=>setProductFormValue(setDocumentForm,e)} required/><label>Type de document<select name="typeDocument" value={documentForm.typeDocument} onChange={(e)=>setProductFormValue(setDocumentForm,e)} required><option value="">Sélectionner un type</option>{resourceTypes.map((type)=><option key={type}>{type}</option>)}</select></label><label>Produit concerné<select name="produitConcerne" value={documentForm.produitConcerne} onChange={(e)=>setProductFormValue(setDocumentForm,e)}><option value="">Tous les produits</option>{products.map((product)=><option value={product.nom} key={product.id||product.nom}>{product.nom}</option>)}</select></label><label className="resource-upload">Déposer ou parcourir un fichier PDF<input type="file" accept="application/pdf" onChange={uploadTechnicalPdf}/><span>{documentForm.fichierNom||'PDF uniquement'}</span></label><Field label="Fichier URL" name="fichierUrl" value={documentForm.fichierUrl} onChange={(e)=>setProductFormValue(setDocumentForm,e)} required/><Field label="Nom du fichier" name="fichierNom" value={documentForm.fichierNom} onChange={(e)=>setProductFormValue(setDocumentForm,e)} required/><label>Description<textarea name="description" rows="4" value={documentForm.description} onChange={(e)=>setProductFormValue(setDocumentForm,e)}/></label><label className="toggle-control"><input type="checkbox" checked={documentForm.actif} onChange={(e)=>setDocumentForm((c)=>({...c,actif:e.target.checked}))}/> Actif</label><label className="toggle-control"><input type="checkbox" checked={documentForm.telechargementPublic} onChange={(e)=>setDocumentForm((c)=>({...c,telechargementPublic:e.target.checked}))}/> Téléchargement public</label></div><footer><button type="submit">{editingDocumentId?'Enregistrer les modifications':'Enregistrer'}</button><button type="button" className="secondary-button" onClick={()=>setResourceDrawerOpen(false)}>Annuler</button></footer></form></aside></>:null}
       </section>
       ) : null}
 
@@ -4489,57 +4543,38 @@ function AdminDashboard({ t, token, onLogout }) {
       </section>
       ) : null}
 
-      {adminTab === 'clients' && !activeClientData ? (
-        <section className="clients-page">
-          <div className="clients-page-heading">
-            <div>
-              <p className="eyebrow">{t.administration}</p>
-              <h2>{t.clientsHistoryTitle}</h2>
-            </div>
-            <div className="clients-page-actions">
-              <button type="button" className="secondary-button" onClick={() => navigate('/admin/dashboard')}>
-                Dashboard
-              </button>
-              <button type="button" className="secondary-button" onClick={() => navigate('/admin/demandes')}>
-                {t.requestsMenu}
-              </button>
-              <label>
-                {t.clientSearch}
-                <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t.clientSearchPlaceholder} />
-              </label>
-              <button type="button" className="secondary-button" onClick={onLogout}>
-                {t.logout}
-              </button>
-            </div>
-          </div>
+      {adminTab === 'notifications' ? <section className="notifications-page">
+        <div className="notification-filters"><button className={notificationFilter==='ALL'?'active':''} onClick={()=>{setNotificationFilter('ALL');setNotificationPage(1)}}>Toutes <span>{pageMeta.notifications.totalElements||0}</span></button><button className={notificationFilter==='UNREAD'?'active':''} onClick={()=>{setNotificationFilter('UNREAD');setNotificationPage(1)}}>Non lues <span>{unreadAdminCount}</span></button><button className={notificationFilter==='REQUEST'?'active':''} onClick={()=>{setNotificationFilter('REQUEST');setNotificationPage(1)}}>Demandes</button><button className={notificationFilter==='DOCUMENT'?'active':''} onClick={()=>{setNotificationFilter('DOCUMENT');setNotificationPage(1)}}>Documents</button><button type="button" className="mark-all" onClick={()=>markNotificationsRead(adminNotifications.map((item)=>item.id))}>Tout marquer comme lu</button></div>
+        <div className="notification-list">{adminNotifications.map((notification)=><article className={!notification.lue?'unread':''} key={notification.id}><span className="notification-type-icon"><AdminIcon type={notification.type==='REQUEST'?'requests':'documents'}/></span><div><strong>{notification.title}</strong><p>{notification.description}</p><time>{formatDate(notification.date)}</time></div><span className="notification-read-state">{notification.lue?'Lu':'Non lu'}</span><button type="button" onClick={()=>openNotification(notification)}>Voir {notification.type==='REQUEST'?'la demande':'le document'} →</button></article>)}</div>
+        <footer className="document-pagination"><span>Page {notificationPage} sur {pageMeta.notifications.totalPages||1}</span><div><button disabled={notificationPage===1} onClick={()=>setNotificationPage((page)=>page-1)}>‹</button>{visiblePageNumbers(notificationPage,pageMeta.notifications.totalPages||1).map((page)=><button className={notificationPage===page?'active':''} onClick={()=>setNotificationPage(page)} key={page}>{page}</button>)}<button disabled={notificationPage>=(pageMeta.notifications.totalPages||1)} onClick={()=>setNotificationPage((page)=>page+1)}>›</button></div></footer>
+      </section>:null}
 
-          <div className="clients-grid">
-            {visibleClients.map((client) => (
-              <article className="client-card" key={client.key}>
-                <div className="client-card-heading">
-                  <div>
-                    <h3>{client.name}</h3>
-                    <span>{client.contact || '-'}</span>
-                    <span>{client.email || '-'}</span>
-                    <span>{client.phone || '-'}</span>
-                  </div>
-                </div>
-                <div className="client-stats-row">
-                  <span>{client.total} {t.requests}</span>
-                  <span>{client.products.length} {t.requestedProducts}</span>
-                  <span>{t.last}: {formatDate(client.lastRequest)}</span>
-                </div>
-                <div className="client-stats-row">
-                  {client.products.map((product) => (
-                    <span key={product}>{product}</span>
-                  ))}
-                </div>
-                <button type="button" onClick={() => navigate(`/admin/clients/${encodeURIComponent(client.key)}`)}>
-                  {t.viewHistory}
-                </button>
-              </article>
-            ))}
+      {adminTab === 'account' ? <section className="account-page"><div className="account-tabs"><button className={accountTab==='profile'?'active':''} onClick={()=>navigate('/admin/account?tab=profile')}>Profil</button><button className={accountTab==='security'?'active':''} onClick={()=>navigate('/admin/account?tab=security')}>Sécurité</button><button className={accountTab==='preferences'?'active':''} onClick={()=>navigate('/admin/account?tab=preferences')}>Préférences</button></div><div className="account-layout"><div className="account-main">
+        {accountTab==='profile'?<article className="account-card"><h2>Informations personnelles</h2><div className="account-fields"><label>Nom complet<input value={adminProfile.nomComplet||'Admin G-ROD'} readOnly/></label><label>Email<input value={adminProfile.email||settings.adminEmail||''} readOnly/></label><label>Fonction<input value={adminProfile.role==='ADMIN'?'Administrateur':adminProfile.role||'Administrateur'} readOnly/></label><label>Statut<input value="Compte authentifié" readOnly/></label></div></article>:null}
+        {accountTab==='security'?<article className="account-card"><h2>Changer le mot de passe</h2><form className="password-change-form" onSubmit={changePassword}><label>Mot de passe actuel<div><input type={passwordVisible?'text':'password'} value={passwordForm.currentPassword} onChange={(e)=>setPasswordForm((current)=>({...current,currentPassword:e.target.value}))} autoComplete="current-password" required/><button type="button" onClick={()=>setPasswordVisible((visible)=>!visible)} aria-label="Afficher ou masquer les mots de passe">◉</button></div></label><label>Nouveau mot de passe<div><input type={passwordVisible?'text':'password'} value={passwordForm.newPassword} onChange={(e)=>setPasswordForm((current)=>({...current,newPassword:e.target.value}))} autoComplete="new-password" minLength="8" required/><button type="button" onClick={()=>setPasswordVisible((visible)=>!visible)} aria-label="Afficher ou masquer les mots de passe">◉</button></div></label><label>Confirmer le nouveau mot de passe<div><input type={passwordVisible?'text':'password'} value={passwordForm.confirmPassword} onChange={(e)=>setPasswordForm((current)=>({...current,confirmPassword:e.target.value}))} autoComplete="new-password" minLength="8" required/><button type="button" onClick={()=>setPasswordVisible((visible)=>!visible)} aria-label="Afficher ou masquer les mots de passe">◉</button></div></label><p>Le nouveau mot de passe doit contenir au moins 8 caractères.</p>{passwordMessage.text?<div className={`password-feedback ${passwordMessage.type}`}>{passwordMessage.text}</div>:null}<button type="submit">Mettre à jour le mot de passe</button></form><div className="account-security-option"><AdminIcon type="security"/><div><strong>Face ID / Passkey</strong><p>Enregistrez cet appareil pour vous connecter sans mot de passe.</p></div><button type="button" onClick={registerPasskey}>Activer Face ID</button></div></article>:null}
+        {accountTab==='preferences'?<article className="account-card"><h2>Notifications administrateur</h2><form className="account-preferences-form" onSubmit={saveSettings}><Field label="Email de notification" name="adminEmail" type="email" value={settings.adminEmail||''} onChange={(e)=>setProductFormValue(setSettings,e)} required/><Field label="Numéro SMS" name="adminPhone" value={settings.adminPhone||''} onChange={(e)=>setProductFormValue(setSettings,e)}/><button type="submit">Enregistrer les préférences</button></form></article>:null}
+      </div><aside className="account-summary"><h2>Résumé du compte</h2><span className="account-avatar">{(adminProfile.nomComplet||'A').charAt(0)}</span><strong>{adminProfile.nomComplet||'Admin G-ROD'}</strong><em>Administrateur</em><p><i/> Compte actif</p><dl><div><dt>Email</dt><dd>{adminProfile.email||settings.adminEmail||'-'}</dd></div><div><dt>Authentification</dt><dd>JWT sécurisé</dd></div></dl><button type="button" onClick={onLogout}>Se déconnecter</button></aside></div></section>:null}
+
+      {adminTab === 'clients' && !activeClientData ? (
+        <section className="crm-clients-page">
+          <header className="crm-page-heading"><h2>Gestion des clients</h2><p>Consultez les clients et leur historique de demandes.</p></header>
+          <div className="crm-kpis">
+            {[
+              ['clients', clients.length, 'Total clients', 'Tous les clients identifiés', 'green'],
+              ['clients', openClientsCount, 'Demandes ouvertes', 'Clients à suivre', 'copper'],
+              ['requests', demandes.length, 'Demandes totales', 'Toutes demandes confondues', 'dark'],
+              ['products', uniqueRequestedProducts, 'Produits demandés', 'Références uniques', 'green'],
+            ].map(([icon, value, label, hint, tone]) => <article className={tone} key={label}><span><AdminIcon type={icon} /></span><div><small>{label}</small><strong>{value}</strong><em>{hint}</em></div></article>)}
           </div>
+          <section className="crm-table-panel">
+            <div className="crm-toolbar"><label><AdminIcon type="search" /><input value={search} onChange={(event) => { setSearch(event.target.value); setClientPage(1) }} placeholder="Rechercher un client..." /></label><select value={clientStatusFilter} onChange={(event) => { setClientStatusFilter(event.target.value); setClientPage(1) }}><option value="ALL">Suivi : tous</option><option value="OPEN">Demandes ouvertes</option><option value="CLOSED">Demandes clôturées</option></select><button type="button" className="secondary-button" onClick={() => { setSearch(''); setClientStatusFilter('ALL'); setClientPage(1) }}>Réinitialiser les filtres</button></div>
+            <div className="crm-table-wrap"><table className="admin-table crm-clients-table"><thead><tr><th>Client / société</th><th>Contact</th><th>Demandes</th><th>Produits demandés</th><th>Dernière demande</th><th>Suivi</th><th>Actions</th></tr></thead><tbody>
+              {paginatedClients.map((client) => { const hasOpen = client.nombreDemandesOuvertes > 0; return <tr key={client.key}><td><div className="crm-client-identity"><span>{(client.name || 'C').charAt(0).toUpperCase()}</span><div><strong>{client.name}</strong><small>{client.reference || client.contact || 'Sans identifiant'}</small></div></div></td><td><strong>{client.email || 'Non renseigné'}</strong><span>{client.phone || 'Non renseigné'}</span></td><td><strong className="crm-request-count">{client.total}</strong></td><td><div className="crm-product-tags">{client.products.map((product) => <span key={product}>{product}</span>)}</div></td><td><strong>{formatDate(client.lastRequest)}</strong></td><td><span className={`crm-follow-status ${hasOpen ? 'open' : 'closed'}`}>{hasOpen ? 'À traiter' : 'Clôturé'}</span></td><td><div className="crm-actions"><button type="button" title="Voir les détails" onClick={() => openClientDetails(client)}>◉</button><button type="button" title="Voir l’historique" onClick={() => navigate(`/admin/clients/${encodeURIComponent(client.key)}`)}>↗</button></div></td></tr> })}
+            </tbody></table></div>
+            <footer className="crm-pagination"><span>Affichage {visibleClients.length ? (clientPage - 1) * clientsPerPage + 1 : 0} à {Math.min(clientPage * clientsPerPage, visibleClients.length)} sur {visibleClients.length} clients</span><div><button type="button" disabled={clientPage === 1} onClick={() => setClientPage((page) => page - 1)}>‹</button>{Array.from({length:totalClientPages},(_,index)=><button type="button" className={clientPage===index+1?'active':''} onClick={()=>setClientPage(index+1)} key={index+1}>{index+1}</button>)}<button type="button" disabled={clientPage === totalClientPages} onClick={() => setClientPage((page) => page + 1)}>›</button></div><select value={clientsPerPage} onChange={(event) => { setClientsPerPage(Number(event.target.value)); setClientPage(1) }}><option value="10">10 par page</option><option value="25">25 par page</option><option value="50">50 par page</option></select></footer>
+          </section>
+          <section className="crm-analytics"><article><h3>Évolution des demandes</h3>{dashboardEvolution.length ? <div className="evolution-chart">{dashboardEvolution.map((point)=><div key={point.date}><span style={{height:`${Math.max(12,point.count/Math.max(...dashboardEvolution.map((item)=>item.count))*100)}%`}}/><small>{point.date}</small><strong>{point.count}</strong></div>)}</div>:<p>Aucune donnée disponible.</p>}</article><article><h3>Produits les plus demandés</h3><div className="top-products-list">{dashboardTopProducts.map((item)=><div key={item.name}><span><strong>{item.name}</strong><em>{item.count}</em></span><i><b style={{width:`${item.percent}%`}}/></i></div>)}</div></article></section>
+          {selectedClient ? <><button type="button" className="crm-drawer-backdrop" aria-label="Fermer" onClick={() => setSelectedClient(null)} /><aside className="crm-client-drawer"><header><div><small>Détails du client</small><h2>{selectedClient.name}</h2></div><button type="button" onClick={() => setSelectedClient(null)}>×</button></header><div className="crm-drawer-body"><div className="crm-drawer-profile"><span>{selectedClient.name.charAt(0).toUpperCase()}</span><strong>{selectedClient.name}</strong><small>{selectedClient.reference || 'Identifiant non renseigné'}</small></div><section><h3>Informations</h3><dl><div><dt>Email</dt><dd>{selectedClient.email || '-'}</dd></div><div><dt>Téléphone</dt><dd>{selectedClient.phone || '-'}</dd></div><div><dt>Contact</dt><dd>{selectedClient.contact || '-'}</dd></div><div><dt>Première demande</dt><dd>{formatDate(selectedClient.firstRequest)}</dd></div></dl></section><section><h3>Statistiques</h3><dl><div><dt>Demandes</dt><dd>{selectedClient.total}</dd></div><div><dt>Produits demandés</dt><dd>{selectedClient.products.length}</dd></div></dl></section><section><h3>Produits demandés</h3><div className="crm-product-tags">{selectedClient.products.map((product)=><span key={product}>{product}</span>)}</div></section><section><h3>Dernières demandes</h3>{selectedClient.demandes.slice(0,3).map((request)=><div className="crm-drawer-request" key={request.id}><div><strong>{request.referenceDemande || `#${request.id}`}</strong><span>{request.produitDemande || '-'}</span></div><div><small>{formatDate(request.dateCreation)}</small><em>{String(request.statut).replace('_',' ')}</em></div></div>)}</section></div><footer><button type="button" onClick={() => navigate(`/admin/clients/${encodeURIComponent(selectedClient.key)}`)}>Voir l’historique complet</button>{selectedClient.email ? <a href={`mailto:${selectedClient.email}`}>Contacter le client</a> : null}</footer></aside></> : null}
         </section>
       ) : null}
 
@@ -4582,7 +4617,7 @@ function AdminDashboard({ t, token, onLogout }) {
                 <div><dt>{t.requestedProducts}</dt><dd>{activeClientData.products.length}</dd></div>
                 <div><dt>{t.newRequests}</dt><dd>{activeClientData.demandes.filter((item) => item.statut === 'NOUVELLE').length}</dd></div>
                 <div><dt>{t.inProgressAction}</dt><dd>{activeClientData.demandes.filter((item) => item.statut === 'EN_TRAITEMENT').length}</dd></div>
-                <div><dt>{t.loyalClient}</dt><dd>{activeClientData.demandes.some((item) => item.clientFidele) ? t.yes : t.no}</dd></div>
+                <div><dt>{t.loyalClient}</dt><dd>{activeClientData.recurrent ? t.yes : t.no}</dd></div>
               </dl>
             </article>
           </div>
@@ -4670,6 +4705,7 @@ function AssistantChat({ t, language }) {
           })),
         }),
       })
+      if (response.status === 429) { setError(t.assistantRateLimited); return }
       if (!response.ok) throw new Error('Assistant failed')
       const data = await response.json()
       setMessages((current) => [...current, { role: 'assistant', content: data.message }])
@@ -4736,12 +4772,12 @@ function AssistantChat({ t, language }) {
 }
 
 function normalizeProduct(product) {
-  const fallback = officialProducts.find((item) => item.nom === product.nom) || officialProducts[0]
-  const productKey = product.id || fallback.id || slugify(product.nom || fallback.nom)
-  const visuals = productVisuals[productKey] || productVisuals[fallback.id] || { images: [], model3D: null, has3D: false }
+  const visualReference = officialProducts.find((item) => item.nom === product.nom)
+  const productKey = visualReference?.id || product.id || slugify(product.nom || '')
+  const visuals = productVisuals[productKey] || { images: [], model3D: null, has3D: false }
   const applications = Array.isArray(product.applications)
     ? product.applications
-    : String(product.applications || fallback.applications.join(','))
+    : String(product.applications || '')
         .replace(/([a-z])([A-Z])/g, '$1,$2')
         .replace(/(electriques|industriels|technique|conductrices|energie)([A-Z])/gi, '$1,$2')
         .split(',')
@@ -4749,17 +4785,16 @@ function normalizeProduct(product) {
         .filter(Boolean)
 
   return {
-    ...fallback,
     ...product,
     applications,
-    imageUrl: product.imageUrl || fallback.imageUrl || visuals.images[0] || PRODUCT_PLACEHOLDER_IMAGE,
-    images: normalizeProductImages(product.images, product.imageUrl || fallback.imageUrl, visuals.images),
+    imageUrl: product.imageUrl || PRODUCT_PLACEHOLDER_IMAGE,
+    images: normalizeProductImages(product.images, product.imageUrl || PRODUCT_PLACEHOLDER_IMAGE, visuals.images),
     model3D: product.model3D || visuals.model3D,
     has3D: Boolean(product.has3D ?? visuals.has3D) && Boolean(product.model3D || visuals.model3D),
-    dimensions: product.dimensions || fallback.dimensions,
-    purete: product.purete || fallback.purete,
-    normes: product.normes || fallback.normes,
-    conditionnement: product.conditionnement || fallback.conditionnement,
+    dimensions: product.dimensions || '',
+    purete: product.purete || '',
+    normes: product.normes || '',
+    conditionnement: product.conditionnement || '',
   }
 }
 
@@ -4849,47 +4884,41 @@ function slugify(value) {
     .replace(/(^-|-$)/g, '')
 }
 
-function buildClientHistory(demandes) {
-  const clients = new Map()
+function mapClientFromApi(client) {
+  return {
+    key: String(client.id),
+    name: client.societe || client.nom || 'Client',
+    contact: client.nom || '',
+    email: client.email || '',
+    phone: client.telephone || '',
+    reference: `CLIENT-${client.id}`,
+    firstRequest: client.premiereDemande || '',
+    lastRequest: client.derniereDemande || '',
+    total: client.nombreDemandes || 0,
+    nombreDemandesOuvertes: client.nombreDemandesOuvertes || 0,
+    products: client.produitsDemandes || [],
+    demandes: client.historique || [],
+    recurrent: Boolean(client.recurrent),
+    actif: client.actif !== false,
+  }
+}
 
-  demandes.forEach((demande) => {
-    const key = (demande.email || demande.telephone || demande.societe || `client-${demande.id}`).toLowerCase()
-    const current = clients.get(key) || {
-      key,
-      name: demande.societe || demande.nomContact || 'Client',
-      contact: demande.nomContact || '',
-      email: demande.email || '',
-      phone: demande.telephone || '',
-      reference: demande.referenceClient || '',
-      firstRequest: demande.dateCreation || '',
-      lastRequest: demande.dateCreation || '',
-      total: 0,
-      products: [],
-      demandes: [],
-    }
+function mapNotificationFromApi(notification) {
+  return {
+    id: notification.id,
+    type: notification.referenceType === 'DEVIS' ? 'REQUEST' : 'DOCUMENT',
+    title: notification.titre,
+    description: notification.message,
+    date: notification.dateCreation,
+    lue: Boolean(notification.lue),
+    referenceId: notification.referenceId,
+    referenceCode: notification.referenceCode,
+  }
+}
 
-    current.total += 1
-    current.demandes.push(demande)
-    if (demande.dateCreation) {
-      if (!current.firstRequest || new Date(demande.dateCreation) < new Date(current.firstRequest)) {
-        current.firstRequest = demande.dateCreation
-      }
-      if (!current.lastRequest || new Date(demande.dateCreation) > new Date(current.lastRequest)) {
-        current.lastRequest = demande.dateCreation
-      }
-    }
-    if (demande.produitDemande && !current.products.includes(demande.produitDemande)) {
-      current.products.push(demande.produitDemande)
-    }
-    clients.set(key, current)
-  })
-
-  return [...clients.values()]
-    .map((client) => ({
-      ...client,
-      demandes: [...client.demandes].sort((a, b) => new Date(b.dateCreation || 0) - new Date(a.dateCreation || 0)),
-    }))
-    .sort((a, b) => new Date(b.lastRequest || 0) - new Date(a.lastRequest || 0))
+function visiblePageNumbers(current, total) {
+  const start = Math.max(1, Math.min(current - 2, Math.max(1, total - 4)))
+  return Array.from({ length: Math.min(5, total) }, (_, index) => start + index)
 }
 
 function formatDate(value) {
@@ -5126,15 +5155,9 @@ function getProductUsage(product) {
   return applications || product.description || '-'
 }
 
-function getProductHeroSpecs(t) {
-  return {
-    purity: t.specPurityShort,
-    dimensions: t.specDimensionsShort,
-    standards: t.specStandardsShort,
-  }
-}
-
 function getAdminTabFromPath(pathname) {
+  if (pathname.includes('/admin/account')) return 'account'
+  if (pathname.includes('/admin/notifications')) return 'notifications'
   if (pathname.includes('/admin/produits')) return 'produits'
   if (pathname.includes('/admin/ressources')) return 'ressources'
   if (pathname.includes('/admin/documents')) return 'documents'
@@ -5144,27 +5167,45 @@ function getAdminTabFromPath(pathname) {
 }
 
 function exportCsv(demandes) {
-  const header = ['Reference', 'Societe', 'Contact', 'Email', 'Telephone', 'Produit', 'Quantite', 'Statut']
+  const header = ['Reference', 'Societe', 'Contact', 'Email', 'Telephone', 'Produit ID', 'Produit', 'Quantite', 'Purete', 'Longueur', 'Largeur', 'Epaisseur', 'Diametre souhaite', 'Norme / reference', 'Finition souhaitee', 'Application / projet', 'Besoin de livraison', 'Lien plan technique', 'Fichier technique', 'Message', 'Statut']
   const rows = demandes.map((demande) => [
     demande.referenceDemande || `#${demande.id}`,
     demande.societe,
     demande.nomContact,
     demande.email,
     demande.telephone,
+    demande.produitId,
     demande.produitDemande,
     demande.quantite,
+    demande.pureteCuivre,
+    demande.longueur,
+    demande.largeur,
+    demande.epaisseur,
+    demande.diametreSouhaite,
+    demande.normeReference,
+    demande.finitionSouhaitee,
+    demande.applicationProjet,
+    demande.besoinLivraison,
+    demande.lienPlanTechnique,
+    demande.fichierTechniqueNom,
+    demande.message,
     demande.statut,
   ])
   const csv = [header, ...rows]
-    .map((row) => row.map((cell) => `"${String(cell || '').replaceAll('"', '""')}"`).join(','))
+    .map((row) => row.map((cell) => `"${sanitizeCsvCell(cell).replaceAll('"', '""')}"`).join(','))
     .join('\n')
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
   link.download = 'demandes-grod.csv'
   link.click()
   URL.revokeObjectURL(url)
+}
+
+function sanitizeCsvCell(value) {
+  const text = String(value ?? '')
+  return /^[=+\-@]/.test(text.trimStart()) ? `'${text}` : text
 }
 
 function base64urlToBuffer(value) {
@@ -5306,6 +5347,16 @@ const dictionary = {
     noProductEyebrow: 'Recherche catalogue',
     noProductTitle: 'Aucun produit trouve',
     noProductText: 'Essayez un autre mot cle, retirez les filtres ou envoyez une demande sur mesure.',
+    catalogueEmptyEyebrow: 'Catalogue en mise a jour',
+    catalogueEmptyTitle: 'Aucun produit disponible actuellement',
+    catalogueEmptyText: 'Le catalogue G-ROD est en cours de mise a jour. Revenez prochainement ou contactez notre equipe commerciale.',
+    catalogueErrorEyebrow: 'Catalogue indisponible',
+    catalogueErrorTitle: 'Impossible de charger le catalogue',
+    catalogueErrorText: 'Une erreur est survenue lors du chargement des produits.',
+    retry: 'Reessayer',
+    productUnavailableEyebrow: 'Catalogue',
+    productUnavailableTitle: 'Produit indisponible',
+    productUnavailableText: 'Ce produit n est plus disponible ou n existe pas dans le catalogue.',
     activeOnly: 'Actifs seulement',
     active: 'Actif',
     quickView: 'Apercu rapide',
@@ -5393,6 +5444,8 @@ const dictionary = {
     drawingPlan: 'Plan',
     drawingPlanValue: 'Dessin technique ou lien document pour les pieces sur mesure',
     techInfo: 'Informations techniques',
+    technicalSpecifications: 'Spécifications techniques',
+    projectAndDelivery: 'Projet / livraison',
     dimensions: 'Dimensions',
     standards: 'Normes',
     specPurityShort: 'Selon besoin',
@@ -5531,6 +5584,7 @@ const dictionary = {
     submitDocumentRequest: 'Envoyer la demande document',
     documentRequestSuccess: 'Demande document enregistree.',
     documentRequestError: 'Impossible d envoyer la demande document.',
+    documentRateLimited: 'Trop de demandes ont été envoyées depuis cette connexion. Veuillez réessayer plus tard.',
     quoteEyebrow: 'Devis',
     quoteTitle: 'Nouvelle demande client',
     quoteIntro: 'Envoyez une demande claire avec le produit, les dimensions et le fichier technique si disponible.',
@@ -5603,6 +5657,7 @@ const dictionary = {
     sending: 'Envoi en cours...',
     quoteSuccess: 'Demande enregistrée.',
     quoteError: 'Impossible d envoyer la demande. Vérifiez que le backend est lancé.',
+    quoteRateLimited: 'Trop de demandes ont été envoyées depuis cette connexion. Veuillez réessayer plus tard.',
     adminLogin: 'Connexion sécurisée',
     adminSpace: 'Espace admin',
     adminLoginIntro: 'Acces reserve a l equipe G-ROD pour le suivi des demandes de devis.',
@@ -5610,6 +5665,7 @@ const dictionary = {
     password: 'Mot de passe',
     login: 'Se connecter',
     loginError: 'Identifiants invalides ou backend non lance.',
+    loginRateLimited: 'Trop de tentatives. Réessayez dans quelques instants.',
     passkeyLogin: 'Connexion Face ID',
     passkeyLoginError: 'Connexion Face ID impossible. Activez-la d abord depuis l admin.',
     passkeyEnable: 'Activer Face ID',
@@ -5720,6 +5776,7 @@ const dictionary = {
     saveChanges: 'Sauvegarder',
     uploadSuccess: 'Upload termine.',
     uploadError: 'Upload impossible.',
+    uploadRateLimited: 'Trop de fichiers ont été envoyés depuis cette connexion. Veuillez réessayer plus tard.',
     uploadImage: 'Uploader image',
     clickSaveProduct: 'Cliquez sur Sauvegarder pour appliquer au produit.',
     productImageSaved: 'Image produit sauvegardee.',
@@ -5754,6 +5811,7 @@ const dictionary = {
     assistantPromptAnodes: 'Explique-moi la purete des anodes cuivre.',
     assistantPromptQuote: 'Aide-moi a preparer une demande de devis.',
     assistantError: 'Assistant indisponible. Verifiez la cle OpenAI ou le backend.',
+    assistantRateLimited: 'Le service est momentanément limité. Réessayez dans quelques instants.',
     reference: 'Référence',
     status: 'Statut',
     inactive: 'Inactif',
@@ -5886,6 +5944,16 @@ const dictionary = {
     noProductEyebrow: 'Catalog search',
     noProductTitle: 'No product found',
     noProductText: 'Try another keyword, remove filters or send a custom request.',
+    catalogueEmptyEyebrow: 'Catalog update',
+    catalogueEmptyTitle: 'No products are currently available',
+    catalogueEmptyText: 'The G-ROD catalog is being updated. Please check back soon or contact our sales team.',
+    catalogueErrorEyebrow: 'Catalog unavailable',
+    catalogueErrorTitle: 'Unable to load the catalog',
+    catalogueErrorText: 'An error occurred while loading the products.',
+    retry: 'Try again',
+    productUnavailableEyebrow: 'Catalog',
+    productUnavailableTitle: 'Product unavailable',
+    productUnavailableText: 'This product is no longer available or does not exist in the catalog.',
     activeOnly: 'Active only',
     active: 'Active',
     quickView: 'Quick view',
@@ -5974,6 +6042,8 @@ const dictionary = {
     drawingPlan: 'Drawing',
     drawingPlanValue: 'Technical drawing or document link for custom parts',
     techInfo: 'Technical information',
+    technicalSpecifications: 'Technical specifications',
+    projectAndDelivery: 'Project / delivery',
     dimensions: 'Dimensions',
     standards: 'Standards',
     specPurityShort: 'As required',
@@ -6112,6 +6182,7 @@ const dictionary = {
     submitDocumentRequest: 'Send document request',
     documentRequestSuccess: 'Document request saved.',
     documentRequestError: 'Unable to send document request.',
+    documentRateLimited: 'Too many requests were sent from this connection. Please try again later.',
     quoteEyebrow: 'Quote',
     quoteTitle: 'New client request',
     quoteIntro: 'Send a clear request with the product, dimensions and technical file when available.',
@@ -6178,6 +6249,7 @@ const dictionary = {
     sending: 'Sending...',
     quoteSuccess: 'Request saved.',
     quoteError: 'Unable to send request. Check that backend is running.',
+    quoteRateLimited: 'Too many requests were sent from this connection. Please try again later.',
     adminLogin: 'Secure login',
     adminSpace: 'Admin area',
     adminLoginIntro: 'Access reserved for the G-ROD team to monitor quote requests.',
@@ -6185,6 +6257,7 @@ const dictionary = {
     password: 'Password',
     login: 'Log in',
     loginError: 'Invalid credentials or backend unavailable.',
+    loginRateLimited: 'Too many attempts. Please try again in a few moments.',
     passkeyLogin: 'Face ID login',
     passkeyLoginError: 'Face ID login failed. Enable it first from admin.',
     passkeyEnable: 'Enable Face ID',
@@ -6295,6 +6368,7 @@ const dictionary = {
     saveChanges: 'Save',
     uploadSuccess: 'Upload complete.',
     uploadError: 'Upload failed.',
+    uploadRateLimited: 'Too many files were sent from this connection. Please try again later.',
     uploadImage: 'Upload image',
     clickSaveProduct: 'Click Save to apply it to the product.',
     productImageSaved: 'Product image saved.',
@@ -6329,6 +6403,7 @@ const dictionary = {
     assistantPromptAnodes: 'Explain copper anode purity.',
     assistantPromptQuote: 'Help me prepare a quote request.',
     assistantError: 'Assistant unavailable. Check the OpenAI key or backend.',
+    assistantRateLimited: 'The service is temporarily limited. Please try again in a few moments.',
     reference: 'Reference',
     status: 'Status',
     inactive: 'Inactive',

@@ -2,6 +2,7 @@ package com.grod.platform.controller;
 
 import com.grod.platform.dto.AuthRequestDTO;
 import com.grod.platform.dto.AuthResponseDTO;
+import com.grod.platform.dto.ChangePasswordRequestDTO;
 import com.grod.platform.entity.Utilisateur;
 import com.grod.platform.repository.UtilisateurRepository;
 import com.grod.platform.security.JwtService;
@@ -11,18 +12,22 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Authentification", description = "Connexion des utilisateurs back-office")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final UtilisateurRepository utilisateurRepository;
     private final JwtService jwtService;
+    private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/login")
     @Operation(summary = "Connecter un utilisateur", description = "Retourne un token JWT pour acceder aux routes protegees")
@@ -43,5 +48,24 @@ public class AuthController {
                 .nomComplet(utilisateur.getNomComplet())
                 .role(utilisateur.getRole())
                 .build();
+    }
+
+    @PutMapping("/password")
+    @Operation(summary = "Modifier le mot de passe de l'utilisateur authentifié")
+    public Map<String, String> changePassword(
+            Authentication authentication,
+            @Valid @RequestBody ChangePasswordRequestDTO request
+    ) {
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), utilisateur.getMotDePasse())) {
+            throw new IllegalArgumentException("CURRENT_PASSWORD_INVALID");
+        }
+
+        utilisateur.setMotDePasse(passwordEncoder.encode(request.getNewPassword()));
+        utilisateurRepository.save(utilisateur);
+
+        return Map.of("message", "PASSWORD_UPDATED");
     }
 }

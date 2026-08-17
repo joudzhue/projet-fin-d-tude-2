@@ -16,6 +16,7 @@ pnpm-debug.log*
 # Environment and local secrets
 .env
 .env.*
+!.env.production.example
 *.local
 
 # IDE files
@@ -30,6 +31,12 @@ Thumbs.db
 # Runtime uploads and temporary files
 uploads/
 **/uploads/
+backups/
+**/backups/
 
 # Java/Maven
 .mvn/wrapper/maven-wrapper.jar
+# Playwright E2E artifacts and isolated uploads
+grod-platform-frontend/test-results/
+grod-platform-frontend/playwright-report/
+grod-platform-backend/uploads-e2e/

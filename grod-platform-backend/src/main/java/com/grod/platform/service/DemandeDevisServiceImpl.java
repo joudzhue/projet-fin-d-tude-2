@@ -5,10 +5,14 @@ import com.grod.platform.dto.DemandeDevisRequestDTO;
 import com.grod.platform.dto.DemandeDevisResponseDTO;
 import com.grod.platform.entity.DemandeDevis;
 import com.grod.platform.entity.StatutDemande;
+import com.grod.platform.event.DemandeDevisCreatedEvent;
 import com.grod.platform.exception.ResourceNotFoundException;
 import com.grod.platform.repository.DemandeDevisRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.core.io.Resource;
 
 import java.time.Year;
 import java.util.List;
@@ -18,11 +22,16 @@ import java.util.List;
 public class DemandeDevisServiceImpl implements DemandeDevisService {
 
     private final DemandeDevisRepository demandeDevisRepository;
-    private final EmailNotificationService emailNotificationService;
-    private final SmsNotificationService smsNotificationService;
+    private final ApplicationEventPublisher eventPublisher;
+    private final StoredFileService storedFileService;
+    private final ClientService clientService;
+    private final NotificationService notificationService;
 
     @Override
+    @Transactional
     public DemandeDevisResponseDTO ajouterDemande(DemandeDevisRequestDTO demandeDTO) {
+
+        String fichierTechniqueUrl = storedFileService.promoteTemporaryQuote(demandeDTO.getFichierTechniqueUrl());
 
         DemandeDevis demande = DemandeDevis.builder()
                 .societe(demandeDTO.getSociete())
@@ -30,16 +39,23 @@ public class DemandeDevisServiceImpl implements DemandeDevisService {
                 .email(demandeDTO.getEmail())
                 .telephone(demandeDTO.getTelephone())
                 .produitDemande(demandeDTO.getProduitDemande())
+                .produitId(demandeDTO.getProduitId())
+                .client(clientService.trouverOuCreer(demandeDTO.getNomContact(), demandeDTO.getSociete(), demandeDTO.getEmail(), demandeDTO.getTelephone()))
                 .pureteCuivre(demandeDTO.getPureteCuivre())
                 .longueur(demandeDTO.getLongueur())
                 .largeur(demandeDTO.getLargeur())
                 .epaisseur(demandeDTO.getEpaisseur())
                 .quantite(demandeDTO.getQuantite())
                 .besoinLivraison(demandeDTO.getBesoinLivraison())
+                .applicationProjet(demandeDTO.getApplicationProjet())
+                .finitionSouhaitee(demandeDTO.getFinitionSouhaitee())
+                .normeReference(demandeDTO.getNormeReference())
+                .lienPlanTechnique(demandeDTO.getLienPlanTechnique())
+                .diametreSouhaite(demandeDTO.getDiametreSouhaite())
                 .clientFidele(demandeDTO.isClientFidele())
                 .referenceClient(demandeDTO.getReferenceClient())
                 .message(demandeDTO.getMessage())
-                .fichierTechniqueUrl(demandeDTO.getFichierTechniqueUrl())
+                .fichierTechniqueUrl(fichierTechniqueUrl)
                 .fichierTechniqueNom(demandeDTO.getFichierTechniqueNom())
                 .statut(StatutDemande.NOUVELLE)
                 .build();
@@ -48,10 +64,20 @@ public class DemandeDevisServiceImpl implements DemandeDevisService {
         savedDemande.setReferenceDemande(genererReferenceDemande(savedDemande));
         savedDemande = demandeDevisRepository.save(savedDemande);
 
-        emailNotificationService.notifierNouvelleDemande(savedDemande);
-        smsNotificationService.notifierNouvelleDemande(savedDemande);
+        notificationService.notifierNouveauDevis(savedDemande);
+
+        eventPublisher.publishEvent(toCreatedEvent(savedDemande));
 
         return convertirEnResponseDTO(savedDemande);
+    }
+
+    private DemandeDevisCreatedEvent toCreatedEvent(DemandeDevis demande) {
+        return new DemandeDevisCreatedEvent(demande.getReferenceDemande(), demande.getSociete(),
+                demande.getNomContact(), demande.getEmail(), demande.getTelephone(), demande.getProduitDemande(),
+                demande.getQuantite(), demande.getPureteCuivre(), demande.getLongueur(), demande.getLargeur(),
+                demande.getEpaisseur(), demande.getBesoinLivraison(), demande.getApplicationProjet(),
+                demande.getFinitionSouhaitee(), demande.getNormeReference(), demande.getDiametreSouhaite(),
+                demande.getMessage(), demande.getFichierTechniqueUrl() != null, demande.getDateCreation());
     }
 
     @Override
@@ -67,6 +93,11 @@ public class DemandeDevisServiceImpl implements DemandeDevisService {
         DemandeDevis demande = trouverEntityParId(id);
 
         return convertirEnResponseDTO(demande);
+    }
+
+    @Override
+    public Resource chargerPieceJointe(Long id) {
+        return storedFileService.loadQuoteDocument(trouverEntityParId(id).getFichierTechniqueUrl());
     }
 
     @Override
@@ -109,6 +140,7 @@ public class DemandeDevisServiceImpl implements DemandeDevisService {
         DemandeDevis demande = trouverEntityParId(id);
 
         demandeDevisRepository.delete(demande);
+        storedFileService.deleteManagedFile(demande.getFichierTechniqueUrl(), "quotes");
     }
 
     private DemandeDevis trouverEntityParId(Long id) {
@@ -125,16 +157,23 @@ public class DemandeDevisServiceImpl implements DemandeDevisService {
                 .email(demande.getEmail())
                 .telephone(demande.getTelephone())
                 .produitDemande(demande.getProduitDemande())
+                .produitId(demande.getProduitId())
+                .clientId(demande.getClient() == null ? null : demande.getClient().getId())
                 .pureteCuivre(demande.getPureteCuivre())
                 .longueur(demande.getLongueur())
                 .largeur(demande.getLargeur())
                 .epaisseur(demande.getEpaisseur())
                 .quantite(demande.getQuantite())
                 .besoinLivraison(demande.getBesoinLivraison())
+                .applicationProjet(demande.getApplicationProjet())
+                .finitionSouhaitee(demande.getFinitionSouhaitee())
+                .normeReference(demande.getNormeReference())
+                .lienPlanTechnique(demande.getLienPlanTechnique())
+                .diametreSouhaite(demande.getDiametreSouhaite())
                 .clientFidele(demande.isClientFidele())
                 .referenceClient(demande.getReferenceClient())
                 .message(demande.getMessage())
-                .fichierTechniqueUrl(demande.getFichierTechniqueUrl())
+                .fichierTechniqueUrl(demande.getFichierTechniqueUrl() == null ? null : "/api/demandes-devis/" + demande.getId() + "/attachment")
                 .fichierTechniqueNom(demande.getFichierTechniqueNom())
                 .statut(demande.getStatut())
                 .dateCreation(demande.getDateCreation())

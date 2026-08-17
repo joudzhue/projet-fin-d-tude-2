@@ -17,10 +17,10 @@ public class NotificationSettingsService {
 
     private final AppSettingRepository appSettingRepository;
 
-    @Value("${app.notifications.admin-email:admin@grod.ma}")
+    @Value("${app.notifications.admin-email:}")
     private String defaultAdminEmail;
 
-    @Value("${app.notifications.admin-phone:+212 6 68 61 56 08}")
+    @Value("${app.notifications.admin-phone:}")
     private String defaultAdminPhone;
 
     public NotificationSettingsDTO getSettings() {

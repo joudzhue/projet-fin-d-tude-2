@@ -5,7 +5,10 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Entity
-@Table(name = "produits")
+@Table(name = "produits", indexes = {
+        @Index(name="idx_produit_actif", columnList="actif"),
+        @Index(name="idx_produit_categorie", columnList="categorie")
+})
 @Getter
 @Setter
 @NoArgsConstructor

@@ -27,10 +27,13 @@ public class JwtService {
 
     public JwtService(
             ObjectMapper objectMapper,
-            @Value("${app.jwt.secret:grod-platform-dev-secret-change-me}") String secret,
+            @Value("${app.jwt.secret}") String secret,
             @Value("${app.jwt.expiration-ms:86400000}") long expirationMs
     ) {
         this.objectMapper = objectMapper;
+        if (secret == null || secret.length() < 32) {
+            throw new IllegalStateException("JWT_SECRET doit contenir au moins 32 caracteres");
+        }
         this.secret = secret;
         this.expirationMs = expirationMs;
     }
