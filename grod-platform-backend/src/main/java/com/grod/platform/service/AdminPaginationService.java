@@ -32,6 +32,21 @@ public class AdminPaginationService {
     }
 
     @Transactional(readOnly = true)
+    public DemandPipelineDTO demandPipeline() {
+        Map<String, DemandPipelineColumnDTO> columns = new LinkedHashMap<>();
+        Pageable topFour = PageRequest.of(0, 4);
+        for (StatutDemande statut : StatutDemande.values()) {
+            List<DemandeDevisResponseDTO> demandes = devisRepository
+                    .findHighestPriorityByStatut(statut, topFour)
+                    .stream()
+                    .map(this::devisDto)
+                    .toList();
+            columns.put(statut.name(), new DemandPipelineColumnDTO(devisRepository.countByStatut(statut), demandes));
+        }
+        return new DemandPipelineDTO(columns);
+    }
+
+    @Transactional(readOnly = true)
     public PagedResponse<DemandeDevisResponseDTO> devis(Pageable pageable, String search, StatutDemande statut,
             String produit, Long clientId, LocalDate dateDebut, LocalDate dateFin) {
         Specification<DemandeDevis> spec = text(search, "referenceDemande", "societe", "nomContact", "email", "telephone", "produitDemande");

@@ -68,6 +68,15 @@ function buildBusBars() {
   return group
 }
 
+function buildFlatBars() {
+  const group = new THREE.Group()
+  const flatBar = new THREE.BoxGeometry(3.5, 0.16, 0.58)
+  for (let index = 0; index < 5; index += 1) {
+    addMesh(group, flatBar, index % 2 ? copperDark : copper, [index * 0.12 - 0.24, index * 0.2 - 0.42, -index * 0.12], [0, -0.3, 0])
+  }
+  return group
+}
+
 function buildTubes() {
   const group = new THREE.Group()
   const tube = new THREE.CylinderGeometry(0.2, 0.2, 3.2, 48, 1, true)
@@ -118,6 +127,7 @@ const models = [
   ['copper-rod.glb', buildRod],
   ['copper-anodes.glb', buildAnodes],
   ['copper-bus-bars.glb', buildBusBars],
+  ['copper-flat-bars.glb', buildFlatBars],
   ['copper-tubes.glb', buildTubes],
   ['copper-sheets.glb', buildSheets],
   ['copper-wire.glb', buildWire],

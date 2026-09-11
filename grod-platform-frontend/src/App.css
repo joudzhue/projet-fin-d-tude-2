@@ -7892,6 +7892,37 @@ button:disabled {
   font-weight: 900;
 }
 
+.pipeline-list .pipeline-more-button {
+  position: static;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+  padding: 9px 12px;
+  color: #17633b;
+  background: #f2f8f4;
+  text-align: center;
+  font-weight: 900;
+}
+
+.pipeline-list .pipeline-more-button:hover {
+  color: #ffffff;
+  background: #17633b;
+  transform: none;
+}
+
+.app-shell[data-theme="dark"] .pipeline-list .pipeline-more-button {
+  border-color: rgba(142, 226, 170, 0.28);
+  color: #8ee2aa;
+  background: rgba(23, 99, 59, 0.16);
+}
+
+.app-shell[data-theme="dark"] .pipeline-list .pipeline-more-button:hover {
+  color: #ffffff;
+  background: #17633b;
+}
+
 .pipeline-list p {
   margin: 0;
   color: #69766d;
@@ -9239,6 +9270,79 @@ button:disabled {
   .product-detail-copy {
     padding: 24px;
   }
+}
+
+/* The advisor result is a nested card and needs its own dark-theme surface. */
+.app-shell[data-theme="dark"] .catalogue-page .advisor-result {
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #f7fbf8;
+  background-color: #111d16;
+  background-image:
+    radial-gradient(circle at 100% 0%, rgba(183, 104, 66, 0.14), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025));
+}
+
+.app-shell[data-theme="dark"] .catalogue-page .advisor-result > span {
+  color: #f5b06f;
+}
+
+.app-shell[data-theme="dark"] .catalogue-page .advisor-result strong {
+  color: #ffffff;
+}
+
+.app-shell[data-theme="dark"] .catalogue-page .advisor-result p {
+  color: rgba(233, 240, 234, 0.82) !important;
+}
+
+.app-shell[data-theme="dark"] .catalogue-page .advisor-result .secondary-link {
+  border-color: rgba(223, 244, 232, 0.28);
+  color: #dff4e8;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Quote 3D preview and file upload are nested light cards in the default theme. */
+.app-shell[data-theme="dark"] .quote-3d-preview {
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #f7fbf8;
+  background:
+    radial-gradient(circle at 84% 18%, rgba(183, 104, 66, 0.15), transparent 32%),
+    linear-gradient(135deg, #111d16, #17251c) !important;
+}
+
+.app-shell[data-theme="dark"] .quote-3d-preview h3 {
+  color: #ffffff;
+}
+
+.app-shell[data-theme="dark"] .quote-3d-preview p:not(.eyebrow) {
+  color: rgba(233, 240, 234, 0.78);
+}
+
+.app-shell[data-theme="dark"] .quote-form.legacy-quote-form .upload-field {
+  border-color: rgba(142, 226, 170, 0.34);
+  color: #f7fbf8;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.04)) !important;
+}
+
+.app-shell[data-theme="dark"] .quote-form.legacy-quote-form .upload-field small {
+  color: rgba(233, 240, 234, 0.7);
+}
+
+/* Product technical cards have explicit light-theme list and definition colors. */
+.app-shell[data-theme="dark"] .product-detail-page .legacy-bullet-list li {
+  color: rgba(233, 240, 234, 0.84);
+}
+
+.app-shell[data-theme="dark"] .product-detail-page .legacy-spec-list div {
+  border-top-color: rgba(255, 255, 255, 0.11);
+}
+
+.app-shell[data-theme="dark"] .product-detail-page .legacy-spec-list dt {
+  color: rgba(233, 240, 234, 0.66);
+}
+
+.app-shell[data-theme="dark"] .product-detail-page .legacy-spec-list dd {
+  color: #f7fbf8;
 }
 
 /* Admin product catalogue */
@@ -11568,7 +11672,46 @@ main.admin-dashboard-page .admin-tabs button.active span {
 .app-shell[data-theme="dark"] .resources-page .faq-item,
 .app-shell[data-theme="dark"] .resources-page .document-request-form .quote-form {
   border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.94);
+  color: #f7fbf8;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(183, 104, 66, 0.1), transparent 32%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.04)) !important;
+}
+
+.app-shell[data-theme="dark"] .resources-page .resource-tools label,
+.app-shell[data-theme="dark"] .resources-page .document-request-form .quote-form label,
+.app-shell[data-theme="dark"] .frequent-documents-heading h3,
+.app-shell[data-theme="dark"] .frequent-document-item strong,
+.app-shell[data-theme="dark"] .resources-page .faq-item summary,
+.app-shell[data-theme="dark"] .document-request-copy h2 {
+  color: #ffffff !important;
+}
+
+.app-shell[data-theme="dark"] .document-request-copy p:not(.eyebrow),
+.app-shell[data-theme="dark"] .document-trust-note,
+.app-shell[data-theme="dark"] .resource-secondary-list article p {
+  color: rgba(233, 240, 234, 0.78) !important;
+}
+
+.app-shell[data-theme="dark"] .frequent-documents-heading a,
+.app-shell[data-theme="dark"] .resources-page .resource-card-footer .text-link {
+  color: #8ee2aa;
+}
+
+.app-shell[data-theme="dark"] .frequent-document-item {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f7fbf8;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.app-shell[data-theme="dark"] .frequent-document-item:hover {
+  border-color: rgba(142, 226, 170, 0.4);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.app-shell[data-theme="dark"] .frequent-document-item small {
+  color: #dff4e8;
+  background: rgba(255, 255, 255, 0.09);
 }
 
 .app-shell[data-theme="dark"] .resources-page .resources-hero {
@@ -13108,37 +13251,56 @@ main.admin-dashboard-page .admin-tabs button.active span {
 
 .legacy-requests-table th:nth-child(1),
 .legacy-requests-table td:nth-child(1) {
-  width: 14%;
+  width: 12%;
 }
 
 .legacy-requests-table th:nth-child(2),
 .legacy-requests-table td:nth-child(2) {
-  width: 20%;
+  width: 16%;
 }
 
 .legacy-requests-table th:nth-child(3),
 .legacy-requests-table td:nth-child(3) {
-  width: 15%;
+  width: 13%;
 }
 
 .legacy-requests-table th:nth-child(4),
 .legacy-requests-table td:nth-child(4) {
-  width: 21%;
+  width: 19%;
 }
 
 .legacy-requests-table th:nth-child(5),
 .legacy-requests-table td:nth-child(5) {
-  width: 13%;
+  width: 11%;
 }
 
 .legacy-requests-table th:nth-child(6),
 .legacy-requests-table td:nth-child(6) {
-  width: 13%;
+  width: 14%;
 }
 
 .legacy-requests-table th:nth-child(7),
 .legacy-requests-table td:nth-child(7) {
   width: 15%;
+}
+
+.requests-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-gutter: stable;
+}
+
+.requests-table-wrap .legacy-requests-table {
+  min-width: 1160px !important;
+}
+
+.legacy-requests-table td:nth-child(6) select {
+  width: 100%;
+  min-width: 145px;
+}
+
+.legacy-requests-table .legacy-quick-actions {
+  min-width: 150px;
 }
 
 .legacy-requests-table td,
@@ -13200,10 +13362,10 @@ main.admin-dashboard-page .admin-tabs button.active span {
 }
 
 .app-shell[data-theme="dark"] .admin-shell {
-  color: #111814 !important;
+  color: #e9f0ea !important;
   background:
-    radial-gradient(circle at 92% 0%, rgba(183, 104, 66, 0.08), transparent 26%),
-    linear-gradient(135deg, #f8faf8 0%, #eef4f0 100%) !important;
+    radial-gradient(circle at 92% 0%, rgba(183, 104, 66, 0.12), transparent 28%),
+    linear-gradient(135deg, #07120d 0%, #0d1a13 100%) !important;
 }
 
 .app-shell[data-theme="dark"] .admin-shell h1,
@@ -13216,25 +13378,484 @@ main.admin-dashboard-page .admin-tabs button.active span {
 .app-shell[data-theme="dark"] .admin-shell label,
 .app-shell[data-theme="dark"] .admin-shell dt,
 .app-shell[data-theme="dark"] .admin-shell dd {
-  color: inherit;
+  color: #f7fbf8;
 }
 
 .app-shell[data-theme="dark"] .admin-shell p,
-.app-shell[data-theme="dark"] .admin-shell span,
 .app-shell[data-theme="dark"] .admin-shell small {
-  color: #637067;
+  color: rgba(233, 240, 234, 0.74);
 }
 
-.app-shell[data-theme="dark"] .admin-sidebar *,
-.app-shell[data-theme="dark"] .admin-kpi-card *,
-.app-shell[data-theme="dark"] .admin-welcome-panel * {
-  color: inherit;
+.app-shell[data-theme="dark"] .admin-topbar {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  background: rgba(7, 18, 13, 0.92);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
 }
 
-.app-shell[data-theme="dark"] .admin-sidebar,
+.app-shell[data-theme="dark"] .admin-menu-button,
+.app-shell[data-theme="dark"] .admin-notification-button {
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #f7fbf8;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.app-shell[data-theme="dark"] .admin-global-search {
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #e9f0ea;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.app-shell[data-theme="dark"] .admin-profile-chip,
+.app-shell[data-theme="dark"] .admin-profile-chip strong {
+  color: #f7fbf8;
+}
+
+.app-shell[data-theme="dark"] .admin-sidebar-brand,
+.app-shell[data-theme="dark"] .admin-sidebar-nav button,
+.app-shell[data-theme="dark"] .admin-sidebar-export button,
+.app-shell[data-theme="dark"] .admin-sidebar-profile,
+.app-shell[data-theme="dark"] .admin-sidebar-profile strong {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.app-shell[data-theme="dark"] .admin-sidebar-nav button:hover,
+.app-shell[data-theme="dark"] .admin-sidebar-nav button.active,
+.app-shell[data-theme="dark"] .admin-sidebar-export button:hover {
+  color: #ffffff;
+}
+
+.app-shell[data-theme="dark"] .admin-sidebar-nav button strong {
+  color: #17633b;
+}
+
+.app-shell[data-theme="dark"] .admin-sidebar-export > span,
+.app-shell[data-theme="dark"] .admin-sidebar-profile small {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.app-shell[data-theme="dark"] .admin-sidebar-profile em {
+  color: #8ee2aa;
+}
+
 .app-shell[data-theme="dark"] .admin-welcome-panel,
+.app-shell[data-theme="dark"] .dashboard-industrial-banner,
 .app-shell[data-theme="dark"] .admin-kpi-card {
-  color: #ffffff !important;
+  color: #ffffff;
+}
+
+.app-shell[data-theme="dark"] .admin-welcome-panel h2,
+.app-shell[data-theme="dark"] .admin-welcome-panel p,
+.app-shell[data-theme="dark"] .dashboard-industrial-banner h2,
+.app-shell[data-theme="dark"] .dashboard-industrial-banner p,
+.app-shell[data-theme="dark"] .dashboard-industrial-banner span,
+.app-shell[data-theme="dark"] .dashboard-industrial-banner time,
+.app-shell[data-theme="dark"] .admin-kpi-card strong,
+.app-shell[data-theme="dark"] .admin-kpi-card span,
+.app-shell[data-theme="dark"] .admin-kpi-card small {
+  color: #ffffff;
+}
+
+.app-shell[data-theme="dark"] .admin-welcome-panel .eyebrow,
+.app-shell[data-theme="dark"] .dashboard-industrial-banner p {
+  color: #8ee2aa;
+}
+
+.app-shell[data-theme="dark"] .legacy-admin-actions button {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.app-shell[data-theme="dark"] .legacy-admin-actions button:hover {
+  background: #17633b;
+}
+
+.app-shell[data-theme="dark"] :is(
+  .admin-tabs,
+  .dashboard-panel,
+  .admin-analytics-panel,
+  .admin-workspace,
+  .product-admin-form,
+  .table-wrap,
+  .clients-page,
+  .client-profile-page,
+  .admin-card,
+  .client-card,
+  .commercial-pipeline,
+  .pipeline-column,
+  .dashboard-kpis article,
+  .dashboard-box,
+  .dashboard-request,
+  .dashboard-analysis-grid > article,
+  .product-kpi,
+  .product-catalogue-panel,
+  .resource-kpis article,
+  .resource-panel,
+  .document-kpis article,
+  .document-table-panel,
+  .document-analytics article,
+  .crm-kpis article,
+  .crm-table-panel,
+  .crm-analytics > article,
+  .account-tabs,
+  .account-card,
+  .account-summary,
+  .notification-filters,
+  .notification-list article
+) {
+  border-color: rgba(255, 255, 255, 0.13);
+  color: #e9f0ea;
+  background: #101a14;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.18);
+}
+
+.app-shell[data-theme="dark"] .dashboard-request {
+  box-shadow: none;
+}
+
+.app-shell[data-theme="dark"] .dashboard-request:hover {
+  border-color: rgba(142, 226, 170, 0.32);
+  background: #16231c;
+}
+
+.app-shell[data-theme="dark"] .dashboard-request strong {
+  color: #f7fbf8;
+}
+
+.app-shell[data-theme="dark"] .dashboard-request span,
+.app-shell[data-theme="dark"] .dashboard-request small,
+.app-shell[data-theme="dark"] .dashboard-request time {
+  color: rgba(233, 240, 234, 0.74);
+}
+
+.app-shell[data-theme="dark"] .catalogue-box dl div {
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+.app-shell[data-theme="dark"] .catalogue-box > a,
+.app-shell[data-theme="dark"] .quick-actions-box > a,
+.app-shell[data-theme="dark"] .quick-actions-box > button:not(.quick-action-primary) {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #dff4e8;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.app-shell[data-theme="dark"] .catalogue-box > a:hover,
+.app-shell[data-theme="dark"] .quick-actions-box > a:hover,
+.app-shell[data-theme="dark"] .quick-actions-box > button:not(.quick-action-primary):hover {
+  color: #ffffff;
+  background: #17633b;
+}
+
+.app-shell[data-theme="dark"] .evolution-chart {
+  border-bottom-color: rgba(255, 255, 255, 0.14);
+  background: repeating-linear-gradient(to top, transparent 0 36px, rgba(255, 255, 255, 0.07) 37px);
+}
+
+.app-shell[data-theme="dark"] .top-products-list i {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.app-shell[data-theme="dark"] :is(
+  .dashboard-kpis,
+  .product-kpi-grid,
+  .resource-kpis,
+  .document-kpis,
+  .crm-kpis
+) article small,
+.app-shell[data-theme="dark"] :is(
+  .dashboard-kpis,
+  .product-kpi-grid,
+  .resource-kpis,
+  .document-kpis,
+  .crm-kpis
+) article strong {
+  color: #f7fbf8;
+}
+
+.app-shell[data-theme="dark"] :is(
+  .dashboard-kpis,
+  .product-kpi-grid,
+  .resource-kpis,
+  .document-kpis,
+  .crm-kpis
+) article em {
+  color: rgba(233, 240, 234, 0.7);
+}
+
+.app-shell[data-theme="dark"] :is(
+  .product-toolbar,
+  .resource-toolbar,
+  .document-toolbar,
+  .crm-toolbar,
+  .product-pagination,
+  .resource-pagination,
+  .document-pagination,
+  .crm-pagination,
+  .product-drawer > nav,
+  .product-drawer-form > footer,
+  .resource-drawer > header,
+  .resource-drawer form > footer,
+  .document-request-drawer > header,
+  .document-request-drawer > footer,
+  .crm-client-drawer > header,
+  .crm-client-drawer > footer
+) {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.app-shell[data-theme="dark"] :is(
+  .product-toolbar label,
+  .resource-toolbar label,
+  .document-toolbar label,
+  .crm-toolbar label
+) {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.app-shell[data-theme="dark"] :is(
+  .admin-table,
+  .product-management-table,
+  .resource-table,
+  .document-management-table,
+  .crm-clients-table
+) th {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #dff4e8;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.app-shell[data-theme="dark"] :is(
+  .admin-table,
+  .product-management-table,
+  .resource-table,
+  .document-management-table,
+  .crm-clients-table
+) td {
+  border-color: rgba(255, 255, 255, 0.09);
+  color: #e9f0ea;
+  background: #101a14;
+}
+
+.app-shell[data-theme="dark"] :is(
+  .admin-table,
+  .product-management-table,
+  .resource-table,
+  .document-management-table,
+  .crm-clients-table
+) tbody tr:hover td {
+  background: #16231c;
+}
+
+.app-shell[data-theme="dark"] :is(
+  .product-actions,
+  .resource-actions,
+  .document-actions,
+  .crm-actions,
+  .product-pagination,
+  .resource-pagination,
+  .document-pagination,
+  .crm-pagination
+) button,
+.app-shell[data-theme="dark"] .resource-actions a {
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #dff4e8;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.app-shell[data-theme="dark"] :is(
+  .product-pagination,
+  .resource-pagination,
+  .document-pagination,
+  .crm-pagination
+) button.active {
+  color: #ffffff;
+  background: #087344;
+}
+
+.app-shell[data-theme="dark"] :is(
+  .product-drawer,
+  .resource-drawer,
+  .document-request-drawer,
+  .crm-client-drawer,
+  .notification-dropdown,
+  .request-detail-panel,
+  .admin-profile-menu
+) {
+  border-color: rgba(255, 255, 255, 0.13);
+  color: #e9f0ea;
+  background: #101a14;
+}
+
+.app-shell[data-theme="dark"] :is(
+  .product-drawer,
+  .resource-drawer,
+  .document-request-drawer,
+  .crm-client-drawer,
+  .notification-dropdown
+) :is(header, footer, section) {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.app-shell[data-theme="dark"] :is(
+  .product-drawer,
+  .resource-drawer,
+  .document-request-drawer,
+  .crm-client-drawer
+) header button {
+  color: #f7fbf8;
+  background: transparent;
+}
+
+.app-shell[data-theme="dark"] .product-drawer-form > footer {
+  background: #101a14;
+}
+
+.app-shell[data-theme="dark"] .resource-upload,
+.app-shell[data-theme="dark"] .account-unavailable,
+.app-shell[data-theme="dark"] .account-security-option,
+.app-shell[data-theme="dark"] .document-request-drawer p {
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #e9f0ea;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.app-shell[data-theme="dark"] .account-fields input[readonly] {
+  color: #e9f0ea !important;
+  background: rgba(255, 255, 255, 0.055) !important;
+}
+
+.app-shell[data-theme="dark"] .account-info-note {
+  color: #f0d8c6;
+  background: rgba(183, 104, 66, 0.12);
+}
+
+.app-shell[data-theme="dark"] .account-summary dd,
+.app-shell[data-theme="dark"] .account-security-option p,
+.app-shell[data-theme="dark"] .account-unavailable p,
+.app-shell[data-theme="dark"] .notification-list p,
+.app-shell[data-theme="dark"] .notification-list time,
+.app-shell[data-theme="dark"] .notification-dropdown small,
+.app-shell[data-theme="dark"] .notification-dropdown time,
+.app-shell[data-theme="dark"] .crm-page-heading p,
+.app-shell[data-theme="dark"] .crm-drawer-body dt,
+.app-shell[data-theme="dark"] .crm-drawer-request span,
+.app-shell[data-theme="dark"] .crm-drawer-request small {
+  color: rgba(233, 240, 234, 0.72);
+}
+
+.app-shell[data-theme="dark"] .crm-client-identity > span,
+.app-shell[data-theme="dark"] .crm-drawer-profile > span {
+  color: #087344 !important;
+  background: #ddf1e4;
+}
+
+.app-shell[data-theme="dark"] .crm-follow-status.open {
+  color: #075d37 !important;
+  background: #dff2e6;
+}
+
+.app-shell[data-theme="dark"] .crm-follow-status.closed {
+  color: #d7e1da !important;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.crm-toolbar select {
+  height: 43px;
+  min-height: 43px;
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 1.2;
+}
+
+.document-toolbar select {
+  height: 42px;
+  min-height: 42px;
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 1.2;
+}
+
+.resource-toolbar select {
+  height: 42px;
+  min-height: 42px;
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 1.2;
+}
+
+.app-shell[data-theme="dark"] .product-description-clamp,
+.app-shell[data-theme="dark"] .product-key-specs {
+  color: rgba(233, 240, 234, 0.76) !important;
+}
+
+.app-shell[data-theme="dark"] .product-status.active {
+  color: #075d37 !important;
+  background: #dff2e6;
+}
+
+.app-shell[data-theme="dark"] .product-status.inactive {
+  color: #ffd6bd !important;
+  background: rgba(183, 104, 66, 0.22);
+}
+
+.app-shell[data-theme="dark"] .product-icon-actions button {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #dff4e8;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.app-shell[data-theme="dark"] .product-icon-actions button:hover {
+  color: #ffffff;
+  background: #17633b;
+}
+
+.app-shell[data-theme="dark"] .product-icon-actions button.danger {
+  border-color: rgba(255, 190, 180, 0.32);
+  color: #ffb5ae;
+  background: rgba(141, 45, 34, 0.18);
+}
+
+.app-shell[data-theme="dark"] .notification-dropdown > div > button,
+.app-shell[data-theme="dark"] .notification-list article.unread {
+  border-color: rgba(255, 255, 255, 0.09);
+  color: #e9f0ea;
+  background: #101a14;
+}
+
+.app-shell[data-theme="dark"] .notification-dropdown > div > button.unread,
+.app-shell[data-theme="dark"] .notification-list article.unread {
+  background: #14241b;
+}
+
+.app-shell[data-theme="dark"] .admin-tabs button,
+.app-shell[data-theme="dark"] .account-tabs button,
+.app-shell[data-theme="dark"] .notification-filters button {
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #dff4e8;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.app-shell[data-theme="dark"] .admin-tabs button.active,
+.app-shell[data-theme="dark"] .notification-filters button.active {
+  color: #ffffff;
+  background: #17633b;
+}
+
+.app-shell[data-theme="dark"] .account-tabs button {
+  background: transparent;
+}
+
+.app-shell[data-theme="dark"] .account-tabs button.active {
+  color: #8ee2aa;
+  border-color: #8ee2aa;
+}
+
+.app-shell[data-theme="dark"] .status-donut {
+  background:
+    radial-gradient(circle, #101a14 0 48%, transparent 50%),
+    conic-gradient(#087344 0 var(--new), #ed7916 var(--new) var(--progress), #4785c4 var(--progress) var(--done), #e5434d var(--done) 100%);
 }
 
 @media (max-width: 1180px) {
@@ -13433,6 +14054,83 @@ main.admin-dashboard-page .admin-tabs button.active span {
 
   .trust-dock article:last-child strong {
     white-space: normal;
+  }
+}
+
+/* Keep catalogue list view horizontal and immune to the card-grid overrides above. */
+.catalogue-page .products-grid.products-grid--list {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.catalogue-page .products-grid--list .product-card {
+  grid-template-columns: 260px minmax(0, 1fr) !important;
+  grid-template-rows: auto !important;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.catalogue-page .products-grid--list .product-media {
+  min-width: 0;
+  min-height: 220px;
+  padding: 12px;
+}
+
+.catalogue-page .products-grid--list .product-media img {
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+}
+
+.catalogue-page .products-grid--list .product-body {
+  grid-template-columns: minmax(0, 1fr) minmax(170px, auto);
+  grid-template-rows: repeat(4, auto);
+  align-content: center;
+  min-width: 0;
+}
+
+.catalogue-page .products-grid--list .product-title-row,
+.catalogue-page .products-grid--list .product-body > p,
+.catalogue-page .products-grid--list .tag-list,
+.catalogue-page .products-grid--list .product-3d-badge {
+  grid-column: 1;
+}
+
+.catalogue-page .products-grid--list .product-body > p {
+  min-height: 0;
+  max-height: none;
+}
+
+.catalogue-page .products-grid--list .tag-list {
+  min-height: 0;
+}
+
+.catalogue-page .products-grid--list .product-card-actions {
+  grid-column: 2;
+  grid-row: 1 / span 4;
+  min-width: 170px;
+  align-self: center;
+}
+
+@media (max-width: 760px) {
+  .catalogue-page .products-grid--list .product-card {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .catalogue-page .products-grid--list .product-media,
+  .catalogue-page .products-grid--list .product-media img {
+    min-height: 190px;
+  }
+
+  .catalogue-page .products-grid--list .product-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+  }
+
+  .catalogue-page .products-grid--list .product-card-actions {
+    grid-column: 1;
+    grid-row: auto;
+    min-width: 0;
   }
 }
 

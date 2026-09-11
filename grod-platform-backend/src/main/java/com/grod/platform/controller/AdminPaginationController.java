@@ -18,6 +18,9 @@ public class AdminPaginationController {
     @GetMapping("/dashboard/summary")
     public DashboardSummaryDTO dashboardSummary() { return service.dashboardSummary(); }
 
+    @GetMapping("/demandes/pipeline")
+    public DemandPipelineDTO demandPipeline() { return service.demandPipeline(); }
+
     @GetMapping("/demandes")
     public PagedResponse<DemandeDevisResponseDTO> devis(@RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="10") int size,
             @RequestParam(defaultValue="dateCreation") String sort, @RequestParam(defaultValue="desc") String direction,

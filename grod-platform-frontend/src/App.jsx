@@ -7,6 +7,12 @@ const API_ORIGIN = API_URL.replace(/\/api$/, '')
 const resolveBackendUrl = (value) => value && !/^https?:\/\//i.test(value)
   ? `${API_ORIGIN}${value.startsWith('/') ? '' : '/'}${value}`
   : value
+const resolveUploadUrl = (value) => {
+  if (!value) return value
+  const localUpload = String(value).match(/^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?(\/uploads\/.*)$/i)
+  if (localUpload) return resolveBackendUrl(localUpload[1])
+  return String(value).startsWith('/uploads/') ? resolveBackendUrl(value) : value
+}
 const ADMIN_TOKEN_KEY = 'grod_admin_token'
 const ADMIN_PROFILE_KEY = 'grod_admin_profile'
 const RECENT_PRODUCTS_KEY = 'grod_recent_products'
@@ -51,8 +57,8 @@ const productVisuals = {
       `${PRODUCT_IMAGE_BASE}/copper-flat-bars-main.webp`,
       `${PRODUCT_IMAGE_BASE}/copper-flat-bars-detail.webp`,
     ],
-    model3D: null,
-    has3D: false,
+    model3D: '/models/copper-flat-bars.glb',
+    has3D: true,
   },
   tubes: {
     images: [
@@ -211,7 +217,7 @@ const resources = [
     title: 'Schema production MCF',
     type: 'Processus',
     text: 'Flow chart visuel du processus: reception, tri, laboratoire, production et export.',
-    href: '/documents/mcf-flow-chart-production.svg',
+    href: '/documents/mcf-flow-chart-production.png',
   },
   {
     title: 'Certificats et conformite',
@@ -221,6 +227,15 @@ const resources = [
   },
 ]
 
+const TECHNICAL_RESOURCE_TYPES = [
+  'Fiche technique',
+  'Certificat',
+  'Guide',
+  'Plan 2D/3D',
+  'Brochure',
+  'FAQ',
+]
+
 const partners = ['ocp', 'tamwilcom', 'anapec', 'maroc-pme', 'cfye']
 
 function App() {
@@ -228,6 +243,8 @@ function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('grod_theme') || 'light')
   const [commandOpen, setCommandOpen] = useState(false)
   const [commandSearch, setCommandSearch] = useState('')
+  const [commandProducts, setCommandProducts] = useState(officialProducts)
+  const [commandResources, setCommandResources] = useState(resources)
   const navigate = useNavigate()
   const location = useLocation()
   const isAdminRoute = location.pathname.startsWith('/admin')
@@ -240,20 +257,64 @@ function App() {
       { title: t.navProcess, subtitle: t.commandProcessHint, to: '/processus' },
       { title: t.navWhy, subtitle: t.commandWhyHint, to: '/pourquoi-grod' },
       { title: t.navQuote, subtitle: t.commandQuoteHint, to: '/devis' },
-      { title: t.navAdmin, subtitle: t.commandAdminHint, to: '/admin' },
-      ...officialProducts.map((product) => ({
+      ...commandProducts.map((product) => ({
         title: product.nom,
         subtitle: product.description,
         to: `/catalogue/${product.id || slugify(product.nom)}`,
+        keywords: [product.categorie, product.purete, product.dimensions, product.normes, ...(product.applications || [])].join(' '),
+      })),
+      ...commandResources.map((resource) => ({
+        title: resource.title,
+        subtitle: [resource.type, resource.text].filter(Boolean).join(' — '),
+        to: `/resources?search=${encodeURIComponent(resource.title)}`,
+        keywords: [resource.type, resource.text, resource.product, resource.fileName].filter(Boolean).join(' '),
       })),
     ],
-    [t],
+    [commandProducts, commandResources, t],
   )
   const filteredCommandActions = useMemo(() => {
     const query = normalizeSearchText(commandSearch)
     if (!query) return commandActions
-    return commandActions.filter((action) => normalizeSearchText(`${action.title} ${action.subtitle}`).includes(query))
+    return commandActions.filter((action) => normalizeSearchText(`${action.title} ${action.subtitle} ${action.keywords || ''}`).includes(query))
   }, [commandActions, commandSearch])
+
+  useEffect(() => {
+    if (!commandOpen) return undefined
+    const controller = new AbortController()
+
+    async function loadCommandContent() {
+      const [productsResponse, resourcesResponse] = await Promise.all([
+        fetch(`${API_URL}/produits/actifs`, { signal: controller.signal }).catch(() => null),
+        fetch(`${API_URL}/documents-techniques/actifs`, { signal: controller.signal }).catch(() => null),
+      ])
+
+      if (productsResponse?.ok) {
+        const products = await productsResponse.json()
+        if (Array.isArray(products)) setCommandProducts(products)
+      }
+      if (resourcesResponse?.ok) {
+        const backendResources = await resourcesResponse.json()
+        if (Array.isArray(backendResources)) {
+          const mergedResources = [
+            ...resources,
+            ...backendResources.map((resource) => ({
+              title: resource.titre,
+              type: resource.typeDocument,
+              text: resource.description || resource.fichierNom,
+              product: resource.produitConcerne,
+              fileName: resource.fichierNom,
+            })),
+          ]
+          setCommandResources(mergedResources.filter((resource, index, list) =>
+            list.findIndex((item) => normalizeSearchText(item.title) === normalizeSearchText(resource.title)) === index,
+          ))
+        }
+      }
+    }
+
+    loadCommandContent().catch(() => {})
+    return () => controller.abort()
+  }, [commandOpen])
 
   useEffect(() => {
     function handleShortcut(event) {
@@ -282,7 +343,7 @@ function App() {
   return (
     <div className="app-shell" data-theme={theme}>
       <PageMeta t={t} />
-      <ScrollProgress t={t} />
+      <ScrollProgress t={t} showBackToTop={!location.pathname.startsWith('/admin/ressources')} />
       <MotionEnhancer />
       <ConnectionStatus t={t} />
       <InstallAppPrompt t={t} />
@@ -728,7 +789,7 @@ function MotionEnhancer() {
   return null
 }
 
-function ScrollProgress({ t }) {
+function ScrollProgress({ t, showBackToTop = true }) {
   const [progress, setProgress] = useState(0)
   const [visible, setVisible] = useState(false)
 
@@ -755,14 +816,14 @@ function ScrollProgress({ t }) {
       <div className="scroll-progress" aria-hidden="true">
         <span style={{ width: `${progress}%` }} />
       </div>
-      <button
+      {showBackToTop ? <button
         className={`back-to-top ${visible ? 'visible' : ''}`}
         type="button"
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         aria-label={t.backToTop}
       >
         ↑
-      </button>
+      </button> : null}
     </>
   )
 }
@@ -846,13 +907,13 @@ function HomePage({ t }) {
           <p className="eyebrow">{t.documentsEyebrow}</p>
           <h2>{t.documentsTitle}</h2>
           <p>{t.documentsText}</p>
-          <span className="brochure-meta">PDF / SVG - documents telechargeables</span>
+          <span className="brochure-meta">PDF / PNG - documents telechargeables</span>
         </div>
         <div className="brochure-actions">
           <a className="primary-link brochure-download" href="/documents/grod-brochure-institutionnelle.pdf" download>
             {t.downloadBrochure}
           </a>
-          <a className="secondary-link brochure-download" href="/documents/mcf-flow-chart-production.svg" download>
+          <a className="secondary-link brochure-download" href="/documents/mcf-flow-chart-production.png" download>
             {t.downloadFlow}
           </a>
         </div>
@@ -2119,11 +2180,19 @@ function ShareProductButton({ product, t }) {
 }
 
 function ResourcesPage({ t }) {
+  const location = useLocation()
   const [backendDocs, setBackendDocs] = useState([])
   const [request, setRequest] = useState(emptyDocumentRequest())
   const [status, setStatus] = useState('')
-  const [resourceSearch, setResourceSearch] = useState('')
+  const [resourceSearch, setResourceSearch] = useState(() => new URLSearchParams(location.search).get('search') || '')
   const [resourceType, setResourceType] = useState('')
+
+  useEffect(() => {
+    const requestedResource = new URLSearchParams(location.search).get('search') || ''
+    // The URL is the source of truth when a document is opened from quick search.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setResourceSearch(requestedResource)
+  }, [location.search])
 
   useEffect(() => {
     async function loadDocs() {
@@ -2263,7 +2332,7 @@ function ResourcesPage({ t }) {
           <article className="resource-card" key={resource.title}>
             <div className={`resource-card-preview resource-card-preview-${resource.preview}`}>
               {resource.preview === 'process' ? (
-                <img src="/documents/mcf-flow-chart-production.svg" alt="" aria-hidden="true" />
+                <img src="/documents/mcf-flow-chart-production.png" alt="" aria-hidden="true" />
               ) : null}
               {resource.preview === 'certificate' ? (
                 <div className="certificate-preview" aria-hidden="true">
@@ -3233,6 +3302,8 @@ function AdminDashboard({ t, token, onLogout }) {
   const [demandsPerPage, setDemandsPerPage] = useState(10)
   const [pageMeta, setPageMeta] = useState({ demandes:{totalElements:0,totalPages:1}, clients:{totalElements:0,totalPages:1}, documents:{totalElements:0,totalPages:1}, produits:{totalElements:0,totalPages:1}, ressources:{totalElements:0,totalPages:1}, notifications:{totalElements:0,totalPages:1} })
   const [dashboardSummary, setDashboardSummary] = useState({ demandesTotales:0, nouvellesDemandes:0, documentsEnAttente:0, produitsActifs:0, clients:0, demandesParStatut:{} })
+  const [demandPipeline, setDemandPipeline] = useState({ columns: {} })
+  const [pipelineRefreshVersion, setPipelineRefreshVersion] = useState(0)
   const [search, setSearch] = useState('')
   const [productSearch, setProductSearch] = useState('')
   const [productCategoryFilter, setProductCategoryFilter] = useState('ALL')
@@ -3358,6 +3429,19 @@ function AdminDashboard({ t, token, onLogout }) {
   }, [token])
 
   useEffect(() => {
+    if (adminTab !== 'demandes') return undefined
+    const controller = new AbortController()
+    fetch(`${API_URL}/admin/demandes/pipeline`, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
+    })
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then(setDemandPipeline)
+      .catch(() => {})
+    return () => controller.abort()
+  }, [adminTab, pipelineRefreshVersion, token])
+
+  useEffect(() => {
     const timeout = window.setTimeout(async () => {
       const params = new URLSearchParams()
       let endpoint = ''
@@ -3454,6 +3538,7 @@ function AdminDashboard({ t, token, onLogout }) {
   const documentStatusCounts = ['NOUVELLE','EN_TRAITEMENT','TRAITEE','ANNULEE'].map((status) => ({ status, count: documentRequests.filter((request) => (request.statut || 'NOUVELLE') === status).length }))
   const documentTypeStats = documentTypes.map((type) => ({ type, count: documentRequests.filter((request) => request.typeDocument === type).length })).sort((a,b) => b.count-a.count).slice(0,4)
   const resourceTypes = [...new Set(documents.map((document) => document.typeDocument).filter(Boolean))].sort()
+  const resourceCreationTypes = [...new Set([...TECHNICAL_RESOURCE_TYPES, ...resourceTypes])].sort()
   const resourceProducts = [...new Set(documents.map((document) => document.produitConcerne).filter(Boolean))].sort()
   const filteredResources = documents.filter((document) => [document.titre,document.typeDocument,document.produitConcerne,document.fichierNom,document.description].join(' ').toLowerCase().includes(resourceSearch.toLowerCase()) && (resourceTypeFilter==='ALL'||document.typeDocument===resourceTypeFilter) && (resourceProductFilter==='ALL'||document.produitConcerne===resourceProductFilter) && (resourceStatusFilter==='ALL'||(resourceStatusFilter==='ACTIVE'?document.actif:!document.actif)))
   const resourcePages = Math.max(1,pageMeta.ressources.totalPages||1)
@@ -3492,14 +3577,26 @@ function AdminDashboard({ t, token, onLogout }) {
     ['EN_TRAITEMENT', t.pipelineProgress],
     ['TRAITEE', t.pipelineDone],
     ['ANNULEE', t.pipelineCancelled],
-  ].map(([status, label]) => ({
-    status,
-    label,
-    demandes: searchedDemandes
+  ].map(([status, label]) => {
+    const demandesByStatus = searchedDemandes
       .filter((demande) => demande.statut === status)
       .sort((first, second) => getDemandPriority(second).score - getDemandPriority(first).score)
-      .slice(0, 4),
-  }))
+    const globalColumn = demandPipeline.columns?.[status]
+    const useGlobalPipeline = !search.trim() && globalColumn
+    const total = useGlobalPipeline
+      ? Number(globalColumn.total || 0)
+      : search.trim()
+        ? demandesByStatus.length
+        : Number(dashboardSummary.demandesParStatut?.[status] || 0)
+    const demandesVisibles = useGlobalPipeline ? globalColumn.demandes : demandesByStatus.slice(0, 4)
+    return {
+      status,
+      label,
+      total,
+      demandes: demandesVisibles,
+      remainingCount: Math.max(0, total - demandesVisibles.length),
+    }
+  })
   const productAnalytics = Object.entries(
     demandes.reduce((accumulator, demande) => {
       const productName = demande.produitDemande || t.notProvided
@@ -3514,6 +3611,14 @@ function AdminDashboard({ t, token, onLogout }) {
     () => [...new Set(products.map((product) => product.categorie || 'Copper products'))].sort(),
     [products],
   )
+
+  function showPipelineStatus(status) {
+    setStatusFilter(status)
+    setDemandPage(1)
+    window.requestAnimationFrame(() => {
+      document.querySelector('.requests-table-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
   const filteredAdminProducts = useMemo(() => {
     const query = normalizeSearchText(productSearch)
     return products.filter((product) => {
@@ -3679,6 +3784,7 @@ function AdminDashboard({ t, token, onLogout }) {
       if (!response.ok) throw new Error('Status update failed')
       const updated = await response.json()
       setDemandes((current) => current.map((demande) => (demande.id === updated.id ? updated : demande)))
+      setPipelineRefreshVersion((version) => version + 1)
       setSuccess(t.statusUpdated)
     } catch {
       setError(t.statusError)
@@ -3703,6 +3809,7 @@ function AdminDashboard({ t, token, onLogout }) {
       if (!response.ok) throw new Error('Loyalty update failed')
       const updated = await response.json()
       setDemandes((current) => current.map((item) => (item.id === updated.id ? updated : item)))
+      setPipelineRefreshVersion((version) => version + 1)
       setSuccess(t.loyaltyUpdated)
     } catch {
       setError(t.loyaltyError)
@@ -3720,6 +3827,7 @@ function AdminDashboard({ t, token, onLogout }) {
       })
       if (!response.ok) throw new Error('Delete failed')
       setDemandes((current) => current.filter((demande) => demande.id !== id))
+      setPipelineRefreshVersion((version) => version + 1)
       setSuccess(t.requestDeleted)
     } catch {
       setError(t.deleteError)
@@ -4233,7 +4341,7 @@ function AdminDashboard({ t, token, onLogout }) {
             <article className={`pipeline-column ${column.status.toLowerCase()}`} key={column.status}>
               <header>
                 <strong>{column.label}</strong>
-                <span>{column.demandes.length}</span>
+                <span>{column.total}</span>
               </header>
               <div className="pipeline-list">
                 {column.demandes.length ? column.demandes.map((demande) => {
@@ -4246,14 +4354,19 @@ function AdminDashboard({ t, token, onLogout }) {
                       <em>{priority.score}%</em>
                     </button>
                   )
-                }) : <p>{t.pipelineEmpty}</p>}
+                }) : column.total === 0 ? <p>{t.pipelineEmpty}</p> : null}
+                {column.remainingCount > 0 ? (
+                  <button type="button" className="pipeline-more-button" onClick={() => showPipelineStatus(column.status)}>
+                    {(column.demandes.length ? t.pipelineViewOthers : t.pipelineViewRequests).replace('{count}', column.remainingCount)} →
+                  </button>
+                ) : null}
               </div>
             </article>
           ))}
         </div>
       </section>
 
-      <div className="table-wrap">
+      <div className="table-wrap requests-table-wrap">
         <table className="admin-table legacy-requests-table">
           <thead>
             <tr>
@@ -4464,7 +4577,7 @@ function AdminDashboard({ t, token, onLogout }) {
                 <tr key={product.id || product.nom}>
                   <td>
                     <div className="product-table-identity">
-                      <img className="admin-product-thumb" src={product.imageUrl || normalized.imageUrl} alt="" loading="lazy" />
+                      <img className="admin-product-thumb" src={resolveUploadUrl(product.imageUrl || normalized.imageUrl)} alt="" loading="lazy" />
                       <div>
                         <strong>{product.nom}</strong>
                         <span className="product-description-clamp">{product.description || 'Aucune description'}</span>
@@ -4497,7 +4610,7 @@ function AdminDashboard({ t, token, onLogout }) {
           <form className="product-drawer-form" onSubmit={saveProduct}>
             <div className="product-drawer-body">
               {productDrawerTab === 'info' ? <div className="drawer-fields"><Field label="Nom du produit" name="nom" value={productForm.nom} onChange={(event) => setProductFormValue(setProductForm, event)} required /><Field label="Catégorie" name="categorie" value={productForm.categorie} onChange={(event) => setProductFormValue(setProductForm, event)} /><label className="drawer-full">Description<textarea name="description" rows="5" value={productForm.description} onChange={(event) => setProductFormValue(setProductForm, event)} /></label><Field label="Pureté" name="purete" value={productForm.purete} onChange={(event) => setProductFormValue(setProductForm, event)} /><Field label="Dimensions" name="dimensions" value={productForm.dimensions} onChange={(event) => setProductFormValue(setProductForm, event)} /><Field label="Normes" name="normes" value={productForm.normes} onChange={(event) => setProductFormValue(setProductForm, event)} /><Field label="Applications" name="applications" value={productForm.applications} onChange={(event) => setProductFormValue(setProductForm, event)} /><label className="toggle-control drawer-full"><input type="checkbox" checked={productForm.actif} onChange={(event) => setProductForm((current) => ({ ...current, actif: event.target.checked }))} /> Afficher comme produit actif</label></div> : null}
-              {productDrawerTab === 'images' ? <div className="product-image-editor">{productForm.imageUrl ? <img src={productForm.imageUrl} alt="Aperçu du produit" /> : <div className="image-placeholder"><AdminIcon type="products" /><span>Aucune image principale</span></div>}<label className="image-upload-zone">Importer ou remplacer l’image<input type="file" accept="image/*" onChange={uploadProductImage} /></label>{productForm.imageUrl ? <button type="button" className="secondary-button" onClick={() => setProductForm((current) => ({ ...current, imageUrl: '' }))}>Retirer l’image</button> : null}</div> : null}
+              {productDrawerTab === 'images' ? <div className="product-image-editor">{productForm.imageUrl ? <img src={resolveUploadUrl(productForm.imageUrl)} alt="Aperçu du produit" /> : <div className="image-placeholder"><AdminIcon type="products" /><span>Aucune image principale</span></div>}<label className="image-upload-zone">Importer ou remplacer l’image<input type="file" accept="image/*" onChange={uploadProductImage} /></label>{productForm.imageUrl ? <button type="button" className="secondary-button" onClick={() => setProductForm((current) => ({ ...current, imageUrl: '' }))}>Retirer l’image</button> : null}</div> : null}
               {productDrawerTab === '3d' ? <div className="drawer-empty-state"><AdminIcon type="cube" /><h3>{editingProductId && productsWith3DCount ? 'Gestion 3D technique' : 'Aucun fichier 3D associé'}</h3><p>Les aperçus 3D actuels sont générés côté interface et chargés uniquement à la demande. L’API produit ne prend pas encore en charge l’upload GLB/GLTF.</p></div> : null}
               {productDrawerTab === 'other' ? <div className="drawer-fields"><Field label="Conditionnement" name="conditionnement" value={productForm.conditionnement} onChange={(event) => setProductFormValue(setProductForm, event)} /></div> : null}
             </div>
@@ -4514,7 +4627,7 @@ function AdminDashboard({ t, token, onLogout }) {
           <div className="resource-table-wrap"><table className="admin-table resource-table"><thead><tr><th>Document</th><th>Type</th><th>Produit concerné</th><th>Visibilité</th><th>Statut</th><th>Actions</th></tr></thead><tbody>{paginatedResources.map((document)=><tr key={document.id}><td><div className="resource-document"><span>PDF</span><div><strong>{document.titre}</strong><small>{document.fichierNom||'Nom non renseigné'}</small></div></div></td><td><span className="resource-type">{document.typeDocument||'-'}</span></td><td><strong>{document.produitConcerne||'Tous les produits'}</strong></td><td><span className={`resource-visibility ${document.telechargementPublic?'public':'restricted'}`}>{document.telechargementPublic?'PUBLIC':'RESTREINT'}</span></td><td><span className={`resource-status ${document.actif?'active':'inactive'}`}>{document.actif?'ACTIF':'INACTIF'}</span></td><td><div className="resource-actions">{document.fichierUrl?<><button type="button" onClick={()=>downloadTechnicalResource(document,true)} title="Aperçu">◉</button><button type="button" onClick={()=>downloadTechnicalResource(document)} title="Télécharger">↓</button></>:null}<button title="Modifier" onClick={()=>{setEditingDocumentId(document.id);setDocumentForm({titre:document.titre||'',typeDocument:document.typeDocument||'',produitConcerne:document.produitConcerne||'',description:document.description||'',fichierUrl:document.fichierUrl||'',fichierNom:document.fichierNom||'',actif:Boolean(document.actif),telechargementPublic:Boolean(document.telechargementPublic)});setResourceDrawerOpen(true)}}>✎</button><button className="danger" title="Supprimer" onClick={()=>deleteDocument(document.id)}>×</button></div></td></tr>)}</tbody></table></div>
           <footer className="resource-pagination"><span>Affichage {filteredResources.length?(resourcePage-1)*10+1:0} à {Math.min(resourcePage*10,filteredResources.length)} sur {filteredResources.length} ressources</span><div><button disabled={resourcePage===1} onClick={()=>setResourcePage((p)=>p-1)}>‹</button>{Array.from({length:resourcePages},(_,i)=><button className={resourcePage===i+1?'active':''} onClick={()=>setResourcePage(i+1)} key={i+1}>{i+1}</button>)}<button disabled={resourcePage===resourcePages} onClick={()=>setResourcePage((p)=>p+1)}>›</button></div><span>10 par page</span></footer>
         </section>
-        {resourceDrawerOpen?<><button className="resource-drawer-backdrop" aria-label="Fermer" onClick={()=>setResourceDrawerOpen(false)}/><aside className="resource-drawer"><header><h2>{editingDocumentId?'Modifier la ressource':'Ajouter une ressource'}</h2><button onClick={()=>setResourceDrawerOpen(false)}>×</button></header><form onSubmit={saveDocument}><div><Field label="Titre du document" name="titre" value={documentForm.titre} onChange={(e)=>setProductFormValue(setDocumentForm,e)} required/><label>Type de document<select name="typeDocument" value={documentForm.typeDocument} onChange={(e)=>setProductFormValue(setDocumentForm,e)} required><option value="">Sélectionner un type</option>{resourceTypes.map((type)=><option key={type}>{type}</option>)}</select></label><label>Produit concerné<select name="produitConcerne" value={documentForm.produitConcerne} onChange={(e)=>setProductFormValue(setDocumentForm,e)}><option value="">Tous les produits</option>{products.map((product)=><option value={product.nom} key={product.id||product.nom}>{product.nom}</option>)}</select></label><label className="resource-upload">Déposer ou parcourir un fichier PDF<input type="file" accept="application/pdf" onChange={uploadTechnicalPdf}/><span>{documentForm.fichierNom||'PDF uniquement'}</span></label><Field label="Fichier URL" name="fichierUrl" value={documentForm.fichierUrl} onChange={(e)=>setProductFormValue(setDocumentForm,e)} required/><Field label="Nom du fichier" name="fichierNom" value={documentForm.fichierNom} onChange={(e)=>setProductFormValue(setDocumentForm,e)} required/><label>Description<textarea name="description" rows="4" value={documentForm.description} onChange={(e)=>setProductFormValue(setDocumentForm,e)}/></label><label className="toggle-control"><input type="checkbox" checked={documentForm.actif} onChange={(e)=>setDocumentForm((c)=>({...c,actif:e.target.checked}))}/> Actif</label><label className="toggle-control"><input type="checkbox" checked={documentForm.telechargementPublic} onChange={(e)=>setDocumentForm((c)=>({...c,telechargementPublic:e.target.checked}))}/> Téléchargement public</label></div><footer><button type="submit">{editingDocumentId?'Enregistrer les modifications':'Enregistrer'}</button><button type="button" className="secondary-button" onClick={()=>setResourceDrawerOpen(false)}>Annuler</button></footer></form></aside></>:null}
+        {resourceDrawerOpen?<><button className="resource-drawer-backdrop" aria-label="Fermer" onClick={()=>setResourceDrawerOpen(false)}/><aside className="resource-drawer"><header><h2>{editingDocumentId?'Modifier la ressource':'Ajouter une ressource'}</h2><button onClick={()=>setResourceDrawerOpen(false)}>×</button></header><form onSubmit={saveDocument}><div><Field label="Titre du document" name="titre" value={documentForm.titre} onChange={(e)=>setProductFormValue(setDocumentForm,e)} required/><label>Type de document<select name="typeDocument" value={documentForm.typeDocument} onChange={(e)=>setProductFormValue(setDocumentForm,e)} required><option value="">Sélectionner un type</option>{resourceCreationTypes.map((type)=><option key={type}>{type}</option>)}</select></label><label>Produit concerné<select name="produitConcerne" value={documentForm.produitConcerne} onChange={(e)=>setProductFormValue(setDocumentForm,e)}><option value="">Tous les produits</option>{products.map((product)=><option value={product.nom} key={product.id||product.nom}>{product.nom}</option>)}</select></label><label className="resource-upload">Déposer ou parcourir un fichier PDF<input type="file" accept="application/pdf" onChange={uploadTechnicalPdf}/><span>{documentForm.fichierNom||'PDF uniquement'}</span></label><Field label="Fichier URL" name="fichierUrl" value={documentForm.fichierUrl} onChange={(e)=>setProductFormValue(setDocumentForm,e)} required/><Field label="Nom du fichier" name="fichierNom" value={documentForm.fichierNom} onChange={(e)=>setProductFormValue(setDocumentForm,e)} required/><label>Description<textarea name="description" rows="4" value={documentForm.description} onChange={(e)=>setProductFormValue(setDocumentForm,e)}/></label><label className="toggle-control"><input type="checkbox" checked={documentForm.actif} onChange={(e)=>setDocumentForm((c)=>({...c,actif:e.target.checked}))}/> Actif</label><label className="toggle-control"><input type="checkbox" checked={documentForm.telechargementPublic} onChange={(e)=>setDocumentForm((c)=>({...c,telechargementPublic:e.target.checked}))}/> Téléchargement public</label></div><footer><button type="submit">{editingDocumentId?'Enregistrer les modifications':'Enregistrer'}</button><button type="button" className="secondary-button" onClick={()=>setResourceDrawerOpen(false)}>Annuler</button></footer></form></aside></>:null}
       </section>
       ) : null}
 
@@ -4787,7 +4900,7 @@ function normalizeProduct(product) {
   return {
     ...product,
     applications,
-    imageUrl: product.imageUrl || PRODUCT_PLACEHOLDER_IMAGE,
+    imageUrl: resolveUploadUrl(product.imageUrl) || PRODUCT_PLACEHOLDER_IMAGE,
     images: normalizeProductImages(product.images, product.imageUrl || PRODUCT_PLACEHOLDER_IMAGE, visuals.images),
     model3D: product.model3D || visuals.model3D,
     has3D: Boolean(product.has3D ?? visuals.has3D) && Boolean(product.model3D || visuals.model3D),
@@ -4805,7 +4918,7 @@ function normalizeProductImages(productImages, imageUrl, fallbackImages = []) {
       ? productImages.split(',')
       : []
 
-  return [...new Set([...images, imageUrl, ...fallbackImages].map((image) => String(image || '').trim()).filter(Boolean))]
+  return [...new Set([...images, imageUrl, ...fallbackImages].map((image) => resolveUploadUrl(String(image || '').trim())).filter(Boolean))]
 }
 
 function getProductImages(product) {
@@ -5248,7 +5361,6 @@ const dictionary = {
     commandProcessHint: 'Comprendre le flow industriel, la qualite et la tracabilite.',
     commandWhyHint: 'Decouvrir G-ROD, ses engagements, sa qualite et ses partenaires.',
     commandQuoteHint: 'Creer une nouvelle demande client.',
-    commandAdminHint: 'Ouvrir le dashboard commercial.',
     quickDockLabel: 'Actions rapides',
     quickDockQuote: 'Devis rapide',
     quickDockCatalog: 'Catalogue',
@@ -5736,6 +5848,8 @@ const dictionary = {
     pipelineDone: 'Traitees',
     pipelineCancelled: 'Annulees',
     pipelineEmpty: 'Aucune demande',
+    pipelineViewOthers: 'Voir les {count} autres',
+    pipelineViewRequests: 'Voir les {count} demandes',
     quickAction: 'Action rapide',
     downloadPdf: 'Telecharger PDF',
     inProgressAction: 'En traitement',
@@ -5845,7 +5959,6 @@ const dictionary = {
     commandProcessHint: 'Understand the industrial flow, quality and traceability.',
     commandWhyHint: 'Discover G-ROD, its commitments, quality and partners.',
     commandQuoteHint: 'Create a new client request.',
-    commandAdminHint: 'Open the commercial dashboard.',
     quickDockLabel: 'Quick actions',
     quickDockQuote: 'Quick quote',
     quickDockCatalog: 'Catalog',
@@ -6328,6 +6441,8 @@ const dictionary = {
     pipelineDone: 'Done',
     pipelineCancelled: 'Cancelled',
     pipelineEmpty: 'No request',
+    pipelineViewOthers: 'View {count} more',
+    pipelineViewRequests: 'View {count} requests',
     quickAction: 'Quick action',
     downloadPdf: 'Download PDF',
     inProgressAction: 'In progress',

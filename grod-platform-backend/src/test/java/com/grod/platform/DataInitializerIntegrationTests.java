@@ -30,6 +30,11 @@ class DataInitializerIntegrationTests {
 
         assertThat(nombreInitial).isEqualTo(8);
         assertThat(produitRepository.count()).isEqualTo(nombreInitial);
+        assertThat(produitRepository.findAll()).allSatisfy(produit -> {
+            assertThat(produit.getPurete()).isNotBlank();
+            assertThat(produit.getDimensions()).isNotBlank();
+            assertThat(produit.getNormes()).isNotBlank();
+        });
     }
 
     @Test

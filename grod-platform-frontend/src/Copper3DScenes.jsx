@@ -536,6 +536,7 @@ function getProductLabels(product) {
     rod: 'Barre ronde',
     anodes: 'Anode cuivre',
     'bus-bars': 'Barre conductrice',
+    'flat-bars': 'Méplat cuivre',
     tubes: 'Tube cuivre',
     sheets: 'Feuille / plaque',
     wire: 'Fil cuivre',
@@ -586,6 +587,14 @@ function buildProductModel(kind, addMesh, materials) {
     return
   }
 
+  if (kind === 'flat-bars') {
+    const flatBar = new THREE.BoxGeometry(3.5, 0.16, 0.58)
+    for (let index = 0; index < 5; index += 1) {
+      addMesh(flatBar, index % 2 ? copperDark : copper, [index * 0.12 - 0.24, index * 0.2 - 0.42, -index * 0.12], [0, -0.3, 0])
+    }
+    return
+  }
+
   if (kind === 'tubes') {
     const tube = new THREE.CylinderGeometry(0.2, 0.2, 3.2, 48, 1, true)
     const opening = new THREE.TorusGeometry(0.2, 0.035, 16, 48)
@@ -631,6 +640,7 @@ function getModelUrl(kind) {
     rod: 'copper-rod.glb',
     anodes: 'copper-anodes.glb',
     'bus-bars': 'copper-bus-bars.glb',
+    'flat-bars': 'copper-flat-bars.glb',
     tubes: 'copper-tubes.glb',
     sheets: 'copper-sheets.glb',
     wire: 'copper-wire.glb',
@@ -662,8 +672,9 @@ function getProduct3DKind(product) {
   const name = String(product?.nom || '').toLowerCase()
   if (name.includes('anode')) return 'anodes'
   if (name.includes('bus')) return 'bus-bars'
+  if (name.includes('flat') || name.includes('meplat') || name.includes('méplat')) return 'flat-bars'
   if (name.includes('tube')) return 'tubes'
-  if (name.includes('sheet') || name.includes('flat') || name.includes('meplat') || name.includes('méplat')) return 'sheets'
+  if (name.includes('sheet')) return 'sheets'
   if (name.includes('wire') || name.includes('fil')) return 'wire'
   if (name.includes('custom') || name.includes('part') || name.includes('piece') || name.includes('pièce')) return 'custom'
   return 'rod'

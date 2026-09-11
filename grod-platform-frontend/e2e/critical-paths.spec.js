@@ -7,6 +7,7 @@ const adminPassword = 'E2eAdminPassword1!'
 const company = 'E2E Copper Industries'
 const clientEmail = 'e2e-client@example.test'
 const plan = path.join(process.cwd(), 'e2e', 'fixtures', 'test-plan.pdf')
+const productImage = path.join(process.cwd(), 'public', 'images', 'home', 'home-copper-rod.webp')
 let token
 let quoteReference
 let quoteId
@@ -118,6 +119,31 @@ test('authentification, demande Admin, statut persistant et pièce jointe', asyn
   expect((await request.get(`${api}/demandes-devis/${quoteId}/attachment`)).status()).toBe(401)
   const directUpload = await request.get(`http://127.0.0.1:18080/uploads/quotes/${quoteFilename}`)
   expect(directUpload.ok()).toBeFalsy()
+})
+
+test('upload image produit, aperçu et persistance utilisent le backend', async ({ page }) => {
+  await authenticatePage(page)
+  await page.goto('/admin/produits')
+  const editButton = page.getByRole('button', { name: 'Modifier Copper Rod' })
+  await expect(editButton).toBeVisible()
+  await editButton.click()
+  await page.getByRole('button', { name: 'Images', exact: true }).click()
+
+  const uploadResponse = page.waitForResponse((response) => response.url().endsWith('/api/uploads/images'))
+  await page.locator('.product-image-editor input[type="file"]').setInputFiles(productImage)
+  expect((await uploadResponse).ok()).toBeTruthy()
+
+  const preview = page.getByRole('img', { name: 'Aperçu du produit' })
+  await expect(preview).toHaveAttribute('src', /http:\/\/127\.0\.0\.1:18080\/uploads\/products\/.+\.webp/)
+
+  const saveResponse = page.waitForResponse((response) => response.url().includes('/api/produits/') && response.request().method() === 'PUT')
+  await page.getByRole('button', { name: 'Enregistrer les modifications' }).click()
+  expect((await saveResponse).ok()).toBeTruthy()
+  await expect(page.getByRole('button', { name: 'Modifier Copper Rod' })).toBeVisible()
+  await expect(page.locator('tr', { hasText: 'Copper Rod' }).locator('.admin-product-thumb')).toHaveAttribute(
+    'src',
+    /http:\/\/127\.0\.0\.1:18080\/uploads\/products\/.+\.webp/,
+  )
 })
 
 test('notifications persistantes, demande document et ressources publique/privée', async ({ page, request }) => {
