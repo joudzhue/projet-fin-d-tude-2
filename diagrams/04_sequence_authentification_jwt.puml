@@ -1,0 +1,60 @@
+@startuml
+title Séquence d'authentification administrateur par JWT
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Times New Roman"
+skinparam ArrowColor #17633B
+skinparam ParticipantBorderColor #315344
+skinparam ParticipantBackgroundColor #F6F8F5
+skinparam DatabaseBackgroundColor #EEF6F1
+
+actor Administrateur as Admin
+participant "AdminPage\nReact" as UI
+participant "RateLimitFilter" as Rate
+participant "AuthController" as Auth
+participant "AuthenticationManager" as Manager
+participant "UserDetailsService" as Users
+database "UtilisateurRepository" as Repo
+participant "BCryptPasswordEncoder" as BCrypt
+participant "JwtService" as JWT
+collections "sessionStorage" as Session
+participant "JwtAuthenticationFilter" as Filter
+participant "Contrôleur Admin protégé" as Protected
+
+Admin -> UI : saisir email et mot de passe
+UI -> Rate : POST /api/auth/login
+Rate -> Auth : requête autorisée
+Auth -> Manager : authenticate(email, mot de passe)
+Manager -> Users : loadUserByUsername(email)
+Users -> Repo : findByEmail(email)
+Repo --> Users : Utilisateur actif
+Manager -> BCrypt : matches(mot de passe, hash)
+
+alt identifiants valides
+  BCrypt --> Manager : vrai
+  Manager --> Auth : Authentication
+  Auth -> Repo : findByEmail(email)
+  Repo --> Auth : Utilisateur
+  Auth -> JWT : generateToken(utilisateur)
+  JWT --> Auth : JWT HS256 + expiration
+  Auth --> UI : token, profil et durée
+  UI -> Session : stocker token et profil
+  UI --> Admin : ouvrir /admin/dashboard
+else identifiants invalides
+  BCrypt --> Manager : faux
+  Manager --> Auth : AuthenticationException
+  Auth --> UI : 401 Identifiants invalides
+  UI --> Admin : afficher le message d'erreur
+end
+
+== Appel ultérieur d'une API protégée ==
+UI -> Filter : GET /api/admin/...\nAuthorization: Bearer JWT
+Filter -> JWT : vérifier signature, sujet et expiration
+JWT --> Filter : identité valide
+Filter -> Users : charger l'utilisateur et ses rôles
+Users -> Repo : findByEmail(email)
+Repo --> Users : Utilisateur
+Filter -> Protected : poursuivre avec SecurityContext ADMIN
+Protected --> UI : réponse autorisée
+@enduml

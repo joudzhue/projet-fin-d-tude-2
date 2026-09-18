@@ -1,0 +1,162 @@
+@startuml
+!pragma layout smetana
+left to right direction
+title Modèle métier persistant issu des entités JPA
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Times New Roman"
+skinparam ArrowColor #17633B
+skinparam ClassBorderColor #315344
+skinparam ClassBackgroundColor #F6F8F5
+skinparam EnumBackgroundColor #FFF8E8
+hide methods
+hide circle
+
+class Utilisateur <<Entity>> {
+  id : Long
+  nomComplet : String
+  email : String
+  motDePasse : String
+  role : Role
+  actif : boolean
+}
+
+class AdminPasskeyCredential <<Entity>> {
+  id : Long
+  email : String
+  credentialId : String
+  publicKeyCose : String
+  signCount : long
+  active : boolean
+}
+
+class AppSetting <<Entity>> {
+  key : String
+  value : String
+}
+
+class Produit <<Entity>> {
+  id : Long
+  nom : String
+  description : String
+  categorie : String
+  imageUrl : String
+  applications : String
+  dimensions : String
+  purete : String
+  normes : String
+  conditionnement : String
+  actif : boolean
+}
+
+class Client <<Entity>> {
+  id : Long
+  nom : String
+  societe : String
+  email : String
+  telephone : String
+  actif : boolean
+  dateCreation : LocalDateTime
+  dateMiseAJour : LocalDateTime
+}
+
+class DemandeDevis <<Entity>> {
+  id : Long
+  referenceDemande : String
+  societe : String
+  nomContact : String
+  email : String
+  telephone : String
+  produitDemande : String
+  produitId : Long
+  quantite : Integer
+  statut : StatutDemande
+  fichierTechniqueUrl : String
+  dateCreation : LocalDateTime
+}
+
+class DemandeDocument <<Entity>> {
+  id : Long
+  referenceDemande : String
+  societe : String
+  nomContact : String
+  email : String
+  telephone : String
+  typeDocument : String
+  titreDocument : String
+  produitConcerne : String
+  statut : StatutDemande
+  dateCreation : LocalDateTime
+}
+
+class DocumentTechnique <<Entity>> {
+  id : Long
+  titre : String
+  typeDocument : String
+  produitConcerne : String
+  fichierUrl : String
+  fichierNom : String
+  actif : boolean
+  telechargementPublic : boolean
+  dateCreation : LocalDateTime
+}
+
+class Notification <<Entity>> {
+  id : Long
+  type : NotificationType
+  titre : String
+  message : String
+  referenceType : NotificationReferenceType
+  referenceId : Long
+  referenceCode : String
+  clientId : Long
+  dateCreation : LocalDateTime
+}
+
+class NotificationLecture <<Entity>> {
+  id : Long
+  dateLecture : LocalDateTime
+}
+
+enum Role {
+  ADMIN
+  COMMERCIAL
+}
+
+enum StatutDemande {
+  NOUVELLE
+  EN_TRAITEMENT
+  TRAITEE
+  ANNULEE
+}
+
+enum NotificationType {
+  NOUVELLE_DEMANDE_DEVIS
+  NOUVELLE_DEMANDE_DOCUMENT
+}
+
+enum NotificationReferenceType {
+  DEVIS
+  DOCUMENT
+}
+
+DemandeDevis "0..*" --> "0..1" Client : client
+NotificationLecture "0..*" --> "1" Notification : notification
+NotificationLecture "0..*" --> "1" Utilisateur : utilisateur
+Utilisateur --> Role
+DemandeDevis --> StatutDemande
+DemandeDocument --> StatutDemande
+Notification --> NotificationType
+Notification --> NotificationReferenceType
+
+AdminPasskeyCredential ..> Utilisateur : email logique\n(aucune FK JPA)
+Notification ..> DemandeDevis : referenceType/referenceId\n(aucune FK JPA)
+Notification ..> DemandeDocument : referenceType/referenceId\n(aucune FK JPA)
+
+note bottom of Produit
+  Les demandes et documents conservent
+  le produit sous forme d'identifiant
+  ou de texte, sans association JPA.
+end note
+@enduml

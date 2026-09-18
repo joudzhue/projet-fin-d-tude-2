@@ -1,0 +1,72 @@
+@startuml
+title Séquence de création d'une demande de devis
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Times New Roman"
+skinparam ArrowColor #17633B
+skinparam ParticipantBorderColor #315344
+skinparam ParticipantBackgroundColor #F6F8F5
+skinparam DatabaseBackgroundColor #EEF6F1
+
+actor "Prospect / Client" as Client
+participant "QuotePage\nReact" as UI
+participant "RateLimitFilter" as Rate
+participant "UploadController" as UploadCtrl
+participant "StoredFileService" as Files
+participant "DemandeDevisController" as QuoteCtrl
+participant "DemandeDevisServiceImpl" as QuoteService
+participant "ClientService" as ClientService
+database "Repositories JPA\n+ base" as DB
+participant "NotificationService" as Notification
+participant "ApplicationEventPublisher" as Events
+participant "ExternalNotificationListener" as Listener
+participant "Email / SMS\noptionnels" as External
+
+Client -> UI : renseigner et valider le formulaire
+
+opt pièce jointe sélectionnée
+  UI -> Rate : POST /api/uploads/quote-documents
+  Rate -> UploadCtrl : requête autorisée
+  UploadCtrl -> UploadCtrl : contrôler taille, type et signature
+  UploadCtrl -> Files : storeTemporaryQuote(...)
+  Files --> UploadCtrl : URL temporaire
+  UploadCtrl --> UI : documentUrl + originalName
+end
+
+UI -> Rate : POST /api/demandes-devis
+Rate -> QuoteCtrl : requête autorisée
+QuoteCtrl -> QuoteService : ajouterDemande(DTO validé)
+activate QuoteService
+
+opt URL temporaire fournie
+  QuoteService -> Files : promoteTemporaryQuote(...)
+  Files --> QuoteService : chemin définitif
+  note right of Files
+    Le déplacement intervient avant
+    les écritures en base.
+  end note
+end
+
+QuoteService -> ClientService : trouverOuCreer(email normalisé)
+ClientService -> DB : rechercher puis créer/mettre à jour le client
+DB --> ClientService : Client
+ClientService --> QuoteService : Client
+QuoteService -> DB : enregistrer la demande
+DB --> QuoteService : demande avec identifiant
+QuoteService -> DB : enregistrer la référence GROD-AAAA-NNNNN
+QuoteService -> Notification : notifierNouveauDevis(...)
+Notification -> DB : enregistrer la notification interne
+QuoteService -> Events : publier DemandeDevisCreatedEvent
+
+deactivate QuoteService
+DB --> QuoteCtrl : commit de la transaction
+Events -> Listener : AFTER_COMMIT
+alt services externes configurés
+  Listener -> External : envoyer email et/ou SMS
+else services externes désactivés
+  Listener -> Listener : journaliser l'envoi ignoré
+end
+QuoteCtrl --> UI : DTO + référence de la demande
+UI --> Client : afficher la confirmation
+@enduml

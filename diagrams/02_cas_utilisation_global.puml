@@ -1,0 +1,61 @@
+@startuml
+!pragma layout smetana
+left to right direction
+title Cas d'utilisation global de G-ROD
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Times New Roman"
+skinparam ArrowColor #17633B
+skinparam BorderColor #315344
+skinparam usecaseBackgroundColor #F6F8F5
+
+actor Visiteur as Visitor
+actor "Prospect / Client" as Client
+actor Administrateur as Admin
+
+Client -|> Visitor
+
+rectangle "Plateforme G-ROD" {
+  usecase "Consulter les pages\npubliques" as UC_Public
+  usecase "Rechercher et filtrer\nle catalogue" as UC_Search
+  usecase "Consulter une\nfiche produit" as UC_Product
+  usecase "Afficher un\naperçu 3D" as UC_3D
+  usecase "Consulter ou demander\nun document technique" as UC_Doc
+  usecase "Interroger l'assistant\nsi configuré" as UC_AI
+  usecase "Créer une demande\nde devis" as UC_Quote
+  usecase "Joindre un plan\nou un fichier" as UC_Upload
+
+  usecase "S'authentifier\npar mot de passe" as UC_Login
+  usecase "S'authentifier\npar Passkey" as UC_Passkey
+  usecase "Consulter le dashboard\net le pipeline" as UC_Dashboard
+  usecase "Traiter les demandes\net générer leur PDF" as UC_Process
+  usecase "Consulter les clients\net leur historique" as UC_Clients
+  usecase "Gérer les produits\net leurs images" as UC_Products
+  usecase "Gérer les demandes\nde documents" as UC_DocRequests
+  usecase "Gérer les ressources\ntechniques" as UC_Resources
+  usecase "Consulter et marquer\nles notifications" as UC_Notifications
+  usecase "Gérer mot de passe,\nPasskey et préférences" as UC_Account
+}
+
+Visitor --> UC_Public
+Visitor --> UC_Search
+Visitor --> UC_Product
+Visitor --> UC_3D
+Visitor --> UC_Doc
+Visitor --> UC_AI
+Client --> UC_Quote
+Client --> UC_Doc
+UC_Upload ..> UC_Quote : <<extend>>
+
+Admin --> UC_Login
+Admin --> UC_Passkey
+Admin --> UC_Dashboard
+Admin --> UC_Process
+Admin --> UC_Clients
+Admin --> UC_Products
+Admin --> UC_DocRequests
+Admin --> UC_Resources
+Admin --> UC_Notifications
+Admin --> UC_Account
+@enduml

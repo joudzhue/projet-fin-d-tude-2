@@ -40,3 +40,10 @@ backups/
 grod-platform-frontend/test-results/
 grod-platform-frontend/playwright-report/
 grod-platform-backend/uploads-e2e/
+
+# Local report-generation dependencies and temporary QA artifacts
+.codex_deps/
+**/__pycache__/
+rapport/lo-profile*/
+rapport/rendered-final/
+rapport/cover-current.png

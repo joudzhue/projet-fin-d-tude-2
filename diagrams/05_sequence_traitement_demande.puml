@@ -1,0 +1,53 @@
+@startuml
+title Séquence de consultation et traitement d'une demande
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Times New Roman"
+skinparam ArrowColor #17633B
+skinparam ParticipantBorderColor #315344
+skinparam ParticipantBackgroundColor #F6F8F5
+skinparam DatabaseBackgroundColor #EEF6F1
+
+actor Administrateur as Admin
+participant "AdminPage\nReact" as UI
+participant "JwtAuthenticationFilter" as JWTFilter
+participant "AdminPaginationController" as PageCtrl
+participant "AdminPaginationService" as PageService
+participant "DemandeDevisController" as QuoteCtrl
+participant "DemandeDevisServiceImpl" as QuoteService
+database "DemandeDevisRepository" as Repo
+
+Admin -> UI : ouvrir la page Demandes
+UI -> JWTFilter : GET /api/admin/demandes\n?page&size&search&status&sort
+JWTFilter -> JWTFilter : valider JWT et rôle ADMIN
+JWTFilter -> PageCtrl : requête authentifiée
+PageCtrl -> PageService : devis(Pageable, filtres)
+PageService -> PageService : borner la taille et construire Specification
+PageService -> Repo : findAll(specification, pageable)
+Repo --> PageService : Page<DemandeDevis>
+PageService --> PageCtrl : PagedResponse<DTO>
+PageCtrl --> UI : contenu + totalElements + totalPages
+UI --> Admin : afficher la page filtrée
+
+Admin -> UI : sélectionner un nouveau statut
+UI -> JWTFilter : PUT /api/demandes-devis/{id}/statut?statut=...
+JWTFilter -> JWTFilter : valider JWT et rôle ADMIN
+JWTFilter -> QuoteCtrl : requête authentifiée
+QuoteCtrl -> QuoteService : changerStatut(id, statut)
+QuoteService -> Repo : findById(id)
+Repo --> QuoteService : demande existante
+QuoteService -> Repo : save(demande mise à jour)
+Repo --> QuoteService : demande persistée
+QuoteService --> QuoteCtrl : DTO actualisé
+QuoteCtrl --> UI : 200 + demande
+UI -> UI : actualiser liste, compteurs et pipeline
+UI --> Admin : afficher le statut persistant
+
+opt téléchargement du récapitulatif
+  Admin -> UI : cliquer Télécharger PDF
+  UI -> JWTFilter : GET /api/demandes-devis/{id}/pdf
+  JWTFilter -> QuoteCtrl : requête authentifiée
+  QuoteCtrl --> UI : application/pdf
+end
+@enduml

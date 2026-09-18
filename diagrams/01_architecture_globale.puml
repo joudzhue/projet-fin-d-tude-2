@@ -1,0 +1,73 @@
+@startuml
+!pragma layout smetana
+title Architecture globale de la plateforme G-ROD
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName "Times New Roman"
+skinparam componentStyle rectangle
+skinparam ArrowColor #17633B
+skinparam BorderColor #315344
+skinparam packageBorderColor #315344
+skinparam packageBackgroundColor #F6F8F5
+skinparam componentBackgroundColor #FFFFFF
+skinparam databaseBackgroundColor #EEF6F1
+skinparam noteBackgroundColor #FFF8E8
+
+actor "Visiteur /\nProspect" as Visitor
+actor "Administrateur" as Admin
+
+package "Navigateur" {
+  component "Site public React" as PublicUI
+  component "Espace Admin React" as AdminUI
+  component "PWA installable" as PWA
+  component "Visualiseur Three.js\n+ modèles GLB locaux" as Viewer3D
+}
+
+node "Serveur cible\n(déploiement préparé)" {
+  component "Nginx\nHTTPS + fichiers statiques\n+ reverse proxy" as Nginx
+  component "API Spring Boot 3.5.14" as API
+  component "Spring Security\nJWT + BCrypt + CORS" as Security
+  component "Contrôleurs REST" as Controllers
+  component "Services métier" as Services
+  component "Repositories JPA" as Repositories
+  database "MySQL" as MySQL
+  folder "UPLOAD_DIR\nproducts / quotes / documents" as Uploads
+}
+
+cloud "Services optionnels" {
+  component "SMTP" as SMTP
+  component "Twilio" as Twilio
+  component "API OpenAI" as OpenAI
+}
+
+Visitor --> PublicUI : consulter / demander
+Admin --> AdminUI : administrer
+PublicUI --> Viewer3D : clic Aperçu 3D
+PublicUI --> PWA : installation navigateur
+AdminUI --> PWA
+PublicUI --> Nginx : HTTPS
+AdminUI --> Nginx : HTTPS + Bearer JWT
+Nginx --> API : /api/*
+Nginx --> API : /uploads/products/*
+API --> Security
+Security --> Controllers
+Controllers --> Services
+Services --> Repositories
+Repositories --> MySQL
+Services --> Uploads
+Services ..> SMTP : si configuré
+Services ..> Twilio : si configuré
+Services ..> OpenAI : si OPENAI_API_KEY
+
+note right of Nginx
+  Nginx, TLS et systemd sont préparés
+  dans le dépôt ; leur déploiement réel
+  n'est pas démontré par le code.
+end note
+
+note bottom of PWA
+  Manifeste et service worker présents.
+  Le mode hors ligne reste incomplet.
+end note
+@enduml

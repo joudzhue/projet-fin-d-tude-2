@@ -1,0 +1,30 @@
+@startgantt
+title Planning reconstruit du projet G-ROD — mars à août 2026
+
+skinparam backgroundColor white
+skinparam defaultFontName "Times New Roman"
+skinparam ganttTaskBackgroundColor #DCEDE3
+skinparam ganttTaskBorderColor #17633B
+skinparam ganttMilestoneBackgroundColor #B5532A
+skinparam ganttMilestoneBorderColor #8D3F20
+
+Project starts 2026-03-01
+printscale monthly
+
+[Début du stage] happens 2026-03-01
+
+[Cadrage et compréhension du contexte\n(à confirmer par l'étudiant)] as [T1] starts 2026-03-01 and ends 2026-03-31
+[Analyse des besoins et des parcours\n(à confirmer par l'étudiant)] as [T2] starts 2026-04-01 and ends 2026-04-30
+[Conception fonctionnelle et technique\n(à confirmer par l'étudiant)] as [T3] starts 2026-05-01 and ends 2026-05-31
+[Développement initial frontend/backend\n(à confirmer par l'étudiant)] as [T4] starts 2026-06-01 and ends 2026-07-27
+
+[Premières traces Git disponibles] happens 2026-07-28
+[Restauration des fonctions Admin et organisation UI\n(preuves Git)] as [T5] starts 2026-07-28 and ends 2026-07-29
+[Corrections catalogue, images et formulaires\n(preuves Git)] as [T6] starts 2026-07-29 and ends 2026-08-06
+[Amélioration de l'expérience frontend\n(preuves Git)] as [T7] starts 2026-08-06 and ends 2026-08-12
+[Stabilisation et préparation RC1\n(preuves Git)] as [T8] starts 2026-08-12 and ends 2026-08-17
+[Release Candidate v1.0.0-rc.1] happens 2026-08-17
+[Recette et clôture de la période de stage\n(à confirmer par l'étudiant)] as [T9] starts 2026-08-18 and ends 2026-08-31
+
+[Fin du stage] happens 2026-08-31
+@endgantt
